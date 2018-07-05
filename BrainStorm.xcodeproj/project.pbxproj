@@ -6,8 +6,52 @@
 	objectVersion = 50;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0161752120EDDE4600FC40FF /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161752020EDDE4600FC40FF /* Metal.framework */; };
+		0161752320EDDE4C00FC40FF /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161752220EDDE4C00FC40FF /* Accelerate.framework */; };
+		0161752820EDDFD800FC40FF /* MetalKernels.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0161752720EDDFD800FC40FF /* MetalKernels.metal */; };
+		0161753C20EDE05000FC40FF /* TimeProfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161753420EDE04F00FC40FF /* TimeProfile.c */; };
+		0161753D20EDE05000FC40FF /* Data.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161753520EDE04F00FC40FF /* Data.c */; };
+		0161753E20EDE05000FC40FF /* Parsing.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161753620EDE04F00FC40FF /* Parsing.c */; };
+		0161753F20EDE05000FC40FF /* NeuralNetwork.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161753720EDE05000FC40FF /* NeuralNetwork.c */; };
+		0161754020EDE05000FC40FF /* NetworkUtils.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161753820EDE05000FC40FF /* NetworkUtils.c */; };
+		0161754120EDE05000FC40FF /* MetalCompute.m in Sources */ = {isa = PBXBuildFile; fileRef = 0161753920EDE05000FC40FF /* MetalCompute.m */; };
+		0161754220EDE05000FC40FF /* Utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161753A20EDE05000FC40FF /* Utils.c */; };
+		0161754320EDE05000FC40FF /* Memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161753B20EDE05000FC40FF /* Memory.c */; };
+		0161754520EDE45400FC40FF /* Data.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752D20EDE03000FC40FF /* Data.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754620EDE45400FC40FF /* Memory.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752E20EDE03000FC40FF /* Memory.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754720EDE45400FC40FF /* MetalCompute.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752F20EDE03000FC40FF /* MetalCompute.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754820EDE45400FC40FF /* NetworkUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752A20EDE03000FC40FF /* NetworkUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754920EDE45400FC40FF /* NeuralNetwork.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752B20EDE03000FC40FF /* NeuralNetwork.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754A20EDE45400FC40FF /* Optimization.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752C20EDE03000FC40FF /* Optimization.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754B20EDE45400FC40FF /* Parsing.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753020EDE03000FC40FF /* Parsing.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754C20EDE45400FC40FF /* TimeProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753120EDE03000FC40FF /* TimeProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754D20EDE45400FC40FF /* Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753220EDE03000FC40FF /* Utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		0161751820EDDDF500FC40FF /* libBrainStorm.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libBrainStorm.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		0161752020EDDE4600FC40FF /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		0161752220EDDE4C00FC40FF /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		0161752420EDDE5300FC40FF /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
+		0161752720EDDFD800FC40FF /* MetalKernels.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; name = MetalKernels.metal; path = metal/MetalKernels.metal; sourceTree = SOURCE_ROOT; };
+		0161752A20EDE03000FC40FF /* NetworkUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkUtils.h; path = include/NetworkUtils.h; sourceTree = SOURCE_ROOT; };
+		0161752B20EDE03000FC40FF /* NeuralNetwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NeuralNetwork.h; path = include/NeuralNetwork.h; sourceTree = SOURCE_ROOT; };
+		0161752C20EDE03000FC40FF /* Optimization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Optimization.h; path = include/Optimization.h; sourceTree = SOURCE_ROOT; };
+		0161752D20EDE03000FC40FF /* Data.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Data.h; path = include/Data.h; sourceTree = SOURCE_ROOT; };
+		0161752E20EDE03000FC40FF /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Memory.h; path = include/Memory.h; sourceTree = SOURCE_ROOT; };
+		0161752F20EDE03000FC40FF /* MetalCompute.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MetalCompute.h; path = include/MetalCompute.h; sourceTree = SOURCE_ROOT; };
+		0161753020EDE03000FC40FF /* Parsing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Parsing.h; path = include/Parsing.h; sourceTree = SOURCE_ROOT; };
+		0161753120EDE03000FC40FF /* TimeProfile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TimeProfile.h; path = include/TimeProfile.h; sourceTree = SOURCE_ROOT; };
+		0161753220EDE03000FC40FF /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = include/Utils.h; sourceTree = SOURCE_ROOT; };
+		0161753420EDE04F00FC40FF /* TimeProfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TimeProfile.c; path = src/TimeProfile.c; sourceTree = "<group>"; };
+		0161753520EDE04F00FC40FF /* Data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Data.c; path = src/Data.c; sourceTree = "<group>"; };
+		0161753620EDE04F00FC40FF /* Parsing.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Parsing.c; path = src/Parsing.c; sourceTree = "<group>"; };
+		0161753720EDE05000FC40FF /* NeuralNetwork.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NeuralNetwork.c; path = src/NeuralNetwork.c; sourceTree = "<group>"; };
+		0161753820EDE05000FC40FF /* NetworkUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NetworkUtils.c; path = src/NetworkUtils.c; sourceTree = "<group>"; };
+		0161753920EDE05000FC40FF /* MetalCompute.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MetalCompute.m; path = src/MetalCompute.m; sourceTree = "<group>"; };
+		0161753A20EDE05000FC40FF /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Utils.c; path = src/Utils.c; sourceTree = "<group>"; };
+		0161753B20EDE05000FC40FF /* Memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Memory.c; path = src/Memory.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -15,6 +59,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0161752320EDDE4C00FC40FF /* Accelerate.framework in Frameworks */,
+				0161752120EDDE4600FC40FF /* Metal.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -24,7 +70,11 @@
 		0161750F20EDDDF500FC40FF = {
 			isa = PBXGroup;
 			children = (
+				0161752620EDDF6600FC40FF /* metal */,
+				0161752920EDDFE600FC40FF /* include */,
+				0161753320EDE03800FC40FF /* src */,
 				0161751920EDDDF500FC40FF /* Products */,
+				0161751F20EDDE4600FC40FF /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -36,6 +86,57 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		0161751F20EDDE4600FC40FF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0161752420EDDE5300FC40FF /* OpenCL.framework */,
+				0161752220EDDE4C00FC40FF /* Accelerate.framework */,
+				0161752020EDDE4600FC40FF /* Metal.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		0161752620EDDF6600FC40FF /* metal */ = {
+			isa = PBXGroup;
+			children = (
+				0161752720EDDFD800FC40FF /* MetalKernels.metal */,
+			);
+			name = metal;
+			path = "New Group";
+			sourceTree = "<group>";
+		};
+		0161752920EDDFE600FC40FF /* include */ = {
+			isa = PBXGroup;
+			children = (
+				0161752D20EDE03000FC40FF /* Data.h */,
+				0161752E20EDE03000FC40FF /* Memory.h */,
+				0161752F20EDE03000FC40FF /* MetalCompute.h */,
+				0161752A20EDE03000FC40FF /* NetworkUtils.h */,
+				0161752B20EDE03000FC40FF /* NeuralNetwork.h */,
+				0161752C20EDE03000FC40FF /* Optimization.h */,
+				0161753020EDE03000FC40FF /* Parsing.h */,
+				0161753120EDE03000FC40FF /* TimeProfile.h */,
+				0161753220EDE03000FC40FF /* Utils.h */,
+			);
+			name = include;
+			path = "New Group/include";
+			sourceTree = "<group>";
+		};
+		0161753320EDE03800FC40FF /* src */ = {
+			isa = PBXGroup;
+			children = (
+				0161753520EDE04F00FC40FF /* Data.c */,
+				0161753B20EDE05000FC40FF /* Memory.c */,
+				0161753920EDE05000FC40FF /* MetalCompute.m */,
+				0161753820EDE05000FC40FF /* NetworkUtils.c */,
+				0161753720EDE05000FC40FF /* NeuralNetwork.c */,
+				0161753620EDE04F00FC40FF /* Parsing.c */,
+				0161753420EDE04F00FC40FF /* TimeProfile.c */,
+				0161753A20EDE05000FC40FF /* Utils.c */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -43,6 +144,15 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0161754520EDE45400FC40FF /* Data.h in Headers */,
+				0161754620EDE45400FC40FF /* Memory.h in Headers */,
+				0161754720EDE45400FC40FF /* MetalCompute.h in Headers */,
+				0161754820EDE45400FC40FF /* NetworkUtils.h in Headers */,
+				0161754920EDE45400FC40FF /* NeuralNetwork.h in Headers */,
+				0161754A20EDE45400FC40FF /* Optimization.h in Headers */,
+				0161754B20EDE45400FC40FF /* Parsing.h in Headers */,
+				0161754C20EDE45400FC40FF /* TimeProfile.h in Headers */,
+				0161754D20EDE45400FC40FF /* Utils.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,6 +166,7 @@
 				0161751420EDDDF500FC40FF /* Sources */,
 				0161751520EDDDF500FC40FF /* Frameworks */,
 				0161751620EDDDF500FC40FF /* Headers */,
+				0161754420EDE43600FC40FF /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -97,11 +208,36 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		0161754420EDE43600FC40FF /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/myLibs'\npath=$path1$path2$path3\n\nif test -d $path ; then\nrm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/libBrainStorm.dylib $path\ncp -r ${BUILT_PRODUCTS_DIR}/usr $path";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		0161751420EDDDF500FC40FF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0161754020EDE05000FC40FF /* NetworkUtils.c in Sources */,
+				0161754220EDE05000FC40FF /* Utils.c in Sources */,
+				0161754320EDE05000FC40FF /* Memory.c in Sources */,
+				0161754120EDE05000FC40FF /* MetalCompute.m in Sources */,
+				0161753F20EDE05000FC40FF /* NeuralNetwork.c in Sources */,
+				0161753D20EDE05000FC40FF /* Data.c in Sources */,
+				0161753C20EDE05000FC40FF /* TimeProfile.c in Sources */,
+				0161753E20EDE05000FC40FF /* Parsing.c in Sources */,
+				0161752820EDDFD800FC40FF /* MetalKernels.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
