@@ -27,6 +27,7 @@
 		0161754B20EDE45400FC40FF /* Parsing.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753020EDE03000FC40FF /* Parsing.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161754C20EDE45400FC40FF /* TimeProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753120EDE03000FC40FF /* TimeProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161754D20EDE45400FC40FF /* Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753220EDE03000FC40FF /* Utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161756220EDEAB100FC40FF /* BrainStorm.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161756120EDE9E800FC40FF /* BrainStorm.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 		0161753920EDE05000FC40FF /* MetalCompute.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MetalCompute.m; path = src/MetalCompute.m; sourceTree = "<group>"; };
 		0161753A20EDE05000FC40FF /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Utils.c; path = src/Utils.c; sourceTree = "<group>"; };
 		0161753B20EDE05000FC40FF /* Memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Memory.c; path = src/Memory.c; sourceTree = "<group>"; };
+		0161756120EDE9E800FC40FF /* BrainStorm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BrainStorm.h; path = include/BrainStorm.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 		0161752920EDDFE600FC40FF /* include */ = {
 			isa = PBXGroup;
 			children = (
+				0161756120EDE9E800FC40FF /* BrainStorm.h */,
 				0161752D20EDE03000FC40FF /* Data.h */,
 				0161752E20EDE03000FC40FF /* Memory.h */,
 				0161752F20EDE03000FC40FF /* MetalCompute.h */,
@@ -144,6 +147,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0161756220EDEAB100FC40FF /* BrainStorm.h in Headers */,
 				0161754520EDE45400FC40FF /* Data.h in Headers */,
 				0161754620EDE45400FC40FF /* Memory.h in Headers */,
 				0161754720EDE45400FC40FF /* MetalCompute.h in Headers */,
