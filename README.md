@@ -3,8 +3,7 @@
 
 ### Description:
 
-BrainStorm is a C library which allows to define and train a full connected (feedforward) network. It supports the following activation functions:
-sigmoid, relu, tanh and softmax (only at the output layer). It also supports L2 regularization, momentum and three algorithms for adapative learning rate: AdaGrad, RMSProp and Adam.
+BrainStorm is a full connected (feedforward) network library written in C. It supports the following activation functions: sigmoid, relu, tanh and softmax (only at the output layer). It also supports L2 regularization, momentum and three algorithms for adapative learning rate: AdaGrad, RMSProp and Adam.
 
 At this time, parameters for the network must be defined in an input file with the define { } directive. The input file must not contain comments or tabulations. 
 
@@ -47,6 +46,14 @@ define {
 }
 ```
 This uses a sigmoid function for all hidden layers and a softmax function at the output layer.
+
+To use the same activation function on all layers, one can write:
+
+```
+define {
+    activations:[sigmoid~]
+}
+```
 
 The topology, activation function, split, classification, RMSProp and Adam parameters must always be defined as a vector of values with the [ ] syntax. Other parameters are simply scalars.
 
