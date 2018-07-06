@@ -16,7 +16,6 @@
 #include "Memory.h"
 #include "Parsing.h"
 #include "NetworkUtils.h"
-//#include "Data.h"
 #include "TimeProfile.h"
 
 static void initNeuralData(void * _Nonnull self);
