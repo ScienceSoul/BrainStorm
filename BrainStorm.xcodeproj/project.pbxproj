@@ -48,6 +48,10 @@
 		0161758420EEEFCB00FC40FF /* Parsing.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753020EDE03000FC40FF /* Parsing.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161758520EEEFCB00FC40FF /* TimeProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753120EDE03000FC40FF /* TimeProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161758620EEEFCB00FC40FF /* Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753220EDE03000FC40FF /* Utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161759020EF443E00FC40FF /* NetworkConstructor.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161758F20EF443E00FC40FF /* NetworkConstructor.c */; };
+		0161759120EF443E00FC40FF /* NetworkConstructor.c in Sources */ = {isa = PBXBuildFile; fileRef = 0161758F20EF443E00FC40FF /* NetworkConstructor.c */; };
+		0161759220EF46D300FC40FF /* NetworkConstructor.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161758E20EF401B00FC40FF /* NetworkConstructor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161759320EF46D300FC40FF /* NetworkParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161758C20EF3E8D00FC40FF /* NetworkParams.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -76,6 +80,9 @@
 		0161756120EDE9E800FC40FF /* BrainStorm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BrainStorm.h; path = include/BrainStorm.h; sourceTree = SOURCE_ROOT; };
 		0161756E20EEEDE500FC40FF /* libBrainStorm.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBrainStorm.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		0161758920EEF25600FC40FF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		0161758C20EF3E8D00FC40FF /* NetworkParams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkParams.h; path = include/NetworkParams.h; sourceTree = SOURCE_ROOT; };
+		0161758E20EF401B00FC40FF /* NetworkConstructor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkConstructor.h; path = include/NetworkConstructor.h; sourceTree = SOURCE_ROOT; };
+		0161758F20EF443E00FC40FF /* NetworkConstructor.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkConstructor.c; path = src/NetworkConstructor.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +154,8 @@
 				0161752D20EDE03000FC40FF /* Data.h */,
 				0161752E20EDE03000FC40FF /* Memory.h */,
 				0161752F20EDE03000FC40FF /* MetalCompute.h */,
+				0161758E20EF401B00FC40FF /* NetworkConstructor.h */,
+				0161758C20EF3E8D00FC40FF /* NetworkParams.h */,
 				0161752A20EDE03000FC40FF /* NetworkUtils.h */,
 				0161752B20EDE03000FC40FF /* NeuralNetwork.h */,
 				0161752C20EDE03000FC40FF /* Optimization.h */,
@@ -164,6 +173,7 @@
 				0161753520EDE04F00FC40FF /* Data.c */,
 				0161753B20EDE05000FC40FF /* Memory.c */,
 				0161753920EDE05000FC40FF /* MetalCompute.m */,
+				0161758F20EF443E00FC40FF /* NetworkConstructor.c */,
 				0161753820EDE05000FC40FF /* NetworkUtils.c */,
 				0161753720EDE05000FC40FF /* NeuralNetwork.c */,
 				0161753620EDE04F00FC40FF /* Parsing.c */,
@@ -201,6 +211,8 @@
 				0161757E20EEEFCB00FC40FF /* Data.h in Headers */,
 				0161757F20EEEFCB00FC40FF /* Memory.h in Headers */,
 				0161758020EEEFCB00FC40FF /* MetalCompute.h in Headers */,
+				0161759220EF46D300FC40FF /* NetworkConstructor.h in Headers */,
+				0161759320EF46D300FC40FF /* NetworkParams.h in Headers */,
 				0161758120EEEFCB00FC40FF /* NetworkUtils.h in Headers */,
 				0161758220EEEFCB00FC40FF /* NeuralNetwork.h in Headers */,
 				0161758320EEEFCB00FC40FF /* Optimization.h in Headers */,
@@ -327,6 +339,7 @@
 				0161753C20EDE05000FC40FF /* TimeProfile.c in Sources */,
 				0161753E20EDE05000FC40FF /* Parsing.c in Sources */,
 				0161752820EDDFD800FC40FF /* MetalKernels.metal in Sources */,
+				0161759020EF443E00FC40FF /* NetworkConstructor.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,6 +348,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0161757220EEEE2400FC40FF /* Data.c in Sources */,
+				0161759120EF443E00FC40FF /* NetworkConstructor.c in Sources */,
 				0161757320EEEE2400FC40FF /* Memory.c in Sources */,
 				0161757420EEEE2400FC40FF /* MetalCompute.m in Sources */,
 				0161757520EEEE2400FC40FF /* NetworkUtils.c in Sources */,

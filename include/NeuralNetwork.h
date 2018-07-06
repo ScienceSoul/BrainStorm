@@ -8,6 +8,9 @@
 #ifndef NeuralNetwork_h
 #define NeuralNetwork_h
 
+#include "Data.h"
+#include "NetworkParams.h"
+#include "NetworkConstructor.h"
 #include "MetalCompute.h"
 #include "Utils.h"
 #include "Optimization.h"
@@ -48,46 +51,13 @@ typedef struct costBiaseDerivativeNode {
     struct costBiaseDerivativeNode * _Nullable previous;
 } costBiaseDerivativeNode;
 
-typedef struct training {
-    float * _Nullable *_Nullable set;
-    unsigned int m, n;
-    float * _Nullable * _Nullable (* _Nullable reader)(const char * _Nonnull fileName, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2);
-} training;
-typedef struct test {
-    float * _Nullable *_Nullable set;
-    unsigned int m, n;
-    float * _Nullable * _Nullable (* _Nullable reader)(const char * _Nonnull fileName, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2);
-} test;
-typedef struct validation {
-    float * _Nullable *_Nullable set;
-    unsigned int m, n;
-} validation;
-
-typedef struct data {
-    training * _Nullable training;
-    test * _Nullable test;
-    validation *_Nullable validation;
-    void (* _Nullable init)(void * _Nonnull self);
-    void (* _Nullable load)(void * _Nonnull self, const char * _Nonnull dataSetName, const char * _Nonnull trainFile, const char * _Nonnull testFile, bool testData);
-} data;
-
-typedef struct parameters {
-    int epochs, miniBatchSize;
-    unsigned int numberOfLayers, numberOfClassifications, numberOfActivationFunctions;
-    float eta, lambda, mu;
-    
-    char supported_parameters[MAX_SUPPORTED_PARAMETERS][MAX_SHORT_STRING_LENGTH];
-    char data[MAX_LONG_STRING_LENGTH], dataName[MAX_LONG_STRING_LENGTH];
-    int topology[MAX_NUMBER_NETWORK_LAYERS], split[2], classifications[MAX_NUMBER_NETWORK_LAYERS];
-    char activationFunctions[MAX_NUMBER_NETWORK_LAYERS][MAX_SHORT_STRING_LENGTH];
-} parameters;
-
 typedef struct NeuralNetwork {
     
     data * _Nullable data;
     float * _Nullable * _Nullable batch;
-    parameters * _Nullable parameters;
-    int (* _Nullable load)(void * _Nonnull self, const char * _Nonnull paraFile);
+    networkConstructor * _Nullable constructor;
+    networkParameters * _Nullable parameters;
+    int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
     
     int example_idx;
     unsigned int number_of_parameters;

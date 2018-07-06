@@ -16,7 +16,7 @@
 #include "Memory.h"
 #include "Parsing.h"
 #include "NetworkUtils.h"
-#include "Data.h"
+//#include "Data.h"
 #include "TimeProfile.h"
 
 static void initNeuralData(void * _Nonnull self);
@@ -70,7 +70,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
     *nn = (NeuralNetwork){.weights=NULL, .weightsVelocity=NULL, .biases=NULL, .biasesVelocity=NULL, .networkActivations=NULL, .networkAffineTransformations=NULL, .networkCostWeightDerivatives=NULL, .networkCostBiaseDerivatives=NULL, .deltaNetworkCostWeightDerivatives=NULL, .deltaNetworkCostBiaseDerivatives=NULL, .gpu=NULL, .adaGrad=NULL, .rmsProp=NULL, .adam=NULL};
     
-    nn->parameters = (parameters *)malloc(sizeof(parameters));
+    nn->parameters = (networkParameters *)malloc(sizeof(networkParameters));
     strcpy(nn->parameters->supported_parameters[0], "data_name");
     strcpy(nn->parameters->supported_parameters[1], "data");
     strcpy(nn->parameters->supported_parameters[2], "topology");
@@ -86,13 +86,16 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     strcpy(nn->parameters->supported_parameters[12], "rmsprop");
     strcpy(nn->parameters->supported_parameters[13], "adam");
     
-    bzero(nn->parameters->data, 256);
-    bzero(nn->parameters->dataName, 256);
+    bzero(nn->parameters->data, MAX_LONG_STRING_LENGTH);
+    strcpy(nn->parameters->dataName, "<empty>");
     nn->parameters->epochs = 30;
     nn->parameters->miniBatchSize = 10;
     nn->parameters->eta = 0.5f;
     nn->parameters->lambda = 0.0f;
     nn->parameters->mu = 0.0f;
+    nn->parameters->numberOfLayers = 0;
+    nn->parameters->numberOfActivationFunctions = 0;
+    nn->parameters->numberOfClassifications = 0;
     nn->adapativeLearningRateMethod = 0;
     memset(nn->parameters->topology, 0, sizeof(nn->parameters->topology));
     memset(nn->parameters->classifications, 0, sizeof(nn->parameters->classifications));
@@ -105,7 +108,9 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
         nn->activationDerivatives[i] = NULL;
     }
     
-    nn->load = loadParameters;
+    nn->constructor = allocateConstructor();
+    
+    nn->load_params_from_input_file = loadParametersFromImputFile;
     
     nn->genesis = genesis;
     nn->finale = finale;
@@ -128,6 +133,26 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
 static void genesis(void * _Nonnull self) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    // If the network is constructed with the constructor API, check that all required parameters were defined
+    if (nn->constructor->networkConstruction) {
+        if (nn->parameters->numberOfLayers == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology not defined. Use a constructor or define it in a parameter file.");
+        
+        if (nn->parameters->numberOfActivationFunctions == 0) {
+            for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+                nn->activationFunctions[i] = sigmoid;
+                nn->activationDerivatives[i] = sigmoidPrime;
+            }
+        }
+        
+        if (nn->parameters->split[0] == 0 || nn->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
+        
+        if (nn->parameters->numberOfClassifications == 0) fatal(DEFAULT_CONSOLE_WRITER, "classification not defined. Use a constructor or define it in a parameter file.");
+        
+        char testString[MAX_LONG_STRING_LENGTH];
+        bzero(testString, MAX_LONG_STRING_LENGTH);
+        if (strcmp(nn->parameters->data, testString) == 0) fatal(DEFAULT_CONSOLE_WRITER, "training data not defined. Use a constructor or define it in a parameter file.");
+    }
     
     fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
     fprintf(stdout, "%s: full connected network with %d layers.\n", DEFAULT_CONSOLE_WRITER, nn->parameters->numberOfLayers);
@@ -195,6 +220,7 @@ static void finale(void * _Nonnull self) {
     nn->data->load = NULL;
     free(nn->data);
     free(nn->parameters);
+    free(nn->constructor);
     
     free(nn->weights);
     free(nn->weightsVelocity);

@@ -230,7 +230,7 @@ void * _Nonnull initNetworkCostBiaseDerivatives(int * _Nonnull ntLayers, unsigne
     return (void *)dcdbList;
 }
 
-int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
+int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile) {
     
     definition *definitions = NULL;
     
@@ -243,7 +243,6 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
-    short FOUND_DATA_NAME      = 0;
     short FOUND_DATA           = 0;
     short FOUND_TOPOLOGY       = 0;
     short FOUND_ACTIVATIONS    = 0;
@@ -265,7 +264,6 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
             
             if (strcmp(field->key, "data_name") == 0) {
                 strcpy(nn->parameters->dataName, field->value);
-                FOUND_DATA_NAME = 1;
                 
             } else if (strcmp(field->key, "data") == 0) {
                 strcpy(nn->parameters->data, field->value);
@@ -300,7 +298,7 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                 
                 if (nn->parameters->numberOfActivationFunctions == 1) {
                     if (strcmp(nn->parameters->activationFunctions[0], "softmax") == 0) {
-                        fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units and can't be used for the entire network.");
+                        fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units, not for the entire network.");
                     }
                     for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
                         if (strcmp(nn->parameters->activationFunctions[0], "sigmoid") == 0) {
@@ -407,9 +405,6 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
         pt = pt->next;
     }
     
-    if (FOUND_DATA_NAME == 0) {
-        strcpy(nn->parameters->dataName, "<empty string>");
-    }
     if (FOUND_DATA == 0) {
         fatal(DEFAULT_CONSOLE_WRITER, "missing data in parameters input.");
     }

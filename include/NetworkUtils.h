@@ -25,6 +25,6 @@ void * _Nonnull initNetworkAffineTransformations(int * _Nonnull ntLayers, unsign
 void * _Nonnull initNetworkCostWeightDerivatives(int * _Nonnull ntLayers, unsigned int numberOfLayers);
 void * _Nonnull initNetworkCostBiaseDerivatives(int * _Nonnull ntLayers, unsigned int numberOfLayers);
 
-int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile);
+int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
 
 #endif /* NetworkUtils_h */
