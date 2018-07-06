@@ -75,6 +75,7 @@
 		0161753B20EDE05000FC40FF /* Memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Memory.c; path = src/Memory.c; sourceTree = "<group>"; };
 		0161756120EDE9E800FC40FF /* BrainStorm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BrainStorm.h; path = include/BrainStorm.h; sourceTree = SOURCE_ROOT; };
 		0161756E20EEEDE500FC40FF /* libBrainStorm.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBrainStorm.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		0161758920EEF25600FC40FF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +103,7 @@
 		0161750F20EDDDF500FC40FF = {
 			isa = PBXGroup;
 			children = (
+				0161758920EEF25600FC40FF /* README.md */,
 				0161752620EDDF6600FC40FF /* metal */,
 				0161752920EDDFE600FC40FF /* include */,
 				0161753320EDE03800FC40FF /* src */,

@@ -130,6 +130,7 @@ static void genesis(void * _Nonnull self) {
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
     fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
+    fprintf(stdout, "%s: full connected network with %d layers.\n", DEFAULT_CONSOLE_WRITER, nn->parameters->numberOfLayers);
     
     nn->example_idx = 0;
     nn->number_of_parameters = 0;
