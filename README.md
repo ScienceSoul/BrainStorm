@@ -16,7 +16,7 @@ define {
 ```
 The first and last entries of the topology vector are always respectively the number of imputs and outputs of the network.
 
-The mandatory network are the data name, the location of the training data, the topology of the network, the split and the classfication used for the training. If no activation function is given, a sigmoid function is assumed for all layers. The default values for the optional parameters are:
+The mandatory network parameters are the location of the training data, the topology of the network, the split of the training data and the classfication for the training. If no activation function is given, a sigmoid function is assumed for all layers. The default values for the optional parameters are:
 
 ```
 number of epochs: 30

@@ -1,0 +1,8 @@
+# Mac OX S
+*.DS_Store
+
+# XCode
+BrainStorm.xcodeproj/project.xcworkspace/*
+BrainStorm.xcodeproj/xcuserdata/*
+
+*~

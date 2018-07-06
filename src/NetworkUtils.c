@@ -408,7 +408,7 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
     }
     
     if (FOUND_DATA_NAME == 0) {
-        fatal(DEFAULT_CONSOLE_WRITER, "missing data name in parameters input.");
+        strcpy(nn->parameters->dataName, "<empty string>");
     }
     if (FOUND_DATA == 0) {
         fatal(DEFAULT_CONSOLE_WRITER, "missing data in parameters input.");
