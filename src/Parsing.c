@@ -41,7 +41,7 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
     
     FILE *f1 = fopen(paramsDefFile,"r");
     if(!f1) {
-        fprintf(stdout,"%s: can't find the parameters definition file %s.\n", PROGRAM_NAME, paramsDefFile);
+        fprintf(stdout,"%s: can't find the parameters definition file %s.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
         return NULL;
     }
     
@@ -61,13 +61,13 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
     while(1) {
         ch = fgetc(f1);
         if (ch == -1) {
-            fprintf(stderr, "%s: syntax error in the file %s. File should end with <}>.\n", PROGRAM_NAME, paramsDefFile);
-            fatal(PROGRAM_NAME);
+            fprintf(stderr, "%s: syntax error in the file %s. File should end with <}>.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
+            fatal(DEFAULT_CONSOLE_WRITER);
         }
         if (ch == ' ') continue;
         if (first_character && ch != '{') { // First character in file should be {
-            fprintf(stderr, "%s: syntax error in the file %s. File should start with <{>.\n", PROGRAM_NAME, paramsDefFile);
-            fatal(PROGRAM_NAME);
+            fprintf(stderr, "%s: syntax error in the file %s. File should start with <{>.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
+            fatal(DEFAULT_CONSOLE_WRITER);
         } else if (first_character && ch == '{'){
             first_character = false;
             continue;
@@ -80,7 +80,7 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
             lineCount++;
         } else {
             if (idx > MAX_LONG_STRING_LENGTH) {
-                fatal(PROGRAM_NAME, "string larger than buffer in getDefinitions().");
+                fatal(DEFAULT_CONSOLE_WRITER, "string larger than buffer in getDefinitions().");
             }
             buff[idx] = ch;
             idx++;
@@ -89,7 +89,7 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
                 memset(str, 0, sizeof(str));
                 memcpy(str, buff, strlen(keyword));
                 if (strcmp(str, keyword) != 0) {
-                    fatal(PROGRAM_NAME, "incorrect keyword for parameter definition. Should be:", (char *)keyword);
+                    fatal(DEFAULT_CONSOLE_WRITER, "incorrect keyword for parameter definition. Should be:", (char *)keyword);
                 }
                 // New parameter definition starts here
                 nn->number_of_parameters++;
@@ -163,8 +163,8 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
                         if (ch == ':') {
                             found_key++;
                             if (found_key > 1) {
-                                fprintf(stderr, "%s: syntax error in the file %s. Maybe duplicate character <:>.\n", PROGRAM_NAME, paramsDefFile);
-                                fatal(PROGRAM_NAME);
+                                fprintf(stderr, "%s: syntax error in the file %s. Maybe duplicate character <:>.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
+                                fatal(DEFAULT_CONSOLE_WRITER);
                             }
                             if (first_kv_node) {
                                 field_head = allocateDictionaryNode();
@@ -186,7 +186,7 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
                             buff[idx] = ch;
                             idx++;
                             if (idx >= MAX_LONG_STRING_LENGTH) {
-                                fatal(PROGRAM_NAME, "string larger than buffer in getDefinitions().");
+                                fatal(DEFAULT_CONSOLE_WRITER, "string larger than buffer in getDefinitions().");
                             }
                         }
                     }
@@ -195,7 +195,7 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
         }
     }
     if (total_key_values == 0) {
-        fatal(PROGRAM_NAME, "no network parameters found in definition input file!");
+        fatal(DEFAULT_CONSOLE_WRITER, "no network parameters found in definition input file!");
     }
     
     return definitions;

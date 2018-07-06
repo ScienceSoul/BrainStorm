@@ -110,17 +110,17 @@ void __attribute__((overloadable))parseArgument(const char * _Nonnull argument, 
     int idx = 0;
     *numberOfItems = 0;
     
-    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", PROGRAM_NAME, argumentName, argument);
+    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argumentName, argument);
     
     size_t length = strlen(argument);
-    if (argument[0] != '[' || argument[length-1] != ']') fatal(PROGRAM_NAME, "syntax error in key value. Collections must use the [ ] syntax.");
-    if ( argument[length-2] == ')') fatal(PROGRAM_NAME, "a range definition can't be used for the network output layer.");
+    if (argument[0] != '[' || argument[length-1] != ']') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in key value. Collections must use the [ ] syntax.");
+    if ( argument[length-2] == ')') fatal(DEFAULT_CONSOLE_WRITER, "a range definition can't be used for the network output layer.");
     
     unsigned int checkRange = 0;
     while (1) {
         if (argument[idx] == '[') {
-            if (argument[idx+1] == ',' || argument[idx+1] == '[') fatal(PROGRAM_NAME, "syntax error possibly <[,> or <[[> in key value");
-            if (argument[idx+1] == '(') fatal(PROGRAM_NAME, "a range definition can't be used for the network input layer");
+            if (argument[idx+1] == ',' || argument[idx+1] == '[') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <[,> or <[[> in key value");
+            if (argument[idx+1] == '(') fatal(DEFAULT_CONSOLE_WRITER, "a range definition can't be used for the network input layer");
             idx++;
         }
         
@@ -141,10 +141,10 @@ void __attribute__((overloadable))parseArgument(const char * _Nonnull argument, 
                     idx++;
                     while (1) {
                         if (argument[idx] == ')') {
-                            if (argument[idx+1] != ',') fatal(PROGRAM_NAME, "syntax error in range definition. <}> should be followed by <,>");
-                            if ((layerNumbering[0]-1) - checkRange != 1) fatal(PROGRAM_NAME, "range definition is not compatible with a correct topology of the network.");
+                            if (argument[idx+1] != ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in range definition. <}> should be followed by <,>");
+                            if ((layerNumbering[0]-1) - checkRange != 1) fatal(DEFAULT_CONSOLE_WRITER, "range definition is not compatible with a correct topology of the network.");
                             for (int i=layerNumbering[0]-1; i<layerNumbering[1]; i++) {
-                                if (*numberOfItems >= *len) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+                                if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
                                 result[*numberOfItems] = numberOfUnits;
                                 (*numberOfItems)++;
                             }
@@ -153,7 +153,7 @@ void __attribute__((overloadable))parseArgument(const char * _Nonnull argument, 
                             break;
                         } else {
                             int digit = argument[idx] - '0';
-                            if (digit < 0 || digit > 9) fatal(PROGRAM_NAME, "NaN in key value.");
+                            if (digit < 0 || digit > 9) fatal(DEFAULT_CONSOLE_WRITER, "NaN in key value.");
                             numberOfUnits = numberOfUnits * 10 + digit;
                             idx++;
                         }
@@ -162,19 +162,19 @@ void __attribute__((overloadable))parseArgument(const char * _Nonnull argument, 
                     break;
                 } else {
                     int digit = argument[idx] - '0';
-                    if (digit < 0 || digit > 9) fatal(PROGRAM_NAME, "NaN in key value.");
+                    if (digit < 0 || digit > 9) fatal(DEFAULT_CONSOLE_WRITER, "NaN in key value.");
                     layerNumbering[count] = layerNumbering[count] * 10 + digit;
                     idx++;
                 }
             }
         } else if (argument[idx] == ',') {
-            if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(PROGRAM_NAME, "syntax error possibly <,]> or <,,> in key value.");
+            if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <,]> or <,,> in key value.");
             (*numberOfItems)++;
             idx++;
         } else {
             int digit = argument[idx] - '0';
-            if (digit < 0 || digit > 9) fatal(PROGRAM_NAME, "NaN in key value.");
-            if (*numberOfItems >= *len) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+            if (digit < 0 || digit > 9) fatal(DEFAULT_CONSOLE_WRITER, "NaN in key value.");
+            if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
             result[*numberOfItems] = result[*numberOfItems] * 10 + digit;
             idx++;
         }
@@ -189,17 +189,17 @@ void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument,
     char buffer[MAX_SHORT_STRING_LENGTH];
     
     
-    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", PROGRAM_NAME, argumentName, argument);
+    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argumentName, argument);
     
     size_t length = strlen(argument);
-    if (argument[0] != '[' || argument[length-1] != ']') fatal(PROGRAM_NAME, "syntax error in key value. Collections must use the [ ] syntax.");
-    if ( argument[length-2] == ')') fatal(PROGRAM_NAME, "a range definition can't be used to define the activation function at the network output layer.");
+    if (argument[0] != '[' || argument[length-1] != ']') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in key value. Collections must use the [ ] syntax.");
+    if ( argument[length-2] == ')') fatal(DEFAULT_CONSOLE_WRITER, "a range definition can't be used to define the activation function at the network output layer.");
     
     unsigned int checkRange = 0;
     memset(buffer, 0, sizeof(buffer));
     while (1) {
         if (argument[idx] == '[') {
-            if (argument[idx+1] == ',' || argument[idx+1] == '[') fatal(PROGRAM_NAME, "syntax error possibly <[,> or <[[> in key value");
+            if (argument[idx+1] == ',' || argument[idx+1] == '[') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <[,> or <[[> in key value");
             idx++;
         }
         if (argument[idx] == '~') {
@@ -222,10 +222,10 @@ void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument,
                     idx++;
                     while (1) {
                         if (argument[idx] == ')') {
-                            if (argument[idx+1] != ',') fatal(PROGRAM_NAME, "syntax error in range definition. <}> should be followed by <,>");
-                            if ((layerNumbering[0]-1) - checkRange != 1) fatal(PROGRAM_NAME, "range definition is not compatible with a correct topology of the network.");
+                            if (argument[idx+1] != ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in range definition. <}> should be followed by <,>");
+                            if ((layerNumbering[0]-1) - checkRange != 1) fatal(DEFAULT_CONSOLE_WRITER, "range definition is not compatible with a correct topology of the network.");
                             for (int i=layerNumbering[0]-1; i<layerNumbering[1]; i++) {
-                                if (*numberOfItems >= *len) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+                                if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
                                 memset(result[*numberOfItems], 0, sizeof(result[*numberOfItems]));
                                 memcpy(result[*numberOfItems], buffer, strlen(buffer));
                                 (*numberOfItems)++;
@@ -233,7 +233,7 @@ void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument,
                             checkRange = layerNumbering[1] - 1;
                             break;
                         } else {
-                            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+                            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
                             buffer[bf_idx] = argument[idx];
                             bf_idx++;
                             idx++;
@@ -251,7 +251,7 @@ void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument,
             }
         } else if (argument[idx] == ',' || argument[idx] == ']') {
             if (argument[idx] == ',') {
-                if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(PROGRAM_NAME, "syntax error possibly <,]> or <,,> in key value.");
+                if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <,]> or <,,> in key value.");
             }
             
             if (argument[idx-1] == ')') { // We got here from a previous range definition so jump to next iteration
@@ -259,7 +259,7 @@ void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument,
                 continue;
             }
             
-            if (*numberOfItems >= *len) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+            if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
             memset(result[*numberOfItems], 0, sizeof(result[*numberOfItems]));
             memcpy(result[*numberOfItems], buffer, strlen(buffer));
             (*numberOfItems)++;
@@ -269,7 +269,7 @@ void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument,
             bf_idx = 0;
             checkRange++;
         } else {
-            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
             buffer[bf_idx] = argument[idx];
             bf_idx++;
             idx++;
@@ -285,23 +285,23 @@ void __attribute__ ((overloadable))parseArgument(const char * _Nonnull argument,
     char buffer[MAX_SHORT_STRING_LENGTH];
     
     
-    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", PROGRAM_NAME, argumentName, argument);
+    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argumentName, argument);
     
     size_t lenght = strlen(argument);
-    if (argument[0] != '[' || argument[lenght-1] != ']') fatal(PROGRAM_NAME, "syntax error in key value. Collections must use the [ ] syntax.");
-    if ( argument[lenght-2] == ')') fatal(PROGRAM_NAME, "a range definition can't be used to define the activation function at the network output layer.");
+    if (argument[0] != '[' || argument[lenght-1] != ']') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in key value. Collections must use the [ ] syntax.");
+    if ( argument[lenght-2] == ')') fatal(DEFAULT_CONSOLE_WRITER, "a range definition can't be used to define the activation function at the network output layer.");
     
     memset(buffer, 0, sizeof(buffer));
     while (1) {
         if (argument[idx] == '[') {
-            if (argument[idx+1] == ',' || argument[idx+1] == '[') fatal(PROGRAM_NAME, "syntax error possibly <[,> or <[[> in key value");
+            if (argument[idx+1] == ',' || argument[idx+1] == '[') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <[,> or <[[> in key value");
             idx++;
         }
         if (argument[idx] == ',' || argument[idx] == ']') {
             if (argument[idx] == ',') {
-                if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(PROGRAM_NAME, "syntax error possibly <,]> or <,,> in key value.");
+                if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <,]> or <,,> in key value.");
             }
-            if (*numberOfItems >= *len) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+            if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
             result[*numberOfItems] = strtof(buffer, NULL);
             (*numberOfItems)++;
             if (argument[idx] == ']') break;
@@ -309,7 +309,7 @@ void __attribute__ ((overloadable))parseArgument(const char * _Nonnull argument,
             memset(buffer, 0, sizeof(buffer));
             bf_idx = 0;
         } else {
-            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(PROGRAM_NAME, "buffer overflow when parsing the key:", (char *)argumentName);
+            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
             buffer[bf_idx] = argument[idx];
             bf_idx++;
             idx++;

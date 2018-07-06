@@ -70,7 +70,7 @@ void init (void) {
     
     if (LoadFileIntoString("metal/MetalKernels.metal", &metal_source, &src_len) != 0) {
         if (LoadFileIntoString("../metal/MetalKernels.metal", &metal_source, &src_len) != 0) {
-            fatal(PROGRAM_NAME, "<metal compute>: can't load the metal source file.");
+            fatal(DEFAULT_CONSOLE_WRITER, "<metal compute>: can't load the metal source file.");
         }
     }
     
@@ -79,7 +79,7 @@ void init (void) {
     if (error != nil) {
         fprintf(stderr, "<metal compute>: error when creating a new library state.");
         fprintf(stderr, "<metal compute>: error code: %ld\n", (long)error.code);
-        fatal(PROGRAM_NAME, "Program will abort.");
+        fatal(DEFAULT_CONSOLE_WRITER, "Program will abort.");
     }
     
     functions = [NSMutableArray new];
@@ -162,7 +162,7 @@ void prepare (char * _Nonnull operation) {
             if (error != nil) {
                 fprintf(stderr, "<metal compute>: error when creating a pipeline state.");
                 fprintf(stderr, "<metal compute>: error code: %ld\n", (long)error.code);
-                fatal(PROGRAM_NAME, "Program will abort.");
+                fatal(DEFAULT_CONSOLE_WRITER, "Program will abort.");
             }
             
             [functions addObject:function];

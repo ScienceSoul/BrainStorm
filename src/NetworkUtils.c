@@ -48,7 +48,7 @@ float * _Nonnull initMatrices(int * _Nonnull topology, unsigned int numberOfLaye
     for (int l=0; l<numberOfLayers-1; l++) {
         dim = dim + (topology[l+1]*topology[l]);
     }
-    fprintf(stdout, "%s: matrices allocation: allocate %f (MB)\n", PROGRAM_NAME, ((float)dim*sizeof(float))/(float)(1024*1024));
+    fprintf(stdout, "%s: matrices allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)dim*sizeof(float))/(float)(1024*1024));
     float *matrices = (float *)malloc(dim*sizeof(float));
     
     if (gaussian) {
@@ -81,7 +81,7 @@ float * _Nonnull initVectors(int * _Nonnull topology, unsigned int numberOfLayer
     for (int l=1; l<numberOfLayers; l++) {
         dim  = dim + topology[l];
     }
-    fprintf(stdout, "%s: vectors allocation: allocate %f (MB)\n", PROGRAM_NAME, ((float)dim*sizeof(float))/(float)(1024*1024));
+    fprintf(stdout, "%s: vectors allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)dim*sizeof(float))/(float)(1024*1024));
     float *vectors = (float*)malloc(dim*sizeof(float));
     
     if (gaussian) {
@@ -234,9 +234,11 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
     
     definition *definitions = NULL;
     
+    fprintf(stdout, "%s: load the network and its input parameters...\n", DEFAULT_CONSOLE_WRITER);
+    
     definitions = getDefinitions(self, paraFile, "define");
     if (definitions == NULL) {
-        fatal(PROGRAM_NAME, "problem finding any parameter definition.");
+        fatal(DEFAULT_CONSOLE_WRITER, "problem finding any parameter definition.");
     }
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
@@ -259,7 +261,7 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                     break;
                 }
             }
-            if (!found) fatal(PROGRAM_NAME, "key for parameter not recognized:", field->key);
+            if (!found) fatal(DEFAULT_CONSOLE_WRITER, "key for parameter not recognized:", field->key);
             
             if (strcmp(field->key, "data_name") == 0) {
                 strcpy(nn->parameters->dataName, field->value);
@@ -283,22 +285,22 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                 //      softmax ->  Softmax unit
                 
                 if (FOUND_TOPOLOGY == 0) {
-                    fatal(PROGRAM_NAME, "missing topology in parameters input.");
+                    fatal(DEFAULT_CONSOLE_WRITER, "missing topology in parameters input.");
                 }
                 
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
                 parseArgument(field->value, field->key, nn->parameters->activationFunctions, &nn->parameters->numberOfActivationFunctions, &len);
                 
                 if (nn->parameters->numberOfActivationFunctions > 1 && nn->parameters->numberOfActivationFunctions < nn->parameters->numberOfLayers-1) {
-                    fatal(PROGRAM_NAME, "the number of activation functions in parameters is too low. Can't resolve how to use the provided activations. ");
+                    fatal(DEFAULT_CONSOLE_WRITER, "the number of activation functions in parameters is too low. Can't resolve how to use the provided activations. ");
                 }
                 if (nn->parameters->numberOfActivationFunctions > nn->parameters->numberOfLayers-1) {
-                    fprintf(stdout, "%s: too many activation functions given to network. Will ignore the extra ones.\n", PROGRAM_NAME);
+                    fprintf(stdout, "%s: too many activation functions given to network. Will ignore the extra ones.\n", DEFAULT_CONSOLE_WRITER);
                 }
                 
                 if (nn->parameters->numberOfActivationFunctions == 1) {
                     if (strcmp(nn->parameters->activationFunctions[0], "softmax") == 0) {
-                        fatal(PROGRAM_NAME, "the softmax function can only be used for the output units and can't be used for the entire network.");
+                        fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units and can't be used for the entire network.");
                     }
                     for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
                         if (strcmp(nn->parameters->activationFunctions[0], "sigmoid") == 0) {
@@ -310,7 +312,7 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                         } else if (strcmp(nn->parameters->activationFunctions[0], "tanh") == 0) {
                             nn->activationFunctions[i] = tan_h;
                             nn->activationDerivatives[i] = tanhPrime;
-                        } else fatal(PROGRAM_NAME, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[0]);
+                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[0]);
                     }
                 } else {
                     for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
@@ -326,11 +328,11 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                         } else if (strcmp(nn->parameters->activationFunctions[i], "softmax") == 0) {
                             // The sofmax function is only supported for the output units
                             if (i < nn->parameters->numberOfLayers-2) {
-                                fatal(PROGRAM_NAME, "the softmax function can't be used for the hiden units, only for the output units.");
+                                fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can't be used for the hiden units, only for the output units.");
                             }
                             nn->activationFunctions[i] = softmax;
                             nn->activationDerivatives[i] = NULL;
-                        } else fatal(PROGRAM_NAME, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[i]);
+                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[i]);
                     }
                 }
                 FOUND_ACTIVATIONS = 1;
@@ -340,7 +342,7 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                 unsigned int len = 2;
                 parseArgument(field->value,  field->key, nn->parameters->split, &n, &len);
                 if (n < 2) {
-                    fatal(PROGRAM_NAME, " data splitting requires two values: one for training, one for testing/evaluation.");
+                    fatal(DEFAULT_CONSOLE_WRITER, " data splitting requires two values: one for training, one for testing/evaluation.");
                 }
                 FOUND_SPLIT = 1;
                 
@@ -376,7 +378,7 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                 float result[2];
                 unsigned int numberOfItems, len = 2;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
-                if (numberOfItems < 2) fatal(PROGRAM_NAME, "the decay rate and a small constant should be given for the RMSProp method.");
+                if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the decay rate and a small constant should be given for the RMSProp method.");
                 nn->rmsProp->decayRate = result[0];
                 nn->rmsProp->delta = result[1];
                 nn->rmsProp->costWeightDerivativeSquaredAccumulated = NULL;
@@ -388,7 +390,7 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
                 float result[4];
                 unsigned int numberOfItems, len=4;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
-                if (numberOfItems < 4) fatal(PROGRAM_NAME, "The step size, two decay rates and a small constant should be given for the Adam method.");
+                if (numberOfItems < 4) fatal(DEFAULT_CONSOLE_WRITER, "The step size, two decay rates and a small constant should be given for the Adam method.");
                 nn->adam->time = 0;
                 nn->adam->stepSize = result[0];
                 nn->adam->decayRate1 = result[1];
@@ -406,13 +408,13 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
     }
     
     if (FOUND_DATA_NAME == 0) {
-        fatal(PROGRAM_NAME, "missing data name in parameters input.");
+        fatal(DEFAULT_CONSOLE_WRITER, "missing data name in parameters input.");
     }
     if (FOUND_DATA == 0) {
-        fatal(PROGRAM_NAME, "missing data in parameters input.");
+        fatal(DEFAULT_CONSOLE_WRITER, "missing data in parameters input.");
     }
     if (FOUND_TOPOLOGY == 0) {
-        fatal(PROGRAM_NAME, "missing topology in parameters input.");
+        fatal(DEFAULT_CONSOLE_WRITER, "missing topology in parameters input.");
     }
     if (FOUND_ACTIVATIONS == 0) {
         for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
@@ -421,10 +423,10 @@ int loadParameters(void * _Nonnull self, const char * _Nonnull paraFile) {
         }
     }
     if (FOUND_SPLIT == 0) {
-        fatal(PROGRAM_NAME, "missing split in parameters input.");
+        fatal(DEFAULT_CONSOLE_WRITER, "missing split in parameters input.");
     }
     if (FOUND_CLASSIFICATION == 0) {
-        fatal(PROGRAM_NAME, "missing classification in parameters input.");
+        fatal(DEFAULT_CONSOLE_WRITER, "missing classification in parameters input.");
     }
     
     return 0;

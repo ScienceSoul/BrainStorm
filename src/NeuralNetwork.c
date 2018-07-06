@@ -25,7 +25,7 @@ static void genesis(void * _Nonnull self);
 static void finale(void * _Nonnull self);
 static void gpu_alloc(void * _Nonnull self);
 
-static void computeNeural(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost);
+static void trainNetwork(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost);
 
 static void miniBatch(void * _Nonnull self, float * _Nonnull * _Nonnull miniBatch);
 
@@ -110,7 +110,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->genesis = genesis;
     nn->finale = finale;
     nn->gpu_alloc = gpu_alloc;
-    nn->compute = computeNeural;
+    nn->train = trainNetwork;
     nn->miniBatch = miniBatch;
     nn->updateWeightsBiases = updateWeightsBiases;
     nn->batchAccumulation = batchAccumulation;
@@ -128,6 +128,8 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
 static void genesis(void * _Nonnull self) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
     
     nn->example_idx = 0;
     nn->number_of_parameters = 0;
@@ -320,10 +322,12 @@ static void gpu_alloc(void * _Nonnull self) {
     nn->gpu = metalCompute();
 }
 
-static void computeNeural(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost) {
+static void trainNetwork(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     nn->number_of_features = nn->parameters->topology[0];
+    
+    fprintf(stdout, "%s: train neural network with the %s data set.\n", DEFAULT_CONSOLE_WRITER, nn->parameters->dataName);
     
     // Stochastic gradient descent
     float **miniBatch = floatmatrix(0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
@@ -333,7 +337,7 @@ static void computeNeural(void * _Nonnull self, bool metal, bool * _Nullable sho
         delta = 0;
         shuffle(nn->data->training->set, nn->data->training->m, nn->data->training->n);
         
-        fprintf(stdout, "%s: Epoch {%d/%d}:\n", PROGRAM_NAME, k, nn->parameters->epochs);
+        fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs);
         double train_time = 0.0;
         const int percentPrint = 5;
         int train_size = (int)nn->data->training->m/nn->parameters->miniBatchSize;
@@ -356,12 +360,12 @@ static void computeNeural(void * _Nonnull self, bool metal, bool * _Nullable sho
                 nextPrint += step;
             }
         }
-        fprintf(stdout, "%s: time to complete all training data set (s): %f\n", PROGRAM_NAME, train_time);
+        fprintf(stdout, "%s: time to complete all training data set (s): %f\n", DEFAULT_CONSOLE_WRITER, train_time);
         
         if (nn->data->test->set != NULL) {
-            fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", PROGRAM_NAME, k, nn->parameters->epochs, nn->data->test->m);
+            fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, nn->data->test->m);
             int result = nn->evaluate(self, metal);
-            fprintf(stdout, "%s: Epoch {%d/%d}: {%d} / {%u}.\n", PROGRAM_NAME, k, nn->parameters->epochs, result, nn->data->test->m);
+            fprintf(stdout, "%s: Epoch {%d/%d}: {%d} / {%u}.\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, result, nn->data->test->m);
         }
         
         if (showTotalCost != NULL) {
@@ -369,13 +373,13 @@ static void computeNeural(void * _Nonnull self, bool metal, bool * _Nullable sho
                 double rt = realtime();
                 float cost = nn->totalCost(self, nn->data->training->set, nn->data->training->m, false);
                 rt = realtime() -  rt;
-                fprintf(stdout, "%s: cost on training data: {%f} / Time (s): %f\n", PROGRAM_NAME, cost, rt);
+                fprintf(stdout, "%s: cost on training data: {%f} / Time (s): %f\n", DEFAULT_CONSOLE_WRITER, cost, rt);
                 
                 if (nn->data->test->set != NULL) {
                     double rt = realtime();
                     cost = nn->totalCost(self, nn->data->test->set, nn->data->test->m, true);
                     rt = realtime() -  rt;
-                    fprintf(stdout, "%s: cost on test data: {%f} / Time (s): %f\n", PROGRAM_NAME, cost, rt);
+                    fprintf(stdout, "%s: cost on test data: {%f} / Time (s): %f\n", DEFAULT_CONSOLE_WRITER, cost, rt);
                 }
             }
         }
@@ -383,6 +387,7 @@ static void computeNeural(void * _Nonnull self, bool metal, bool * _Nullable sho
     }
 
     free_fmatrix(miniBatch, 0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
+    fprintf(stdout, "%s: all done.\n", DEFAULT_CONSOLE_WRITER);
 }
 
 static void miniBatch(void * _Nonnull self, float * _Nonnull * _Nonnull miniBatch) {
@@ -421,7 +426,7 @@ static void miniBatch(void * _Nonnull self, float * _Nonnull * _Nonnull miniBatc
     }
     rt = realtime() - rt;
 #ifdef VERBOSE
-    fprintf(stdout, "%s: time to complete a single mini-batch (s): %f\n", PROGRAM_NAME, rt);
+    fprintf(stdout, "%s: time to complete a single mini-batch (s): %f\n", DEFAULT_CONSOLE_WRITER, rt);
 #endif
     
     nn->updateWeightsBiases((void *)nn);
@@ -790,7 +795,7 @@ static int evaluate(void * _Nonnull self, bool metal) {
     rt = realtime() - rt;
 #endif
     
-    fprintf(stdout, "%s: total infer time in evaluation for %u input test data (s): %f\n", PROGRAM_NAME, nn->data->test->m, rt);
+    fprintf(stdout, "%s: total infer time in evaluation for %u input test data (s): %f\n", DEFAULT_CONSOLE_WRITER, nn->data->test->m, rt);
     
     return sum;
 }

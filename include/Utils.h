@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#define PROGRAM_NAME "FeedforwardNT"
+#define DEFAULT_CONSOLE_WRITER "BrainStorm"
 
 #define MAX_NUMBER_NETWORK_LAYERS 500
 #define MAX_SUPPORTED_PARAMETERS 50

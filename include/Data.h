@@ -9,6 +9,8 @@
 #ifndef Data_h
 #define Data_h
 
+#include "stdbool.h"
+
 void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const char * _Nonnull trainFile, const char * _Nonnull testFile, bool testData);
 
 #endif /* Data_h */

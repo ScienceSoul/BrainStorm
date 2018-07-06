@@ -18,7 +18,7 @@ static float * _Nonnull * _Nonnull createTrainigData(float * _Nonnull * _Nonnull
     *t2 = ntLayers[0]+ntLayers[numberOfLayers-1];
     
     if (ntLayers[numberOfLayers-1] != numberOfClassifications) {
-        fatal(PROGRAM_NAME, "the number of classifications should be equal to the number of activations at the output layer.");
+        fatal(DEFAULT_CONSOLE_WRITER, "the number of classifications should be equal to the number of activations at the output layer.");
     }
     
     for (int i=0; i<end; i++) {
@@ -60,16 +60,18 @@ void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const cha
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
-    fprintf(stdout, "%s: load the <%s> training data set.\n", PROGRAM_NAME, dataSetName);
+    fprintf(stdout, "%s: load the <%s> training data set...\n", DEFAULT_CONSOLE_WRITER, dataSetName);
     raw_training = nn->data->training->reader(trainFile, &len1, &len2);
     shuffle(raw_training, len1, len2);
     
     nn->data->training->set = createTrainigData(raw_training, 0, nn->parameters->split[0], &nn->data->training->m, &nn->data->training->n, nn->parameters->classifications, nn->parameters->numberOfClassifications, nn->parameters->topology, nn->parameters->numberOfLayers);
     
     if (testData) {
+         fprintf(stdout, "%s: load test data set in <%s>...\n", DEFAULT_CONSOLE_WRITER, dataSetName);
         nn->data->test->set = nn->data->test->reader(testFile, &nn->data->test->m, &nn->data->test->n);
         nn->data->validation->set = getData(raw_training, len1, len2, nn->parameters->split[0], nn->parameters->split[1], &nn->data->validation->m, &nn->data->validation->n);
     } else {
         nn->data->test->set = getData(raw_training, len1, len2, nn->parameters->split[0], nn->parameters->split[1], &nn->data->test->m, &nn->data->test->n);
     }
+    fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
 }

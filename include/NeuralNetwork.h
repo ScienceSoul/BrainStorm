@@ -119,7 +119,7 @@ typedef struct NeuralNetwork {
     void (* _Nullable finale)(void * _Nonnull self);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
-    void (* _Nullable compute)(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost);
+    void (* _Nullable train)(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost);
     void (* _Nullable miniBatch)(void * _Nonnull self, float * _Nonnull * _Nonnull miniBatch);
     void (* _Nullable updateWeightsBiases)(void * _Nonnull self);
     void (* _Nullable batchAccumulation)(void * _Nonnull self);
