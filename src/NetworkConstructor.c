@@ -12,7 +12,7 @@
 
 void layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation) {
     
-    bool firstTime = true;
+    static bool firstTime = true;
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
