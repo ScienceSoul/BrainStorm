@@ -37,29 +37,56 @@ void * _Nonnull allocateCostBiaseDerivativeNode(void) {
 }
 
 //
-//  Create the matrices of the network, typically used to create the weights and the weights velocity.
+//  Allocate and initialize serialized matrices
 //  They are initialized using a Gaussian distribution with mean 0
 //  and standard deviation 1 over the square root of the number of
 //  weights/velocities connecting to the same neuron.
 //
-float * _Nonnull initMatrices(int * _Nonnull topology, unsigned int numberOfLayers, bool gaussian) {
+float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _Nonnull strategy) {
+    
+    NeuralNetwork* nn= (NeuralNetwork *)self;
+    
+    if (init) {
+        if (strategy == NULL) fatal(DEFAULT_CONSOLE_WRITER, " initialization required but NULL strategy.");
+    }
     
     int dim = 0;
-    for (int l=0; l<numberOfLayers-1; l++) {
-        dim = dim + (topology[l+1]*topology[l]);
+    for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+        dim = dim + (nn->parameters->topology[l+1]*nn->parameters->topology[l]);
     }
     fprintf(stdout, "%s: matrices allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)dim*sizeof(float))/(float)(1024*1024));
     float *matrices = (float *)malloc(dim*sizeof(float));
     
-    if (gaussian) {
+    if (init) {
         int stride = 0;
-        for (int l=0; l<numberOfLayers-1; l++) {
-            int m = topology[l+1];
-            int n = topology[l];
-            for (int i = 0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    matrices[stride+((i*n)+j)] = randn(0.0f, 1.0f) / sqrtf((float)n);
+        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+            int m = nn->parameters->topology[l+1];
+            int n = nn->parameters->topology[l];
+            // Output layer always initialized the same way
+            if (strcmp(strategy, "default") == 0 || l == nn->parameters->numberOfLayers-2) {
+                for (int i = 0; i<m; i++) {
+                    for (int j=0; j<n; j++) {
+                        matrices[stride+((i*n)+j)] = randn(0.0f, 1.0f) / sqrtf((float)n);
+                    }
                 }
+            } else if (strcmp(strategy, "xavier-he") == 0  && l < nn->parameters->numberOfLayers-2) { // xavier-he only used for hidden layers
+                float standard_deviation = 0.0f;
+                int n_inputs = m * n;
+                int n_outputs = m * nn->parameters->topology[l+2];
+                if (strcmp(nn->parameters->activationFunctions[l], "sigmoid") == 0) {
+                    standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
+                } else if (strcmp(nn->parameters->activationFunctions[l], "tanh") == 0) {
+                    standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
+                } else if (strcmp(nn->parameters->activationFunctions[l], "relu") == 0) {
+                    standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
+                }
+                for (int i = 0; i<m; i++) {
+                    for (int j=0; j<n; j++) {
+                        matrices[stride+((i*n)+j)] = randn(0.0f, standard_deviation);
+                    }
+                }
+            } else {
+                fatal(DEFAULT_CONSOLE_WRITER, "unrecognized initializer in matrices.");
             }
             stride = stride + (m * n);
         }
@@ -71,23 +98,29 @@ float * _Nonnull initMatrices(int * _Nonnull topology, unsigned int numberOfLaye
 }
 
 //
-//  Create the vectors of the network, typically used to create the biases and the biases velocity.
+//  Allocate and initialize serialized vectors
 //  They are initialized using a Gaussian distribution with mean 0
 //  and standard deviation 1.
 //
-float * _Nonnull initVectors(int * _Nonnull topology, unsigned int numberOfLayers, bool gaussian) {
+float * _Nonnull initVectors(void * _Nonnull self, bool init, char * _Nonnull strategy) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    if (init) {
+        if (strategy == NULL) fatal(DEFAULT_CONSOLE_WRITER, " initialization required but NULL strategy.");
+    }
     
     int dim = 0;
-    for (int l=1; l<numberOfLayers; l++) {
-        dim  = dim + topology[l];
+    for (int l=1; l<nn->parameters->numberOfLayers; l++) {
+        dim  = dim + nn->parameters->topology[l];
     }
     fprintf(stdout, "%s: vectors allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)dim*sizeof(float))/(float)(1024*1024));
     float *vectors = (float*)malloc(dim*sizeof(float));
     
-    if (gaussian) {
+    if (init) {
         int stride = 0;
-        for (int l=1; l<numberOfLayers; l++) {
-            int n = topology[l];
+        for (int l=1; l<nn->parameters->numberOfLayers; l++) {
+            int n = nn->parameters->topology[l];
             for (int i = 0; i<n; i++) {
                 vectors[stride+i] = randn(0.0f, 1.0f);
             }
@@ -98,6 +131,19 @@ float * _Nonnull initVectors(int * _Nonnull topology, unsigned int numberOfLayer
     }
     
     return vectors;
+}
+
+float * _Nonnull tensor(void * _Nonnull self, tensor_dict tensor_dict) {
+    
+    float *tensor = NULL;
+    if (tensor_dict.rank == 1) {
+        tensor = initVectors(self, tensor_dict.init, tensor_dict.init_stategy);
+    } else if (tensor_dict.rank == 2) {
+        tensor = initMatrices(self, tensor_dict.init, tensor_dict.init_stategy);
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "creating a tensor with rank > 2 is not currently supported.");
+    }
+    return tensor;
 }
 
 //

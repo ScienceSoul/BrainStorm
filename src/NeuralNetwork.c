@@ -15,12 +15,11 @@
 #include "NeuralNetwork.h"
 #include "Memory.h"
 #include "Parsing.h"
-#include "NetworkUtils.h"
 #include "TimeProfile.h"
 
 static void initNeuralData(void * _Nonnull self);
 
-static void genesis(void * _Nonnull self);
+static void genesis(void * _Nonnull self, char * _Nonnull init_stategy);
 static void finale(void * _Nonnull self);
 static void gpu_alloc(void * _Nonnull self);
 
@@ -113,6 +112,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     
     nn->genesis = genesis;
     nn->finale = finale;
+    nn->tensor = tensor;
     nn->gpu_alloc = gpu_alloc;
     nn->train = trainNetwork;
     nn->miniBatch = miniBatch;
@@ -129,7 +129,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
 //
 //  Create the network layers, i.e. allocates memory for the weight, bias, activation, z, dC/dx and dC/db data structures
 //
-static void genesis(void * _Nonnull self) {
+static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
@@ -173,30 +173,49 @@ static void genesis(void * _Nonnull self) {
         nn->biasesDimensions[l-1].n = nn->parameters->topology[l];
     }
     
-    nn->weights = initMatrices(nn->parameters->topology, nn->parameters->numberOfLayers, true);
-    nn->weightsVelocity = initMatrices(nn->parameters->topology, nn->parameters->numberOfLayers, true);
-    nn->biases = initVectors(nn->parameters->topology, nn->parameters->numberOfLayers, true);
-    nn->biasesVelocity = initVectors(nn->parameters->topology, nn->parameters->numberOfLayers, true);
-    nn->networkActivations = (activationNode *)initNetworkActivations(nn->parameters->topology, nn->parameters->numberOfLayers);
-    nn->networkAffineTransformations = (affineTransformationNode *)initNetworkAffineTransformations(nn->parameters->topology, nn->parameters->numberOfLayers);
-    nn->networkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
-    nn->networkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
-    nn->deltaNetworkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
-    nn->deltaNetworkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+    if (nn->weights == NULL)
+        nn->weights = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=true, .init_stategy=init_stategy});
+    if (nn->weightsVelocity == NULL)
+        nn->weightsVelocity = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=true, .init_stategy=init_stategy});
+    if (nn->biases == NULL)
+        nn->biases = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=true, .init_stategy=init_stategy});
+    if (nn->biasesVelocity == NULL)
+        nn->biasesVelocity = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=true, .init_stategy=init_stategy});
+    
+    if (nn->networkActivations == NULL)
+        nn->networkActivations = (activationNode *)initNetworkActivations(nn->parameters->topology, nn->parameters->numberOfLayers);
+    if (nn->networkAffineTransformations == NULL)
+        nn->networkAffineTransformations = (affineTransformationNode *)initNetworkAffineTransformations(nn->parameters->topology, nn->parameters->numberOfLayers);
+    if (nn->networkCostWeightDerivatives == NULL)
+        nn->networkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+    if (nn->networkCostBiaseDerivatives == NULL)
+        nn->networkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+    if (nn->deltaNetworkCostWeightDerivatives == NULL)
+        nn->deltaNetworkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+    if (nn->deltaNetworkCostBiaseDerivatives == NULL)
+        nn->deltaNetworkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
     
     if (nn->adaGrad != NULL) {
-        nn->adaGrad->costWeightDerivativeSquaredAccumulated = initMatrices(nn->parameters->topology, nn->parameters->numberOfLayers, false);
-        nn->adaGrad->costBiasDerivativeSquaredAccumulated = initVectors(nn->parameters->topology, nn->parameters->numberOfLayers, false);
+        if (nn->adaGrad->costWeightDerivativeSquaredAccumulated == NULL)
+            nn->adaGrad->costWeightDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->adaGrad->costBiasDerivativeSquaredAccumulated == NULL)
+            nn->adaGrad->costBiasDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     }
     if (nn->rmsProp != NULL) {
-        nn->rmsProp->costWeightDerivativeSquaredAccumulated = initMatrices(nn->parameters->topology, nn->parameters->numberOfLayers, false);
-        nn->rmsProp->costBiasDerivativeSquaredAccumulated = initVectors(nn->parameters->topology, nn->parameters->numberOfLayers, false);
+        if (nn->rmsProp->costWeightDerivativeSquaredAccumulated == NULL)
+            nn->rmsProp->costWeightDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->rmsProp->costBiasDerivativeSquaredAccumulated == NULL)
+            nn->rmsProp->costBiasDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     }
     if (nn->adam != NULL) {
-        nn->adam->weightsBiasedFirstMomentEstimate = initMatrices(nn->parameters->topology, nn->parameters->numberOfLayers, false);
-        nn->adam->weightsBiasedSecondMomentEstimate = initMatrices(nn->parameters->topology, nn->parameters->numberOfLayers, false);
-        nn->adam->biasesBiasedFirstMomentEstimate = initVectors(nn->parameters->topology, nn->parameters->numberOfLayers, false);
-        nn->adam->biasesBiasedSecondMomentEstimate = initVectors(nn->parameters->topology, nn->parameters->numberOfLayers, false);
+        if (nn->adam->weightsBiasedFirstMomentEstimate == NULL)
+            nn->adam->weightsBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->adam->weightsBiasedSecondMomentEstimate == NULL)
+            nn->adam->weightsBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->adam->biasesBiasedFirstMomentEstimate == NULL)
+            nn->adam->biasesBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+        if (nn->adam->biasesBiasedSecondMomentEstimate == NULL)
+            nn->adam->biasesBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     }
 }
 
@@ -353,7 +372,7 @@ static void trainNetwork(void * _Nonnull self, bool metal, bool * _Nullable show
     NeuralNetwork *nn = (NeuralNetwork *)self;
     nn->number_of_features = nn->parameters->topology[0];
     
-    fprintf(stdout, "%s: train neural network with the %s data set.\n", DEFAULT_CONSOLE_WRITER, nn->parameters->dataName);
+    if (strcmp(nn->parameters->dataName, "<empty>") != 0) fprintf(stdout, "%s: train neural network with the %s data set.\n", DEFAULT_CONSOLE_WRITER, nn->parameters->dataName);
     
     // Stochastic gradient descent
     float **miniBatch = floatmatrix(0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);

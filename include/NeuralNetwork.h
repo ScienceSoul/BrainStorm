@@ -11,8 +11,8 @@
 #include "Data.h"
 #include "NetworkParams.h"
 #include "NetworkConstructor.h"
+#include "NetworkUtils.h"
 #include "MetalCompute.h"
-#include "Utils.h"
 #include "Optimization.h"
 
 typedef struct weightMatrixDimension {
@@ -85,8 +85,9 @@ typedef struct NeuralNetwork {
     RMSProp * _Nullable rmsProp;
     Adam    * _Nullable adam;
     
-    void (* _Nullable genesis)(void * _Nonnull self);
+    void (* _Nullable genesis)(void * _Nonnull self, char * _Nonnull init_stategy);
     void (* _Nullable finale)(void * _Nonnull self);
+    float * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
     void (* _Nullable train)(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost);
