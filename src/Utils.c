@@ -464,6 +464,18 @@ float leakyreluPrime(float z) {
     return (z <= 0) ? 0.01f : 1.0f;
 }
 
+// The ELU (exponential linear unit) function
+float elu(float z, float * _Nullable vec, unsigned int * _Nullable n) {
+    float alpha = 1.0f;
+    return (z >= 0) ? z : alpha * (expf(z) - 1.0f);
+}
+
+// Derivative of the ELU function
+float eluPrime (float z) {
+    float alpha = 1.0f;
+    return (z >= 0) ? 1 : alpha * expf(z);
+}
+
 // The softmax function
 float softmax(float z, float * _Nullable vec, unsigned int * _Nullable n) {
     float sum = 0;

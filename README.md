@@ -58,7 +58,7 @@ define {
 The topology, activation function, split, classification, RMSProp and Adam parameters must always be defined as a vector of values with the [ ] syntax. Other parameters are simply scalars.
 
 The values used by the RMSProp method must be defined in the order: [decay rate, delta].
-The values used by the Adam method must be defined in the order: [time, step size, decay rate 1, decay rate 2, delta].
+The values used by the Adam method must be defined in the order: [step size, decay rate 1, decay rate 2, delta].
 
 If a seperate test data set is provided, then validation data are also created from the training set using the split. Otherwise test data are created from the training set using the split.
 

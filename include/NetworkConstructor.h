@@ -19,7 +19,7 @@ typedef struct scalar_dict {
 
 typedef struct adaptive_dict {
     float scalar;
-    float vector[4];
+    float * _Nullable vector;
 } adaptive_dict;
 
 typedef struct networkConstructor {

@@ -78,7 +78,8 @@ float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _Nonnull s
                 } else if (strcmp(nn->parameters->activationFunctions[l], "tanh") == 0) {
                     standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
                 } else if (strcmp(nn->parameters->activationFunctions[l], "relu") == 0 ||
-                           strcmp(nn->parameters->activationFunctions[l], "leakyrelu") == 0) {
+                           strcmp(nn->parameters->activationFunctions[l], "leakyrelu") == 0 ||
+                           strcmp(nn->parameters->activationFunctions[l], "elu") == 0) {
                     standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
                 }
                 for (int i = 0; i<m; i++) {
@@ -357,6 +358,9 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                         } else if (strcmp(nn->parameters->activationFunctions[0], "leakyrelu") == 0) {
                             nn->activationFunctions[i] = leakyrelu;
                             nn->activationDerivatives[i] = leakyreluPrime;
+                        } else if (strcmp(nn->parameters->activationFunctions[0], "elu") == 0) {
+                            nn->activationFunctions[i] = elu;
+                            nn->activationDerivatives[i] = eluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[0], "tanh") == 0) {
                             nn->activationFunctions[i] = tan_h;
                             nn->activationDerivatives[i] = tanhPrime;
@@ -373,6 +377,9 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                         } else if (strcmp(nn->parameters->activationFunctions[i], "leakyrelu") == 0) {
                             nn->activationFunctions[i] = leakyrelu;
                             nn->activationDerivatives[i] = leakyreluPrime;
+                        } else if (strcmp(nn->parameters->activationFunctions[i], "elu") == 0) {
+                            nn->activationFunctions[i] = elu;
+                            nn->activationDerivatives[i] = eluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[i], "tanh") == 0) {
                             nn->activationFunctions[i] = tan_h;
                             nn->activationDerivatives[i] = tanhPrime;

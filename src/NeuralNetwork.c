@@ -176,11 +176,11 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     if (nn->weights == NULL)
         nn->weights = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=true, .init_stategy=init_stategy});
     if (nn->weightsVelocity == NULL)
-        nn->weightsVelocity = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=true, .init_stategy=init_stategy});
+        nn->weightsVelocity = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
     if (nn->biases == NULL)
         nn->biases = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=true, .init_stategy=init_stategy});
     if (nn->biasesVelocity == NULL)
-        nn->biasesVelocity = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=true, .init_stategy=init_stategy});
+        nn->biasesVelocity = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     
     if (nn->networkActivations == NULL)
         nn->networkActivations = (activationNode *)initNetworkActivations(nn->parameters->topology, nn->parameters->numberOfLayers);
