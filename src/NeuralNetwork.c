@@ -568,7 +568,7 @@ static void updateWeightsBiases(void * _Nonnull self) {
             }
             for (int i=0; i<m; i++) {
                 for (int j=0; j<n; j++) {
-                    coeff[i][j] = nn->adam->stepSize*( s_hat[i][j] / (sqrtf(r_hat[i][j])+nn->adam->delta) );
+                    coeff[i][j] = nn->adam->stepSize*( s_hat[i][j] / (sqrtf(r_hat[i][j]+nn->adam->delta)) );
                 }
             }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -641,7 +641,7 @@ static void updateWeightsBiases(void * _Nonnull self) {
                 r_hat[i] = nn->adam->biasesBiasedSecondMomentEstimate[stride+i] / (1.0f - powf(nn->adam->decayRate2, (float)nn->adam->time));
             }
             for (int i=0; i<n; i++) {
-                coeff[i] = nn->adam->stepSize*( s_hat[i] / (sqrtf(r_hat[i])+nn->adam->delta) );
+                coeff[i] = nn->adam->stepSize*( s_hat[i] / (sqrtf(r_hat[i]+nn->adam->delta)) );
             }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             
