@@ -444,14 +444,24 @@ float tanhPrime(float z) {
     return 1.0f - powf(tanhf(z), 2.0f);
 }
 
-// The relu function
+// The ReLU function
 float relu(float z, float * _Nullable vec, unsigned int * _Nullable n) {
     return fmaxf(z, 0.0f);
 }
 
-// Derivative of the relu function
+// Derivative of the ReLU function
 float reluPrime(float z) {
     return (z <= 0) ? 0.0f : 1.0f;
+}
+
+// The LeakyReLU function
+float leakyrelu(float z, float * _Nullable vec, unsigned int * _Nullable n) {
+    return fmaxf(0.01f*z, z);
+}
+
+// Derivative of the LeakyReLU function
+float leakyreluPrime(float z) {
+    return (z <= 0) ? 0.01f : 1.0f;
 }
 
 // The softmax function

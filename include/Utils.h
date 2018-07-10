@@ -60,6 +60,9 @@ float tanhPrime(float z);
 float relu(float z, float * _Nullable vec, unsigned int * _Nullable n);
 float reluPrime(float z);
 
+float leakyrelu(float z, float * _Nullable vec, unsigned int * _Nullable n);
+float leakyreluPrime(float z);
+
 float softmax(float z, float * _Nullable vec, unsigned int * _Nullable n);
 
 float crossEntropyCost(float * _Nonnull a, float * _Nonnull y, unsigned int n);

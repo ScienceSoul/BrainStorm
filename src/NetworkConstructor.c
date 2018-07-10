@@ -49,6 +49,10 @@ void set_layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull t
             strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "relu");
             nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = relu;
             nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = reluPrime;
+        } else if (strcmp(activation, "leakyrelu") == 0) {
+            strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "leakyrelu");
+            nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = leakyrelu;
+            nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = leakyreluPrime;
         } else if (strcmp(activation, "tanh") == 0) {
             strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "tanh");
             nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = tan_h;
