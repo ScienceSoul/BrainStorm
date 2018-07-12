@@ -18,6 +18,7 @@
 #include "NeuralNetwork.h"
 #include "Optimization.h"
 #include "Parsing.h"
+#include "Regularization.h"
 #include "TimeProfile.h"
 #include "Utils.h"
 
