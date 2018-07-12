@@ -39,6 +39,10 @@ static float totalCost(void * _Nonnull self, float * _Nonnull * _Nonnull data, u
 
 static void feedforward(void * _Nonnull self);
 
+float l0_regularizer(void * _Nonnull neural, int i, int j, int n, int stride);
+float l1_regularizer(void * _Nonnull neural, int i, int j, int n, int stride);
+float l2_regularizer(void * _Nonnull neural, int i, int j, int n, int stride);
+
 
 static void initNeuralData(void * _Nonnull self) {
     
@@ -78,11 +82,12 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     strcpy(nn->parameters->supported_parameters[6], "epochs");
     strcpy(nn->parameters->supported_parameters[7], "batch_size");
     strcpy(nn->parameters->supported_parameters[8], "learning_rate");
-    strcpy(nn->parameters->supported_parameters[9], "regularization_factor");
-    strcpy(nn->parameters->supported_parameters[10], "momentum");
-    strcpy(nn->parameters->supported_parameters[11], "adagrad");
-    strcpy(nn->parameters->supported_parameters[12], "rmsprop");
-    strcpy(nn->parameters->supported_parameters[13], "adam");
+    strcpy(nn->parameters->supported_parameters[9], "l1_regularization");
+    strcpy(nn->parameters->supported_parameters[10], "l2_regularization");
+    strcpy(nn->parameters->supported_parameters[11], "momentum");
+    strcpy(nn->parameters->supported_parameters[12], "adagrad");
+    strcpy(nn->parameters->supported_parameters[13], "rmsprop");
+    strcpy(nn->parameters->supported_parameters[14], "adam");
     
     bzero(nn->parameters->data, MAX_LONG_STRING_LENGTH);
     strcpy(nn->parameters->dataName, "<empty>");
@@ -122,6 +127,10 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->evaluate = evaluate;
     nn->totalCost = totalCost;
     nn->feedforward = feedforward;
+    
+    nn->l0_regularizer = l0_regularizer;
+    nn->l1_regularizer = l1_regularizer;
+    nn->l2_regularizer = l2_regularizer;
     
     return nn;
 }
@@ -585,7 +594,8 @@ static void updateWeightsBiases(void * _Nonnull self) {
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 nn->weightsVelocity[stride+((i*n)+j)] = nn->parameters->mu*nn->weightsVelocity[stride+((i*n)+j)] - coeff[i][j];
-                nn->weights[stride+((i*n)+j)] = (1.0f-((nn->parameters->eta*nn->parameters->lambda)/(float)nn->data->training->m))*nn->weights[stride+((i*n)+j)] + nn->weightsVelocity[stride+((i*n)+j)];
+                nn->weights[stride+((i*n)+j)] = nn->regularizer[l]((void *)nn, i, j, n, stride) +
+                                                nn->weightsVelocity[stride+((i*n)+j)];
             }
         }
         dcdwNodePt = dcdwNodePt->next;
@@ -944,4 +954,31 @@ static void feedforward(void * _Nonnull self) {
         stride1 = stride1 + (m * n);
         stride2 = stride2 + nn->biasesDimensions[l].n;
     }
+}
+
+
+float l0_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    return nn->weights[stride+((i*n)+j)];
+}
+
+float l1_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    float sgn;
+    if (nn->weights[stride+((i*n)+j)] > 0) {
+        sgn = 1.0f;
+    } else if (nn->weights[stride+((i*n)+j)] < 0) {
+        sgn = -1.0f;
+    } else {
+        sgn = 0.0;
+    }
+    return nn->weights[stride+((i*n)+j)] -
+           ((nn->parameters->eta*nn->parameters->lambda)/(float)nn->data->training->m)*sgn;
+}
+
+float l2_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    return (1.0f-((nn->parameters->eta*nn->parameters->lambda)/(float)nn->data->training->m))*nn->weights[stride+((i*n)+j)];
 }

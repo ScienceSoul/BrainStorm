@@ -13,7 +13,6 @@
 typedef struct scalar_dict {
     int epochs, mini_batch_size;
     float learning_rate;
-    float regularization_factor;
     float momentum_coefficient;
 } scalar_dict;
 
@@ -22,9 +21,14 @@ typedef struct adaptive_dict {
     float * _Nullable vector;
 } adaptive_dict;
 
+typedef struct regularizer_dict {
+    float regularization_factor;
+    float (* _Nullable regularizer_func)(void * _Nonnull neural, int i, int j, int n, int stride);
+} regularizer_dict;
+
 typedef struct networkConstructor {
     bool networkConstruction;
-    void (* _Nullable layer)(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation);
+    void (* _Nullable layer)(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation, regularizer_dict * _Nullable regularizer);
     void (* _Nullable split)(void * _Nonnull neural, int n1, int n2);
     void (* _Nullable training_data)(void * _Nonnull neural, char * _Nonnull str);
     void (* _Nullable classification)(void * _Nonnull neural, int * _Nonnull vector, int n);

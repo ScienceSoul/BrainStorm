@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "NeuralNetwork.h"
 
-void set_layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation) {
+void set_layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation, regularizer_dict * _Nullable regularizer) {
     
     static bool firstTime = true;
     
@@ -68,6 +68,13 @@ void set_layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull t
         } else {
             fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activation);
         }
+        
+        // Add a regularizer if provided
+        if (regularizer != NULL) {
+            nn->parameters->lambda = regularizer->regularization_factor;
+            nn->regularizer[nn->parameters->numberOfActivationFunctions] = regularizer->regularizer_func;
+        } else nn->regularizer[nn->parameters->numberOfActivationFunctions] = nn->l0_regularizer;
+        
         nn->parameters->numberOfActivationFunctions++;
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unknown layer type in network construction.");
@@ -103,7 +110,6 @@ void set_scalars(void * _Nonnull neural, scalar_dict scalars) {
     nn->parameters->epochs = scalars.epochs;
     nn->parameters->miniBatchSize = scalars.mini_batch_size;
     nn->parameters->eta = scalars.learning_rate;
-    nn->parameters->lambda = scalars.regularization_factor;
     nn->parameters->mu = scalars.momentum_coefficient;
 }
 

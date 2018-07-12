@@ -100,6 +100,12 @@ typedef struct NeuralNetwork {
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
     int (* _Nullable evaluate)(void * _Nonnull self, bool metal);
     float (* _Nullable totalCost)(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert);
+    
+    float (* _Nullable l0_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
+    float (* _Nullable l1_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
+    float (* _Nullable l2_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
+    float (* _Nullable regularizer[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, int i, int j, int n, int stride);
+    
 } NeuralNetwork;
 
 NeuralNetwork * _Nonnull newNeuralNetwork(void);

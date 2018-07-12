@@ -296,6 +296,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
     short FOUND_ACTIVATIONS    = 0;
     short FOUND_SPLIT          = 0;
     short FOUND_CLASSIFICATION = 0;
+    short FOUND_REGULARIZATION = 0;
     
     definition *pt = definitions;
     while (pt != NULL) {
@@ -331,7 +332,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 //      softmax ->  Softmax unit
                 
                 if (FOUND_TOPOLOGY == 0) {
-                    fatal(DEFAULT_CONSOLE_WRITER, "missing topology in parameters input.");
+                    fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
                 }
                 
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
@@ -418,9 +419,24 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
             } else if (strcmp(field->key, "learning_rate") == 0) {
                 nn->parameters->eta = strtof(field->value, NULL);
                 
-            } else if (strcmp(field->key, "regularization_factor") == 0) {
+            } else if (strcmp(field->key, "l1_regularization") == 0) {
+                if (FOUND_TOPOLOGY == 0) {
+                    fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
+                }
                 nn->parameters->lambda = strtof(field->value, NULL);
-            
+                for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+                    nn->regularizer[i] = nn->l1_regularizer;
+                    FOUND_REGULARIZATION = 1;
+                }
+            } else if (strcmp(field->key, "l2_regularization") == 0) {
+                if (FOUND_TOPOLOGY == 0) {
+                    fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
+                }
+                nn->parameters->lambda = strtof(field->value, NULL);
+                for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+                    nn->regularizer[i] = nn->l2_regularizer;
+                    FOUND_REGULARIZATION = 1;
+                }
             } else if (strcmp(field->key, "momentum") == 0) {
                 nn->parameters->mu = strtof(field->value, NULL);
             
@@ -483,6 +499,12 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
     if (FOUND_CLASSIFICATION == 0) {
         fatal(DEFAULT_CONSOLE_WRITER, "missing classification in parameters input.");
     }
+    if (FOUND_REGULARIZATION == 0) {
+        for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+            nn->regularizer[i] = nn->l0_regularizer;
+        }
+    }
+    
     
     return 0;
 }
