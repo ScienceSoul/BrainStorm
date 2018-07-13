@@ -109,40 +109,59 @@ void set_scalars(void * _Nonnull neural, scalar_dict scalars) {
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     nn->parameters->epochs = scalars.epochs;
     nn->parameters->miniBatchSize = scalars.mini_batch_size;
-    nn->parameters->eta = scalars.learning_rate;
-    nn->parameters->mu = scalars.momentum_coefficient;
 }
 
-void set_adaptive_learning(void * _Nonnull neural, char * _Nonnull method, adaptive_dict adaptive_dict) {
+void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
+    void * optimizer = NULL;
     
-    if (strcmp(method, "adagrad") == 0) {
-        nn->adaGrad = (AdaGrad *)malloc(sizeof(AdaGrad));
-        nn->adaGrad->delta = adaptive_dict.scalar;
-        nn->adaGrad->costWeightDerivativeSquaredAccumulated = NULL;
-        nn->adaGrad->costBiasDerivativeSquaredAccumulated = NULL;
-        nn->adapativeLearningRateMethod = ADAGRAD;
-    } else if (strcmp(method, "rmsprop") == 0) {
-         nn->rmsProp = (RMSProp *)malloc(sizeof(RMSProp));
-        nn->rmsProp->decayRate = adaptive_dict.vector[0];
-        nn->rmsProp->delta = adaptive_dict.vector[1];
-        nn->rmsProp->costWeightDerivativeSquaredAccumulated = NULL;
-        nn->rmsProp->costBiasDerivativeSquaredAccumulated = NULL;
-        nn->adapativeLearningRateMethod = RMSPROP;
-    } else if (strcmp(method, "adam") == 0) {
-        nn->adam = (Adam *)malloc(sizeof(Adam));
-        nn->adam->time = 0;
-        nn->adam->stepSize = adaptive_dict.vector[0];
-        nn->adam->decayRate1 = adaptive_dict.vector[1];
-        nn->adam->decayRate2 = adaptive_dict.vector[2];
-        nn->adam->delta = adaptive_dict.vector[3];
-        nn->adam->weightsBiasedFirstMomentEstimate = NULL;
-        nn->adam->weightsBiasedSecondMomentEstimate = NULL;
-        nn->adam->biasesBiasedFirstMomentEstimate = NULL;
-        nn->adam->biasesBiasedSecondMomentEstimate = NULL;
-        nn->adapativeLearningRateMethod = ADAM;
+    if (strcmp(optimizer_dict.optimizer, "gradient descent") == 0) {
+        nn->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
+        nn->train->gradient_descent->learning_rate = optimizer_dict.learning_rate;
+        nn->train->gradient_descent->minimize = gradientDescentOptimizer;
+        optimizer = (void *)nn->train->gradient_descent;
+    } else if (strcmp(optimizer_dict.optimizer, "momentum") == 0) {
+        nn->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
+        nn->train->momentum->learning_rate = optimizer_dict.learning_rate;
+        nn->train->momentum->momentum_coefficient = optimizer_dict.momentum;
+        nn->train->momentum->minimize = momentumOptimizer;
+        optimizer = (void *)nn->train->momentum;
+    } else if (strcmp(optimizer_dict.optimizer, "adagrad") == 0) {
+        nn->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
+        nn->train->ada_grad->learning_rate = optimizer_dict.learning_rate;
+        nn->train->ada_grad->delta = optimizer_dict.delta;
+        nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
+        nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
+        nn->train->ada_grad->minimize = adamOptimizer;
+        optimizer = (void *)nn->train->ada_grad;
+    } else if (strcmp(optimizer_dict.optimizer, "rmsprop") == 0) {
+        nn->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
+        nn->train->rms_prop->learning_rate = optimizer_dict.learning_rate;
+        nn->train->rms_prop->decayRate = optimizer_dict.decay_rate1;
+        nn->train->rms_prop->delta = optimizer_dict.delta;
+        nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
+        nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
+        nn->train->rms_prop->minimize = rmsPropOptimizer;
+        optimizer = (void *)nn->train->rms_prop;
+    } else if (strcmp(optimizer_dict.optimizer, "adam") == 0) {
+        nn->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
+        nn->train->adam->time = 0;
+        nn->train->adam->stepSize = optimizer_dict.step_size;
+        nn->train->adam->decayRate1 = optimizer_dict.decay_rate1;
+        nn->train->adam->decayRate2 = optimizer_dict.decay_rate2;
+        nn->train->adam->delta = optimizer_dict.delta;
+        nn->train->adam->weightsBiasedFirstMomentEstimate = NULL;
+        nn->train->adam->weightsBiasedSecondMomentEstimate = NULL;
+        nn->train->adam->biasesBiasedFirstMomentEstimate = NULL;
+        nn->train->adam->biasesBiasedSecondMomentEstimate = NULL;
+        nn->train->adam->minimize = adamOptimizer;
+        optimizer = (void *)nn->train->adam;
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "unrecognized optimizer. Currently supported optimizers are: GradiendDescent, Momentum, AdaGrad, RMSProp and Adam.");
     }
+    
+    return optimizer;
 }
 
 networkConstructor * _Nonnull allocateConstructor(void) {
@@ -154,6 +173,6 @@ networkConstructor * _Nonnull allocateConstructor(void) {
     constructor->training_data = set_training_data;
     constructor->classification = set_classification;
     constructor->scalars = set_scalars;
-    constructor->adaptive_learning = set_adaptive_learning;
+    constructor->optimizer = set_optimizer;
     return constructor;
 }

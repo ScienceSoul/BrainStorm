@@ -13,7 +13,8 @@
 #include "NetworkConstructor.h"
 #include "NetworkUtils.h"
 #include "MetalCompute.h"
-#include "Optimization.h"
+#include "Optimizers.h"
+#include "NetworkPrimitiveFunctions.h"
 
 typedef struct weightMatrixDimension {
     unsigned int m, n;
@@ -51,6 +52,17 @@ typedef struct costBiaseDerivativeNode {
     struct costBiaseDerivativeNode * _Nullable previous;
 } costBiaseDerivativeNode;
 
+typedef struct Train {
+    GradientDescentOptimizer * _Nullable gradient_descent;
+    MomentumOptimizer * _Nullable momentum;
+    AdaGradOptimizer * _Nullable ada_grad;
+    RMSPropOptimizer * _Nullable rms_prop;
+    AdamOptimizer * _Nullable adam;
+    void (* _Nullable next_batch)(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, unsigned int batchSize);
+    int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize);
+    void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
+} Train;
+
 typedef struct NeuralNetwork {
     
     data * _Nullable data;
@@ -63,7 +75,6 @@ typedef struct NeuralNetwork {
     unsigned int number_of_parameters;
     unsigned int number_of_features;
     unsigned int max_number_of_nodes_in_layer;
-    unsigned int adapativeLearningRateMethod;
     
     float * _Nullable weights;
     float * _Nullable weightsVelocity;
@@ -79,23 +90,14 @@ typedef struct NeuralNetwork {
     costWeightDerivativeNode * _Nullable deltaNetworkCostWeightDerivatives;
     costBiaseDerivativeNode * _Nullable deltaNetworkCostBiaseDerivatives;
     
+    Train * _Nullable train;
     MetalCompute * _Nullable gpu;
-    
-    AdaGrad * _Nullable adaGrad;
-    RMSProp * _Nullable rmsProp;
-    Adam    * _Nullable adam;
     
     void (* _Nullable genesis)(void * _Nonnull self, char * _Nonnull init_stategy);
     void (* _Nullable finale)(void * _Nonnull self);
     float * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
-    void (* _Nullable train)(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost);
-    void (* _Nullable miniBatch)(void * _Nonnull self, float * _Nonnull * _Nonnull miniBatch);
-    void (* _Nullable updateWeightsBiases)(void * _Nonnull self);
-    void (* _Nullable batchAccumulation)(void * _Nonnull self);
-    void * _Nullable (* _Nullable backpropagation)(void * _Nonnull self);
-    void (* _Nonnull feedforward)(void * _Nonnull self);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
     int (* _Nullable evaluate)(void * _Nonnull self, bool metal);

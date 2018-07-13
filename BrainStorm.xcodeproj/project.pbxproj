@@ -23,7 +23,7 @@
 		0161754720EDE45400FC40FF /* MetalCompute.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752F20EDE03000FC40FF /* MetalCompute.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161754820EDE45400FC40FF /* NetworkUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752A20EDE03000FC40FF /* NetworkUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161754920EDE45400FC40FF /* NeuralNetwork.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752B20EDE03000FC40FF /* NeuralNetwork.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0161754A20EDE45400FC40FF /* Optimization.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752C20EDE03000FC40FF /* Optimization.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161754A20EDE45400FC40FF /* Optimizers.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752C20EDE03000FC40FF /* Optimizers.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161754B20EDE45400FC40FF /* Parsing.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753020EDE03000FC40FF /* Parsing.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161754C20EDE45400FC40FF /* TimeProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753120EDE03000FC40FF /* TimeProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161754D20EDE45400FC40FF /* Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753220EDE03000FC40FF /* Utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -44,7 +44,7 @@
 		0161758020EEEFCB00FC40FF /* MetalCompute.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752F20EDE03000FC40FF /* MetalCompute.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161758120EEEFCB00FC40FF /* NetworkUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752A20EDE03000FC40FF /* NetworkUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161758220EEEFCB00FC40FF /* NeuralNetwork.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752B20EDE03000FC40FF /* NeuralNetwork.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0161758320EEEFCB00FC40FF /* Optimization.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752C20EDE03000FC40FF /* Optimization.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0161758320EEEFCB00FC40FF /* Optimizers.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161752C20EDE03000FC40FF /* Optimizers.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161758420EEEFCB00FC40FF /* Parsing.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753020EDE03000FC40FF /* Parsing.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161758520EEEFCB00FC40FF /* TimeProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753120EDE03000FC40FF /* TimeProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161758620EEEFCB00FC40FF /* Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161753220EDE03000FC40FF /* Utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -58,6 +58,11 @@
 		0161759C20F70E4F00FC40FF /* NetworkParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161758C20EF3E8D00FC40FF /* NetworkParams.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161759D20F70E4F00FC40FF /* Regularization.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161759720F70DEB00FC40FF /* Regularization.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161759E20F70E5C00FC40FF /* Regularization.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161759720F70DEB00FC40FF /* Regularization.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		016175A120F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */; };
+		016175A220F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */; };
+		016175A420F73DDB00FC40FF /* Optimizers.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A320F73DDB00FC40FF /* Optimizers.c */; };
+		016175A520F73DDB00FC40FF /* Optimizers.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A320F73DDB00FC40FF /* Optimizers.c */; };
+		016175A620F8882B00FC40FF /* NetworkPrimitiveFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161759F20F7379000FC40FF /* NetworkPrimitiveFunctions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,7 +73,7 @@
 		0161752720EDDFD800FC40FF /* MetalKernels.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; name = MetalKernels.metal; path = metal/MetalKernels.metal; sourceTree = SOURCE_ROOT; };
 		0161752A20EDE03000FC40FF /* NetworkUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkUtils.h; path = include/NetworkUtils.h; sourceTree = SOURCE_ROOT; };
 		0161752B20EDE03000FC40FF /* NeuralNetwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NeuralNetwork.h; path = include/NeuralNetwork.h; sourceTree = SOURCE_ROOT; };
-		0161752C20EDE03000FC40FF /* Optimization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Optimization.h; path = include/Optimization.h; sourceTree = SOURCE_ROOT; };
+		0161752C20EDE03000FC40FF /* Optimizers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Optimizers.h; path = include/Optimizers.h; sourceTree = SOURCE_ROOT; };
 		0161752D20EDE03000FC40FF /* Data.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Data.h; path = include/Data.h; sourceTree = SOURCE_ROOT; };
 		0161752E20EDE03000FC40FF /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Memory.h; path = include/Memory.h; sourceTree = SOURCE_ROOT; };
 		0161752F20EDE03000FC40FF /* MetalCompute.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MetalCompute.h; path = include/MetalCompute.h; sourceTree = SOURCE_ROOT; };
@@ -91,6 +96,9 @@
 		0161758F20EF443E00FC40FF /* NetworkConstructor.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkConstructor.c; path = src/NetworkConstructor.c; sourceTree = "<group>"; };
 		0161759720F70DEB00FC40FF /* Regularization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Regularization.h; path = include/Regularization.h; sourceTree = SOURCE_ROOT; };
 		0161759820F70E1600FC40FF /* Regularization.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Regularization.c; path = src/Regularization.c; sourceTree = "<group>"; };
+		0161759F20F7379000FC40FF /* NetworkPrimitiveFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkPrimitiveFunctions.h; path = include/NetworkPrimitiveFunctions.h; sourceTree = SOURCE_ROOT; };
+		016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkPrimitiveFunctions.c; path = src/NetworkPrimitiveFunctions.c; sourceTree = "<group>"; };
+		016175A320F73DDB00FC40FF /* Optimizers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Optimizers.c; path = src/Optimizers.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,9 +172,10 @@
 				0161752F20EDE03000FC40FF /* MetalCompute.h */,
 				0161758E20EF401B00FC40FF /* NetworkConstructor.h */,
 				0161758C20EF3E8D00FC40FF /* NetworkParams.h */,
+				0161759F20F7379000FC40FF /* NetworkPrimitiveFunctions.h */,
 				0161752A20EDE03000FC40FF /* NetworkUtils.h */,
 				0161752B20EDE03000FC40FF /* NeuralNetwork.h */,
-				0161752C20EDE03000FC40FF /* Optimization.h */,
+				0161752C20EDE03000FC40FF /* Optimizers.h */,
 				0161753020EDE03000FC40FF /* Parsing.h */,
 				0161759720F70DEB00FC40FF /* Regularization.h */,
 				0161753120EDE03000FC40FF /* TimeProfile.h */,
@@ -183,8 +192,10 @@
 				0161753B20EDE05000FC40FF /* Memory.c */,
 				0161753920EDE05000FC40FF /* MetalCompute.m */,
 				0161758F20EF443E00FC40FF /* NetworkConstructor.c */,
+				016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */,
 				0161753820EDE05000FC40FF /* NetworkUtils.c */,
 				0161753720EDE05000FC40FF /* NeuralNetwork.c */,
+				016175A320F73DDB00FC40FF /* Optimizers.c */,
 				0161753620EDE04F00FC40FF /* Parsing.c */,
 				0161759820F70E1600FC40FF /* Regularization.c */,
 				0161753420EDE04F00FC40FF /* TimeProfile.c */,
@@ -208,7 +219,7 @@
 				0161759C20F70E4F00FC40FF /* NetworkParams.h in Headers */,
 				0161754820EDE45400FC40FF /* NetworkUtils.h in Headers */,
 				0161754920EDE45400FC40FF /* NeuralNetwork.h in Headers */,
-				0161754A20EDE45400FC40FF /* Optimization.h in Headers */,
+				0161754A20EDE45400FC40FF /* Optimizers.h in Headers */,
 				0161754B20EDE45400FC40FF /* Parsing.h in Headers */,
 				0161759D20F70E4F00FC40FF /* Regularization.h in Headers */,
 				0161754C20EDE45400FC40FF /* TimeProfile.h in Headers */,
@@ -226,9 +237,10 @@
 				0161758020EEEFCB00FC40FF /* MetalCompute.h in Headers */,
 				0161759220EF46D300FC40FF /* NetworkConstructor.h in Headers */,
 				0161759320EF46D300FC40FF /* NetworkParams.h in Headers */,
+				016175A620F8882B00FC40FF /* NetworkPrimitiveFunctions.h in Headers */,
 				0161758120EEEFCB00FC40FF /* NetworkUtils.h in Headers */,
 				0161758220EEEFCB00FC40FF /* NeuralNetwork.h in Headers */,
-				0161758320EEEFCB00FC40FF /* Optimization.h in Headers */,
+				0161758320EEEFCB00FC40FF /* Optimizers.h in Headers */,
 				0161758420EEEFCB00FC40FF /* Parsing.h in Headers */,
 				0161759E20F70E5C00FC40FF /* Regularization.h in Headers */,
 				0161758520EEEFCB00FC40FF /* TimeProfile.h in Headers */,
@@ -350,8 +362,10 @@
 				0161754120EDE05000FC40FF /* MetalCompute.m in Sources */,
 				0161759920F70E1600FC40FF /* Regularization.c in Sources */,
 				0161753F20EDE05000FC40FF /* NeuralNetwork.c in Sources */,
+				016175A420F73DDB00FC40FF /* Optimizers.c in Sources */,
 				0161753D20EDE05000FC40FF /* Data.c in Sources */,
 				0161753C20EDE05000FC40FF /* TimeProfile.c in Sources */,
+				016175A120F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */,
 				0161753E20EDE05000FC40FF /* Parsing.c in Sources */,
 				0161752820EDDFD800FC40FF /* MetalKernels.metal in Sources */,
 				0161759020EF443E00FC40FF /* NetworkConstructor.c in Sources */,
@@ -364,10 +378,12 @@
 			files = (
 				0161757220EEEE2400FC40FF /* Data.c in Sources */,
 				0161759120EF443E00FC40FF /* NetworkConstructor.c in Sources */,
+				016175A220F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */,
 				0161757320EEEE2400FC40FF /* Memory.c in Sources */,
 				0161757420EEEE2400FC40FF /* MetalCompute.m in Sources */,
 				0161757520EEEE2400FC40FF /* NetworkUtils.c in Sources */,
 				0161757620EEEE2400FC40FF /* NeuralNetwork.c in Sources */,
+				016175A520F73DDB00FC40FF /* Optimizers.c in Sources */,
 				0161757720EEEE2400FC40FF /* Parsing.c in Sources */,
 				0161759A20F70E1600FC40FF /* Regularization.c in Sources */,
 				0161757820EEEE2400FC40FF /* TimeProfile.c in Sources */,

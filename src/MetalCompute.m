@@ -61,7 +61,7 @@ int LoadFileIntoString(const char * _Nonnull filename, char * _Nonnull * _Nullab
     return 0;
 }
 
-void init (void) {
+void init_device (void) {
     device = MTLCreateSystemDefaultDevice();
     commandQueue = device.newCommandQueue;
     
@@ -254,7 +254,7 @@ MetalCompute * _Nonnull metalCompute(void) {
     
     MetalCompute *metalComppute = (MetalCompute *)malloc(sizeof(MetalCompute));
     
-    metalComppute->init = init;
+    metalComppute->init = init_device;
     metalComppute->prepare = prepare;
     metalComppute->allocate_buffers = allocate_buffers;
     metalComppute->nullify = nullify;

@@ -18,14 +18,7 @@ typedef struct tensor_dict {
     char * _Nullable init_stategy;
 } tensor_dict;
 
-void * _Nonnull allocateActivationNode(void);
-void * _Nonnull allocateAffineTransformationNode(void);
-void * _Nonnull allocateCostWeightDerivativeNode(void);
-void * _Nonnull allocateCostBiaseDerivativeNode(void);
-
 float * _Nonnull tensor(void * _Nonnull self, tensor_dict tensor_dict);
-float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _Nonnull strategy);
-float * _Nonnull initVectors(void * _Nonnull self, bool init, char * _Nonnull strategy);
 
 void * _Nonnull initNetworkActivations(int * _Nonnull ntLayers, unsigned int numberOfLayers);
 void * _Nonnull initNetworkAffineTransformations(int * _Nonnull ntLayers, unsigned int numberOfLayers);

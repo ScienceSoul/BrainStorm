@@ -9,17 +9,9 @@
 #ifndef BrainStorm_h
 #define BrainStorm_h
 
-#include "Data.h"
-#include "Memory.h"
-#include "MetalCompute.h"
-#include "NetworkConstructor.h"
-#include "NetworkParams.h"
-#include "NetworkUtils.h"
 #include "NeuralNetwork.h"
-#include "Optimization.h"
-#include "Parsing.h"
-#include "Regularization.h"
-#include "TimeProfile.h"
+#include "Memory.h"
 #include "Utils.h"
+#include "TimeProfile.h"
 
 #endif /* BrainStorm_h */

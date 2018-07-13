@@ -9,7 +9,7 @@
 #ifndef Data_h
 #define Data_h
 
-#include "stdbool.h"
+#include <stdbool.h>
 
 typedef struct training {
     float * _Nullable *_Nullable set;

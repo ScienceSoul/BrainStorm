@@ -24,21 +24,9 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy);
 static void finale(void * _Nonnull self);
 static void gpu_alloc(void * _Nonnull self);
 
-static void trainNetwork(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost);
-
-static void miniBatch(void * _Nonnull self, float * _Nonnull * _Nonnull miniBatch);
-
-static void updateWeightsBiases(void * _Nonnull self);
-
-static void batchAccumulation(void * _Nonnull self);
-
-static void * _Nullable backpropagation(void * _Nonnull self);
-
 static int evaluate(void * _Nonnull self, bool metal);
 
 static float totalCost(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert);
-
-static void feedforward(void * _Nonnull self);
 
 static void initNeuralData(void * _Nonnull self) {
     
@@ -66,7 +54,7 @@ static void initNeuralData(void * _Nonnull self) {
 NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     
     NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-    *nn = (NeuralNetwork){.weights=NULL, .weightsVelocity=NULL, .biases=NULL, .biasesVelocity=NULL, .networkActivations=NULL, .networkAffineTransformations=NULL, .networkCostWeightDerivatives=NULL, .networkCostBiaseDerivatives=NULL, .deltaNetworkCostWeightDerivatives=NULL, .deltaNetworkCostBiaseDerivatives=NULL, .gpu=NULL, .adaGrad=NULL, .rmsProp=NULL, .adam=NULL};
+    *nn = (NeuralNetwork){.weights=NULL, .weightsVelocity=NULL, .biases=NULL, .biasesVelocity=NULL, .networkActivations=NULL, .networkAffineTransformations=NULL, .networkCostWeightDerivatives=NULL, .networkCostBiaseDerivatives=NULL, .deltaNetworkCostWeightDerivatives=NULL, .deltaNetworkCostBiaseDerivatives=NULL};
     
     nn->parameters = (networkParameters *)malloc(sizeof(networkParameters));
     strcpy(nn->parameters->supported_parameters[0], "data_name");
@@ -95,7 +83,6 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->parameters->numberOfLayers = 0;
     nn->parameters->numberOfActivationFunctions = 0;
     nn->parameters->numberOfClassifications = 0;
-    nn->adapativeLearningRateMethod = 0;
     memset(nn->parameters->topology, 0, sizeof(nn->parameters->topology));
     memset(nn->parameters->classifications, 0, sizeof(nn->parameters->classifications));
     memset(nn->parameters->split, 0, sizeof(nn->parameters->split));
@@ -108,6 +95,14 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     }
     
     nn->constructor = allocateConstructor();
+    nn->train = (Train *)malloc(sizeof(Train));
+    nn->train->gradient_descent = NULL;
+    nn->train->ada_grad = NULL;
+    nn->train->rms_prop = NULL;
+    nn->train->adam = NULL;
+    nn->train->next_batch = nextBatch;
+    nn->train->batch_range = batchRange;
+    nn->train->progression = progression;
     
     nn->load_params_from_input_file = loadParametersFromImputFile;
     
@@ -115,14 +110,8 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->finale = finale;
     nn->tensor = tensor;
     nn->gpu_alloc = gpu_alloc;
-    nn->train = trainNetwork;
-    nn->miniBatch = miniBatch;
-    nn->updateWeightsBiases = updateWeightsBiases;
-    nn->batchAccumulation = batchAccumulation;
-    nn->backpropagation = backpropagation;
     nn->evaluate = evaluate;
     nn->totalCost = totalCost;
-    nn->feedforward = feedforward;
     
     nn->l0_regularizer = l0_regularizer;
     nn->l1_regularizer = l1_regularizer;
@@ -163,7 +152,7 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     
     nn->example_idx = 0;
     nn->number_of_parameters = 0;
-    nn->number_of_features = 0;
+    nn->number_of_features = nn->parameters->topology[0];;
     nn->max_number_of_nodes_in_layer = max_array(nn->parameters->topology, nn->parameters->numberOfLayers);
     
     nn->data = (data *)malloc(sizeof(data));
@@ -180,12 +169,8 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     
     if (nn->weights == NULL)
         nn->weights = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=true, .init_stategy=init_stategy});
-    if (nn->weightsVelocity == NULL)
-        nn->weightsVelocity = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
     if (nn->biases == NULL)
         nn->biases = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=true, .init_stategy=init_stategy});
-    if (nn->biasesVelocity == NULL)
-        nn->biasesVelocity = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     
     if (nn->networkActivations == NULL)
         nn->networkActivations = (activationNode *)initNetworkActivations(nn->parameters->topology, nn->parameters->numberOfLayers);
@@ -200,32 +185,39 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     if (nn->deltaNetworkCostBiaseDerivatives == NULL)
         nn->deltaNetworkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
     
-    if (nn->adaGrad != NULL) {
-        if (nn->adaGrad->costWeightDerivativeSquaredAccumulated == NULL)
-            nn->adaGrad->costWeightDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->adaGrad->costBiasDerivativeSquaredAccumulated == NULL)
-            nn->adaGrad->costBiasDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+    if (nn->train->momentum != NULL) {
+        if (nn->weightsVelocity == NULL)
+            nn->weightsVelocity = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->biasesVelocity == NULL)
+            nn->biasesVelocity = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     }
-    if (nn->rmsProp != NULL) {
-        if (nn->rmsProp->costWeightDerivativeSquaredAccumulated == NULL)
-            nn->rmsProp->costWeightDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->rmsProp->costBiasDerivativeSquaredAccumulated == NULL)
-            nn->rmsProp->costBiasDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+    
+    if (nn->train->ada_grad != NULL) {
+        if (nn->train->ada_grad->costWeightDerivativeSquaredAccumulated == NULL)
+            nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->train->ada_grad->costBiasDerivativeSquaredAccumulated == NULL)
+            nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     }
-    if (nn->adam != NULL) {
-        if (nn->adam->weightsBiasedFirstMomentEstimate == NULL)
-            nn->adam->weightsBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->adam->weightsBiasedSecondMomentEstimate == NULL)
-            nn->adam->weightsBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->adam->biasesBiasedFirstMomentEstimate == NULL)
-            nn->adam->biasesBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
-        if (nn->adam->biasesBiasedSecondMomentEstimate == NULL)
-            nn->adam->biasesBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+    if (nn->train->rms_prop != NULL) {
+        if (nn->train->rms_prop->costWeightDerivativeSquaredAccumulated == NULL)
+            nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->train->rms_prop->costBiasDerivativeSquaredAccumulated == NULL)
+            nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+    }
+    if (nn->train->adam != NULL) {
+        if (nn->train->adam->weightsBiasedFirstMomentEstimate == NULL)
+            nn->train->adam->weightsBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->train->adam->weightsBiasedSecondMomentEstimate == NULL)
+            nn->train->adam->weightsBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
+        if (nn->train->adam->biasesBiasedFirstMomentEstimate == NULL)
+            nn->train->adam->biasesBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+        if (nn->train->adam->biasesBiasedSecondMomentEstimate == NULL)
+            nn->train->adam->biasesBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
     }
 }
 
 //
-// Free-up all the memory used by a network
+// Free-up all the memory used by the network
 //
 static void finale(void * _Nonnull self) {
     
@@ -246,9 +238,7 @@ static void finale(void * _Nonnull self) {
     free(nn->constructor);
     
     free(nn->weights);
-    free(nn->weightsVelocity);
     free(nn->biases);
-    free(nn->biasesVelocity);
     
     costWeightDerivativeNode *dcdwTail = nn->networkCostWeightDerivatives;
     while (dcdwTail != NULL && dcdwTail->next ) {
@@ -345,24 +335,33 @@ static void finale(void * _Nonnull self) {
         free(nn->gpu);
     }
     
-    if (nn->adaGrad != NULL) {
-        if (nn->adaGrad->costWeightDerivativeSquaredAccumulated != NULL) free(nn->adaGrad->costWeightDerivativeSquaredAccumulated);
-        if (nn->adaGrad->costBiasDerivativeSquaredAccumulated != NULL) free(nn->adaGrad->costBiasDerivativeSquaredAccumulated);
-        free(nn->adaGrad);
+    if (nn->train->gradient_descent != NULL) {
+        free(nn->train->gradient_descent);
     }
-    
-    if (nn->rmsProp != NULL) {
-        if (nn->rmsProp->costWeightDerivativeSquaredAccumulated != NULL) free(nn->rmsProp->costWeightDerivativeSquaredAccumulated);
-        if (nn->rmsProp->costBiasDerivativeSquaredAccumulated != NULL) free(nn->rmsProp->costBiasDerivativeSquaredAccumulated);
-        free(nn->rmsProp);
+    if (nn->train->momentum != NULL) {
+        if (nn->weightsVelocity != NULL) free(nn->weightsVelocity);
+        if (nn->biasesVelocity != NULL) free(nn->biasesVelocity);
+        free(nn->train->momentum);
     }
-    if (nn->adam != NULL) {
-        if (nn->adam->weightsBiasedFirstMomentEstimate != NULL) free(nn->adam->weightsBiasedFirstMomentEstimate);
-        if (nn->adam->weightsBiasedSecondMomentEstimate != NULL) free(nn->adam->weightsBiasedSecondMomentEstimate);
+    if (nn->train->ada_grad != NULL) {
+        if (nn->train->ada_grad->costWeightDerivativeSquaredAccumulated != NULL) free(nn->train->ada_grad->costWeightDerivativeSquaredAccumulated);
+        if (nn->train->ada_grad->costBiasDerivativeSquaredAccumulated != NULL) free(nn->train->ada_grad->costBiasDerivativeSquaredAccumulated);
+        free(nn->train->ada_grad);
+    }
+    if (nn->train->rms_prop != NULL) {
+        if (nn->train->rms_prop->costWeightDerivativeSquaredAccumulated != NULL) free(nn->train->rms_prop->costWeightDerivativeSquaredAccumulated);
+        if (nn->train->rms_prop->costBiasDerivativeSquaredAccumulated != NULL) free(nn->train->rms_prop->costBiasDerivativeSquaredAccumulated);
+        free(nn->train->rms_prop);
+    }
+    if (nn->train->adam != NULL) {
+        if (nn->train->adam->weightsBiasedFirstMomentEstimate != NULL) free(nn->train->adam->weightsBiasedFirstMomentEstimate);
+        if (nn->train->adam->weightsBiasedSecondMomentEstimate != NULL) free(nn->train->adam->weightsBiasedSecondMomentEstimate);
         
-        if (nn->adam->biasesBiasedFirstMomentEstimate != NULL) free(nn->adam->biasesBiasedFirstMomentEstimate);
-        if (nn->adam->biasesBiasedSecondMomentEstimate != NULL) free(nn->adam->biasesBiasedSecondMomentEstimate);
+        if (nn->train->adam->biasesBiasedFirstMomentEstimate != NULL) free(nn->train->adam->biasesBiasedFirstMomentEstimate);
+        if (nn->train->adam->biasesBiasedSecondMomentEstimate != NULL) free(nn->train->adam->biasesBiasedSecondMomentEstimate);
+        free(nn->train->adam);
     }
+    free(nn->train);
 }
 
 static void gpu_alloc(void * _Nonnull self) {
@@ -371,410 +370,6 @@ static void gpu_alloc(void * _Nonnull self) {
     
     nn->gpu = metalCompute();
 }
-
-static void trainNetwork(void * _Nonnull self, bool metal, bool * _Nullable showTotalCost) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    nn->number_of_features = nn->parameters->topology[0];
-    
-    if (strcmp(nn->parameters->dataName, "<empty>") != 0) fprintf(stdout, "%s: train neural network with the %s data set.\n", DEFAULT_CONSOLE_WRITER, nn->parameters->dataName);
-    
-    // Stochastic gradient descent
-    float **miniBatch = floatmatrix(0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
-    nn->batch = miniBatch;
-    int delta;
-    for (int k=1; k<=nn->parameters->epochs; k++) {
-        delta = 0;
-        shuffle(nn->data->training->set, nn->data->training->m, nn->data->training->n);
-        
-        fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs);
-        double train_time = 0.0;
-        const int percentPrint = 5;
-        int train_size = (int)nn->data->training->m/nn->parameters->miniBatchSize;
-        int step = train_size / (100/percentPrint);
-        int nextPrint = step;
-        int i = 0;
-        for (int l=1; l<=(int)ceil((int)nn->data->training->m/nn->parameters->miniBatchSize); l++) {
-            memcpy(*miniBatch, *nn->data->training->set+delta, (nn->parameters->miniBatchSize*(int)nn->data->training->n)*sizeof(float));
-            double rt = realtime();
-            nn->miniBatch((void *)nn, miniBatch);
-            rt = realtime() - rt;
-            train_time += rt;
-            delta = delta + (nn->parameters->miniBatchSize*(int)nn->data->training->n);
-            
-            i++;
-            if (i >= nextPrint) {
-                int percent = (100 * i) / train_size;
-                fprintf(stdout, "...%d%%\n", percent);
-                fflush(stdout);
-                nextPrint += step;
-            }
-        }
-        fprintf(stdout, "%s: time to complete all training data set (s): %f\n", DEFAULT_CONSOLE_WRITER, train_time);
-        
-        if (nn->data->test->set != NULL) {
-            fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, nn->data->test->m);
-            int result = nn->evaluate(self, metal);
-            fprintf(stdout, "%s: Epoch {%d/%d}: {%d} / {%u}.\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, result, nn->data->test->m);
-        }
-        
-        if (showTotalCost != NULL) {
-            if (*showTotalCost == true) {
-                double rt = realtime();
-                float cost = nn->totalCost(self, nn->data->training->set, nn->data->training->m, false);
-                rt = realtime() -  rt;
-                fprintf(stdout, "%s: cost on training data: {%f} / Time (s): %f\n", DEFAULT_CONSOLE_WRITER, cost, rt);
-                
-                if (nn->data->test->set != NULL) {
-                    double rt = realtime();
-                    cost = nn->totalCost(self, nn->data->test->set, nn->data->test->m, true);
-                    rt = realtime() -  rt;
-                    fprintf(stdout, "%s: cost on test data: {%f} / Time (s): %f\n", DEFAULT_CONSOLE_WRITER, cost, rt);
-                }
-            }
-        }
-        fprintf(stdout, "\n");
-    }
-
-    free_fmatrix(miniBatch, 0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
-    fprintf(stdout, "%s: all done.\n", DEFAULT_CONSOLE_WRITER);
-}
-
-static void miniBatch(void * _Nonnull self, float * _Nonnull * _Nonnull miniBatch) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    costWeightDerivativeNode *dcdwNodePt = nn->networkCostWeightDerivatives;
-    while (dcdwNodePt != NULL) {
-        memset(*dcdwNodePt->dcdw, 0.0f, (dcdwNodePt->m*dcdwNodePt->n)*sizeof(float));
-        dcdwNodePt = dcdwNodePt->next;
-    }
-    
-    costBiaseDerivativeNode *dcdbNodePt = nn->networkCostBiaseDerivatives;
-    while (dcdbNodePt != NULL) {
-        memset(dcdbNodePt->dcdb, 0.0f, dcdbNodePt->n*sizeof(float));
-        dcdbNodePt = dcdbNodePt->next;
-    }
-    
-    costWeightDerivativeNode *delta_dcdwNodePt = nn->deltaNetworkCostWeightDerivatives;
-    while (delta_dcdwNodePt != NULL) {
-        memset(*delta_dcdwNodePt->dcdw, 0.0f, (delta_dcdwNodePt->m*delta_dcdwNodePt->n)*sizeof(float));
-        delta_dcdwNodePt = delta_dcdwNodePt->next;
-    }
-    
-    costBiaseDerivativeNode *delta_dcdbNodePt = nn->deltaNetworkCostBiaseDerivatives;
-    while (delta_dcdbNodePt != NULL) {
-        memset(delta_dcdbNodePt->dcdb, 0.0f, delta_dcdbNodePt->n*sizeof(float));
-        delta_dcdbNodePt = delta_dcdbNodePt->next;
-    }
-    
-    double rt = realtime();
-    for (int i=0; i<nn->parameters->miniBatchSize; i++) {
-        nn->example_idx = i;
-        nn->backpropagation((void *)nn);
-        nn->batchAccumulation((void *)nn);
-    }
-    rt = realtime() - rt;
-#ifdef VERBOSE
-    fprintf(stdout, "%s: time to complete a single mini-batch (s): %f\n", DEFAULT_CONSOLE_WRITER, rt);
-#endif
-    
-    nn->updateWeightsBiases((void *)nn);
-}
-
-static void batchAccumulation(void * _Nonnull self) {
-    
-    // Accumulate dcdw and dc/db
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    costWeightDerivativeNode *dcdwNodePt = nn->networkCostWeightDerivatives;
-    costBiaseDerivativeNode *dcdbNodePt = nn->networkCostBiaseDerivatives;
-    costWeightDerivativeNode *delta_dcdwNodePt = nn->deltaNetworkCostWeightDerivatives;
-    costBiaseDerivativeNode *delta_dcdbNodePt = nn->deltaNetworkCostBiaseDerivatives;
-    while (dcdwNodePt != NULL && delta_dcdwNodePt != NULL) {
-        for (int i=0; i<dcdwNodePt->m; i++) {
-            for (int j=0; j<dcdwNodePt->n; j++) {
-                dcdwNodePt->dcdw[i][j] = dcdwNodePt->dcdw[i][j] + delta_dcdwNodePt->dcdw[i][j];
-            }
-        }
-        for (int i=0; i<dcdbNodePt->n; i++) {
-            dcdbNodePt->dcdb[i] = dcdbNodePt->dcdb[i] + delta_dcdbNodePt->dcdb[i];
-        }
-        dcdwNodePt = dcdwNodePt->next;
-        dcdbNodePt = dcdbNodePt->next;
-        delta_dcdwNodePt = delta_dcdwNodePt->next;
-        delta_dcdbNodePt = delta_dcdbNodePt->next;
-    }
-}
-
-static void updateWeightsBiases(void * _Nonnull self) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    // Update weights
-    unsigned int stride = 0;
-    unsigned int l = 0;
-    costWeightDerivativeNode *dcdwNodePt = nn->networkCostWeightDerivatives;
-    while (dcdwNodePt != NULL) {
-        unsigned int m = nn->weightsDimensions[l].m;
-        unsigned int n = nn->weightsDimensions[l].n;
-        
-        // Adpative learning rate
-        float coeff[m][n];
-        
-/////////////////////////////////////////// AdaGrad learning rate ////////////////////////////////////////////////////////
-        if (nn->adapativeLearningRateMethod == ADAGRAD) {
-            for (int i=0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    nn->adaGrad->costWeightDerivativeSquaredAccumulated[stride+((i*n)+j)] = nn->adaGrad->costWeightDerivativeSquaredAccumulated[stride+((i*n)+j)] + ( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j]) * ((1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j]) );
-                }
-            }
-            for (int i=0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    coeff[i][j] = ( nn->parameters->eta/(nn->adaGrad->delta+sqrtf(nn->adaGrad->costWeightDerivativeSquaredAccumulated[stride+((i*n)+j)])) ) * ( (1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j] );
-                }
-            }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-            
-/////////////////////////////////////////// RMSProp learning rate ////////////////////////////////////////////////////////
-        } else if (nn->adapativeLearningRateMethod == RMSPROP) {
-            for (int i=0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    nn->rmsProp->costWeightDerivativeSquaredAccumulated[stride+((i*n)+j)] = (nn->rmsProp->decayRate*nn->rmsProp->costWeightDerivativeSquaredAccumulated[stride+((i*n)+j)]) + (1.0f-nn->rmsProp->decayRate)*( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j]) * ((1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j]) );
-                }
-            }
-            for (int i=0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    coeff[i][j] = ( nn->parameters->eta/(sqrtf(nn->rmsProp->delta+nn->rmsProp->costWeightDerivativeSquaredAccumulated[stride+((i*n)+j)])) ) * ( (1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j] );
-                }
-            }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-            
-/////////////////////////////////////////// Adam learning rate ///////////////////////////////////////////////////////////
-        } else if (nn->adapativeLearningRateMethod == ADAM) {
-            nn->adam->time++;
-            float s_hat[m][n];
-            float r_hat[m][n];
-            for (int i=0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    // Update biased first moment estimate
-                    nn->adam->weightsBiasedFirstMomentEstimate[stride+((i*n)+j)] = (nn->adam->decayRate1*nn->adam->weightsBiasedFirstMomentEstimate[stride+((i*n)+j)]) + (1.0f-nn->adam->decayRate1)*( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j]) );
-                    // Update biased second moment estimate
-                    nn->adam->weightsBiasedSecondMomentEstimate[stride+((i*n)+j)] = (nn->adam->decayRate2*nn->adam->weightsBiasedSecondMomentEstimate[stride+((i*n)+j)]) + (1.0f-nn->adam->decayRate2)*( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j]) * ((1.0f/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j]) );
-                    
-                    // Correct bias in first moment
-                    s_hat[i][j] = nn->adam->weightsBiasedFirstMomentEstimate[stride+((i*n)+j)] / (1.0f - powf(nn->adam->decayRate1, (float)nn->adam->time));
-                    // Correct bias in second moment
-                    r_hat[i][j] = nn->adam->weightsBiasedSecondMomentEstimate[stride+((i*n)+j)] / (1.0f - powf(nn->adam->decayRate2, (float)nn->adam->time));
-                }
-            }
-            for (int i=0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    coeff[i][j] = nn->adam->stepSize*( s_hat[i][j] / (sqrtf(r_hat[i][j]+nn->adam->delta)) );
-                }
-            }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-            
-        } else {
-            for (int i=0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    coeff[i][j] = (nn->parameters->eta/(float)nn->parameters->miniBatchSize)*dcdwNodePt->dcdw[i][j];
-                }
-            }
-        }
-        
-        for (int i=0; i<m; i++) {
-            for (int j=0; j<n; j++) {
-                nn->weightsVelocity[stride+((i*n)+j)] = nn->parameters->mu*nn->weightsVelocity[stride+((i*n)+j)] - coeff[i][j];
-                nn->weights[stride+((i*n)+j)] = nn->regularizer[l]((void *)nn, i, j, n, stride) +
-                                                nn->weightsVelocity[stride+((i*n)+j)];
-            }
-        }
-        dcdwNodePt = dcdwNodePt->next;
-        l++;
-        stride = stride + (m * n);
-    }
-    
-    // Update biases
-    stride = 0;
-    l = 0;
-    costBiaseDerivativeNode *dcdbNodePt = nn->networkCostBiaseDerivatives;
-    while (dcdbNodePt != NULL) {
-        unsigned int n = nn->biasesDimensions[l].n;
-        
-        // Adpative learning rate
-        float coeff[n];
-        
-/////////////////////////////////////////// AdaGrad learning rate ////////////////////////////////////////////////////////
-        if (nn->adapativeLearningRateMethod == ADAGRAD) {
-            for (int i=0; i<n; i++) {
-                nn->adaGrad->costBiasDerivativeSquaredAccumulated[stride+i] = nn->adaGrad->costBiasDerivativeSquaredAccumulated[stride+i] + ( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) * ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) );
-            }
-            for (int i=0; i<n; i++) {
-                coeff[i] = ( nn->parameters->eta/(nn->adaGrad->delta+sqrtf(nn->adaGrad->costBiasDerivativeSquaredAccumulated[stride+i])) ) * ( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) );
-            }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-            
-/////////////////////////////////////////// RMSProp learning rate ////////////////////////////////////////////////////////
-        } else if (nn->adapativeLearningRateMethod == RMSPROP) {
-            for (int i=0; i<n; i++) {
-                nn->rmsProp->costBiasDerivativeSquaredAccumulated[stride+i] = (nn->rmsProp->decayRate*nn->rmsProp->costBiasDerivativeSquaredAccumulated[stride+i]) + (1.0-nn->rmsProp->decayRate)*( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) * ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) );
-            }
-            for (int i=0; i<n; i++) {
-                coeff[i] = ( nn->parameters->eta/(sqrtf(nn->rmsProp->delta+nn->rmsProp->costBiasDerivativeSquaredAccumulated[stride+i])) ) * ( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) );
-            }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-            
-/////////////////////////////////////////// Adam learning rate ///////////////////////////////////////////////////////////
-        } else if (nn->adapativeLearningRateMethod == ADAM) {
-            float s_hat[n];
-            float r_hat[n];
-            for (int i=0; i<n; i++) {
-                // Update biased first moment estimate
-                nn->adam->biasesBiasedFirstMomentEstimate[stride+i] = (nn->adam->decayRate1*nn->adam->biasesBiasedFirstMomentEstimate[stride+i]) + (1.0-nn->adam->decayRate1)*( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) );
-                // Update biased second moment estimate
-                nn->adam->biasesBiasedSecondMomentEstimate[stride+i] = (nn->adam->decayRate2*nn->adam->biasesBiasedSecondMomentEstimate[stride+i]) + (1.0-nn->adam->decayRate2)*( ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) * ((1.0f/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i]) );
-                
-                // Correct bias in first moment
-                s_hat[i] = nn->adam->biasesBiasedFirstMomentEstimate[stride+i] / (1.0f - powf(nn->adam->decayRate1, (float)nn->adam->time));
-                // Correct bias in second moment
-                r_hat[i] = nn->adam->biasesBiasedSecondMomentEstimate[stride+i] / (1.0f - powf(nn->adam->decayRate2, (float)nn->adam->time));
-            }
-            for (int i=0; i<n; i++) {
-                coeff[i] = nn->adam->stepSize*( s_hat[i] / (sqrtf(r_hat[i]+nn->adam->delta)) );
-            }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-        } else {
-            for (int i=0; i<n; i++) {
-                coeff[i] = (nn->parameters->eta/(float)nn->parameters->miniBatchSize)*dcdbNodePt->dcdb[i];
-            }
-        }
-        
-        for (int i=0; i<n; i++) {
-            nn->biasesVelocity[stride+i] = nn->parameters->mu*nn->biasesVelocity[stride+i] - coeff[i];
-            nn->biases[stride+i] = nn->biases[stride+i] + nn->biasesVelocity[stride+i];
-        }
-        dcdbNodePt = dcdbNodePt->next;
-        l++;
-        stride = stride + n;
-    }
-}
-
-//
-//  Return the gradient of the cross-entropy cost function C_x layers by layers
-//
-static void * _Nullable backpropagation(void * _Nonnull self) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    // Activations at the input layer
-    activationNode *aNodePt = nn->networkActivations;
-    for (int i=0; i<nn->number_of_features; i++) {
-        aNodePt->a[i] = nn->batch[nn->example_idx][i];
-    }
-    
-    // Feedforward
-    feedforward(nn);
-    
-    // ------------- Backward pass
-    // At last layer
-    
-    activationNode *aTail = nn->networkActivations;
-    while (aTail != NULL && aTail->next != NULL) {
-        aTail = aTail->next;
-    }
-    affineTransformationNode *zTail = nn->networkAffineTransformations;
-    while (zTail != NULL && zTail->next != NULL) {
-        zTail = zTail->next;
-    }
-    
-    float delta[nn->max_number_of_nodes_in_layer];
-    float buffer[nn->max_number_of_nodes_in_layer];
-    memset(delta, 0.0f, sizeof(delta));
-    memset(buffer, 0.0f, sizeof(buffer));
-    
-    // Compute delta
-    int k = (int)nn->number_of_features;
-    for (int i=0; i<aTail->n; i++) {
-        delta[i] = aTail->a[i] - nn->batch[nn->example_idx][k];
-        k++;
-    }
-    
-    //dc/dw and dc/db at last layer
-    costWeightDerivativeNode *dcdwTail = nn->deltaNetworkCostWeightDerivatives;
-    while (dcdwTail != NULL && dcdwTail->next != NULL) {
-        dcdwTail = dcdwTail->next;
-    }
-    costBiaseDerivativeNode *dcdbTail = nn->deltaNetworkCostBiaseDerivatives;
-    while (dcdbTail != NULL && dcdbTail->next != NULL) {
-        dcdbTail = dcdbTail->next;
-    }
-    aNodePt = aTail->previous;
-    for (int i=0; i<dcdwTail->m; i++) {
-        for (int j=0; j<dcdwTail->n; j++) {
-            dcdwTail->dcdw[i][j] = aNodePt->a[j]*delta[i];
-        }
-    }
-    for (int i=0; i<dcdbTail->n; i++) {
-        dcdbTail->dcdb[i] = delta[i];
-    }
-    
-    // The backward pass loop
-    
-    // Stride to weithts at last layer
-    unsigned int stride = 0;
-    unsigned int m, n;
-    for (int l=0; l<nn->parameters->numberOfLayers-2; l++) {
-        m = nn->weightsDimensions[l].m;
-        n = nn->weightsDimensions[l].n;
-        stride = stride + (m * n);
-    }
-    
-    affineTransformationNode *zNodePt = zTail->previous;
-    costWeightDerivativeNode *dcdwNodePt = dcdwTail->previous;
-    costBiaseDerivativeNode *dcdbNodePt = dcdbTail->previous;
-    
-    unsigned int l = nn->parameters->numberOfLayers - 2;
-    while (dcdwNodePt != NULL && dcdbNodePt != NULL) {
-        aNodePt = aNodePt->previous;
-        
-        float sp[zNodePt->n];
-        for (int i=0; i<zNodePt->n; i++) {
-            sp[i] = nn->activationDerivatives[l-1](zNodePt->z[i]);
-        }
-        
-        cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->weightsDimensions[l].m, (int)nn->weightsDimensions[l].n, 1.0, nn->weights+stride, (int)nn->weightsDimensions[l].n, delta, 1, 0.0, buffer, 1);
-        for (int i=0; i<zNodePt->n; i++) {
-            delta[i] = buffer[i] * sp[i];
-        }
-        // dc/dw at layer l
-        for (int i=0; i<dcdwNodePt->m; i++) {
-            for (int j=0; j<dcdwNodePt->n; j++) {
-                dcdwNodePt->dcdw[i][j] = aNodePt->a[j]*delta[i];
-            }
-        }
-        // dc/db at layer l
-        for (int i=0; i<dcdbNodePt->n; i++) {
-            dcdbNodePt->dcdb[i] = delta[i];
-        }
-        
-        zNodePt = zNodePt->previous;
-        dcdwNodePt = dcdwNodePt->previous;
-        dcdbNodePt = dcdbNodePt->previous;
-        stride = stride - (nn->weightsDimensions[l-1].m * nn->weightsDimensions[l-1].n);
-        l--;
-    }
-    
-    return NULL;
-}
-
 
 static int eval(void * _Nonnull self) {
     
@@ -791,7 +386,7 @@ static int eval(void * _Nonnull self) {
             aNodePt->a[i] = nn->data->test->set[k][i];
         }
 
-        nn->feedforward(self);
+        feedforward(self);
         
         aNodePt = nn->networkActivations;
         while (aNodePt != NULL && aNodePt->next != NULL) {
@@ -869,7 +464,7 @@ static float totalCost(void * _Nonnull self, float * _Nonnull * _Nonnull data, u
             aNodePt->a[j] = data[i][j];
         }
         
-        nn->feedforward(self);
+        feedforward(self);
         aNodePt = nn->networkActivations;
         while (aNodePt != NULL && aNodePt->next != NULL) {
             aNodePt = aNodePt->next;
@@ -905,49 +500,4 @@ static float totalCost(void * _Nonnull self, float * _Nonnull * _Nonnull data, u
     }
     
     return cost;
-}
-
-//
-//  Return the output of the network for a given activation input
-//
-static void feedforward(void * _Nonnull self) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-
-    activationNode *aNodePt = nn->networkActivations;
-    affineTransformationNode *zNodePt = nn->networkAffineTransformations;
-    
-    unsigned int stride1 = 0;
-    unsigned int stride2 = 0;
-    for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
-        unsigned int m = nn->weightsDimensions[l].m;
-        unsigned int n = nn->weightsDimensions[l].n;
-        
-        aNodePt = aNodePt->next;
-        zNodePt = zNodePt->next;
-        float buffer[aNodePt->n];
-        memset(buffer, 0.0f, sizeof(buffer));
-        
-        cblas_sgemv(CblasRowMajor, CblasNoTrans, (int)m, (int)n, 1.0, nn->weights+stride1, (int)n, aNodePt->previous->a, 1, 0.0, buffer, 1);
-#ifdef __APPLE__
-        vDSP_vadd(buffer, 1, nn->biases+stride2, 1, zNodePt->z, 1,nn->biasesDimensions[l].n);
-#else
-        for (int i=0; i<nn->biasesDimensions[l].n; i++) {
-            zNodePt->z[i] = buffer[i] + nn->biases[stride2+i];
-        }
-#endif
-        float *vec = NULL;
-        unsigned int *vec_length = NULL;
-        if (strcmp(nn->parameters->activationFunctions[l], "softmax") == 0) {
-            vec = zNodePt->z;
-            vec_length = &zNodePt->n;
-        }
-        for (int i=0; i<aNodePt->n; i++) {
-            aNodePt->a[i] = nn->activationFunctions[l](zNodePt->z[i],vec, vec_length);
-        }
-        nanToNum(aNodePt->a, aNodePt->n);
-        
-        stride1 = stride1 + (m * n);
-        stride2 = stride2 + nn->biasesDimensions[l].n;
-    }
 }

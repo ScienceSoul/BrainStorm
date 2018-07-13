@@ -12,25 +12,25 @@
 #include "Memory.h"
 #include "Parsing.h"
 
-void * _Nonnull allocateActivationNode(void) {
+static void * _Nonnull allocateActivationNode(void) {
     activationNode *list = (activationNode *)malloc(sizeof(activationNode));
     *list = (activationNode){.n=0, .a=NULL, .next=NULL, .previous=NULL};
     return (void *)list;
 }
 
-void * _Nonnull allocateAffineTransformationNode(void) {
+static void * _Nonnull allocateAffineTransformationNode(void) {
     affineTransformationNode *list = (affineTransformationNode *)malloc(sizeof(affineTransformationNode));
     *list = (affineTransformationNode){.n=0, .z=NULL, .next=NULL, .previous=NULL};
     return (void *)list;
 }
 
-void * _Nonnull allocateCostWeightDerivativeNode(void) {
+static void * _Nonnull allocateCostWeightDerivativeNode(void) {
     costWeightDerivativeNode *list = (costWeightDerivativeNode *)malloc(sizeof(costWeightDerivativeNode));
     *list = (costWeightDerivativeNode){.m=0, .n=0, .dcdw=NULL, .next=NULL, .previous=NULL};
     return (void *)list;
 }
 
-void * _Nonnull allocateCostBiaseDerivativeNode(void) {
+static void * _Nonnull allocateCostBiaseDerivativeNode(void) {
     costBiaseDerivativeNode *list = (costBiaseDerivativeNode *)malloc(sizeof(costBiaseDerivativeNode));
     *list = (costBiaseDerivativeNode){.n=0, .dcdb=NULL, .next=NULL, .previous=NULL};
     return (void *)list;
@@ -42,7 +42,7 @@ void * _Nonnull allocateCostBiaseDerivativeNode(void) {
 //  and standard deviation 1 over the square root of the number of
 //  weights/velocities connecting to the same neuron.
 //
-float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _Nonnull strategy) {
+static float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _Nonnull strategy) {
     
     NeuralNetwork* nn= (NeuralNetwork *)self;
     
@@ -104,7 +104,7 @@ float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _Nonnull s
 //  They are initialized using a Gaussian distribution with mean 0
 //  and standard deviation 1.
 //
-float * _Nonnull initVectors(void * _Nonnull self, bool init, char * _Nonnull strategy) {
+static float * _Nonnull initVectors(void * _Nonnull self, bool init, char * _Nonnull strategy) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
@@ -441,40 +441,37 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->parameters->mu = strtof(field->value, NULL);
             
             } else if (strcmp(field->key, "adagrad") == 0) {
-                nn->adaGrad = (AdaGrad *)malloc(sizeof(AdaGrad));
-                nn->adaGrad->delta = strtof(field->value, NULL);
-                nn->adaGrad->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->adaGrad->costBiasDerivativeSquaredAccumulated = NULL;
-                nn->adapativeLearningRateMethod = ADAGRAD;
+                nn->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
+                nn->train->ada_grad->delta = strtof(field->value, NULL);
+                nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
+                nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
             
             } else if (strcmp(field->key, "rmsprop") == 0) {
-                nn->rmsProp = (RMSProp *)malloc(sizeof(RMSProp));
+                nn->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the decay rate and a small constant should be given for the RMSProp method.");
-                nn->rmsProp->decayRate = result[0];
-                nn->rmsProp->delta = result[1];
-                nn->rmsProp->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->rmsProp->costBiasDerivativeSquaredAccumulated = NULL;
-                nn->adapativeLearningRateMethod = RMSPROP;
+                nn->train->rms_prop->decayRate = result[0];
+                nn->train->rms_prop->delta = result[1];
+                nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
+                nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
             
             } else if (strcmp(field->key, "adam") == 0) {
-                nn->adam = (Adam *)malloc(sizeof(Adam));
+                nn->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
                 float result[4];
                 unsigned int numberOfItems, len=4;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 4) fatal(DEFAULT_CONSOLE_WRITER, "The step size, two decay rates and a small constant should be given for the Adam method.");
-                nn->adam->time = 0;
-                nn->adam->stepSize = result[0];
-                nn->adam->decayRate1 = result[1];
-                nn->adam->decayRate2 = result[2];
-                nn->adam->delta = result[3];
-                nn->adam->weightsBiasedFirstMomentEstimate = NULL;
-                nn->adam->weightsBiasedSecondMomentEstimate = NULL;
-                nn->adam->biasesBiasedFirstMomentEstimate = NULL;
-                nn->adam->biasesBiasedSecondMomentEstimate = NULL;
-                nn->adapativeLearningRateMethod = ADAM;
+                nn->train->adam->time = 0;
+                nn->train->adam->stepSize = result[0];
+                nn->train->adam->decayRate1 = result[1];
+                nn->train->adam->decayRate2 = result[2];
+                nn->train->adam->delta = result[3];
+                nn->train->adam->weightsBiasedFirstMomentEstimate = NULL;
+                nn->train->adam->weightsBiasedSecondMomentEstimate = NULL;
+                nn->train->adam->biasesBiasedFirstMomentEstimate = NULL;
+                nn->train->adam->biasesBiasedSecondMomentEstimate = NULL;
             }
             field = field->next;
         }
