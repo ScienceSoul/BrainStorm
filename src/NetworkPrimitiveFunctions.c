@@ -18,6 +18,7 @@
 #include "NetworkPrimitiveFunctions.h"
 #include "NeuralNetwork.h"
 #include "TimeProfile.h"
+#include "Memory.h"
 
 void feedforward(void * _Nonnull self) {
     
@@ -189,7 +190,7 @@ void batchAccumulation(void * _Nonnull self) {
     }
 }
 
-void miniBatchLoop(void * _Nonnull neural) {
+void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
 
@@ -197,7 +198,7 @@ void miniBatchLoop(void * _Nonnull neural) {
     double rt = realtime();
 #endif
     
-    for (int i=0; i<nn->parameters->miniBatchSize; i++) {
+    for (int i=0; i<batch_size; i++) {
         nn->example_idx = i;
         backpropagation((void *)nn);
         batchAccumulation((void *)nn);
@@ -257,4 +258,41 @@ void progression(void * _Nonnull neural, progress_dict progress_dict) {
         nextPrint = step;
         count = 1;
     } else count++;
+}
+
+void trainLoop(void * _Nonnull  neural) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    float **miniBatch = floatmatrix(0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
+    
+    for (int k=1; k<=nn->parameters->epochs; k++) {
+        shuffle(nn->data->training->set, nn->data->training->m, nn->data->training->n);
+        
+        fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs);
+        for (int l=1; l<=nn->train->batch_range((void *)neural,  nn->parameters->miniBatchSize); l++) {
+            nn->train->next_batch((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            
+            if (nn->train->gradient_descent != NULL) {
+             nn->train->gradient_descent->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            } else if (nn->train->momentum != NULL) {
+                nn->train->momentum->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            } else if (nn->train->ada_grad != NULL) {
+                nn->train->ada_grad->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            } else if (nn->train->rms_prop != NULL) {
+                nn->train->rms_prop->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            }  else if (nn->train->adam != NULL) {
+                nn->train->adam->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            }
+        }
+        
+        if (nn->data->test->set != NULL) {
+            fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, nn->data->test->m);
+            int result = nn->evaluate((void *)nn, false);
+            fprintf(stdout, "%s: Epoch {%d/%d}: {%d} / {%u}.\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, result, nn->data->test->m);
+        }
+        fprintf(stdout, "\n");
+    }
+    
+    free_fmatrix(miniBatch, 0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
 }

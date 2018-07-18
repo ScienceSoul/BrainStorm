@@ -68,16 +68,17 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     strcpy(nn->parameters->supported_parameters[8], "learning_rate");
     strcpy(nn->parameters->supported_parameters[9], "l1_regularization");
     strcpy(nn->parameters->supported_parameters[10], "l2_regularization");
-    strcpy(nn->parameters->supported_parameters[11], "momentum");
-    strcpy(nn->parameters->supported_parameters[12], "adagrad");
-    strcpy(nn->parameters->supported_parameters[13], "rmsprop");
-    strcpy(nn->parameters->supported_parameters[14], "adam");
+    strcpy(nn->parameters->supported_parameters[11], "gradient_descent_optimizer");
+    strcpy(nn->parameters->supported_parameters[12], "momentum_optimizer");
+    strcpy(nn->parameters->supported_parameters[13], "adagrad_optimizer");
+    strcpy(nn->parameters->supported_parameters[14], "rmsprop_optimizer");
+    strcpy(nn->parameters->supported_parameters[15], "adam_optimizer");
     
     bzero(nn->parameters->data, MAX_LONG_STRING_LENGTH);
     strcpy(nn->parameters->dataName, "<empty>");
-    nn->parameters->epochs = 30;
-    nn->parameters->miniBatchSize = 10;
-    nn->parameters->eta = 0.5f;
+    nn->parameters->epochs = 0;
+    nn->parameters->miniBatchSize = 0;
+    nn->parameters->eta = 0.0f;
     nn->parameters->lambda = 0.0f;
     nn->parameters->mu = 0.0f;
     nn->parameters->numberOfLayers = 0;
@@ -116,6 +117,9 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->l0_regularizer = l0_regularizer;
     nn->l1_regularizer = l1_regularizer;
     nn->l2_regularizer = l2_regularizer;
+    
+    // This function is only used when loading a network from a param file
+    nn->train_loop = trainLoop;
     
     return nn;
 }

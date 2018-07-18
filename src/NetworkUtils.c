@@ -297,6 +297,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
     short FOUND_SPLIT          = 0;
     short FOUND_CLASSIFICATION = 0;
     short FOUND_REGULARIZATION = 0;
+    short FOUND_OPTIMIZER      = 0;
     
     definition *pt = definitions;
     while (pt != NULL) {
@@ -437,32 +438,56 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     nn->regularizer[i] = nn->l2_regularizer;
                     FOUND_REGULARIZATION = 1;
                 }
-            } else if (strcmp(field->key, "momentum") == 0) {
-                nn->parameters->mu = strtof(field->value, NULL);
-            
-            } else if (strcmp(field->key, "adagrad") == 0) {
-                nn->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
-                nn->train->ada_grad->delta = strtof(field->value, NULL);
-                nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
-            
-            } else if (strcmp(field->key, "rmsprop") == 0) {
-                nn->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
+            } else if (strcmp(field->key, "gradient_descent_optimizer") == 0) {
+                nn->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
+                nn->train->gradient_descent->learning_rate = strtof(field->value, NULL);
+                nn->train->gradient_descent->minimize = gradientDescentOptimizer;
+                FOUND_OPTIMIZER = 1;
+                
+            } else if (strcmp(field->key, "momentum_optimizer") == 0) {
+                nn->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
-                if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the decay rate and a small constant should be given for the RMSProp method.");
-                nn->train->rms_prop->decayRate = result[0];
-                nn->train->rms_prop->delta = result[1];
+                if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and the momentum coefficient should be given to the momentum optimizer.");
+                nn->train->momentum->learning_rate = result[0];
+                nn->train->momentum->momentum_coefficient = result[1];
+                nn->train->momentum->minimize = momentumOptimizer;
+                FOUND_OPTIMIZER = 1;
+            
+            } else if (strcmp(field->key, "adagrad_optimizer") == 0) {
+                nn->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
+                float result[2];
+                unsigned int numberOfItems, len = 2;
+                parseArgument(field->value, field->key, result, &numberOfItems, &len);
+                if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and a delta value should be given to the AdaGrad optimizer.");
+                nn->train->ada_grad->learning_rate = result[0];
+                nn->train->ada_grad->delta = result[1];
+                nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
+                nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->train->ada_grad->minimize = adamOptimizer;
+                FOUND_OPTIMIZER = 1;
+            
+            } else if (strcmp(field->key, "rmsprop_optimizer") == 0) {
+                nn->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
+                float result[3];
+                unsigned int numberOfItems, len = 3;
+                parseArgument(field->value, field->key, result, &numberOfItems, &len);
+                if (numberOfItems < 3) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate, the decay rate and a delata value should be given to the RMSProp optimizer.");
+                nn->train->rms_prop->learning_rate = result[0];
+                nn->train->rms_prop->decayRate = result[1];
+                nn->train->rms_prop->delta = result[2];
                 nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
                 nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->train->rms_prop->minimize = rmsPropOptimizer;
+                FOUND_OPTIMIZER = 1;
             
-            } else if (strcmp(field->key, "adam") == 0) {
+            } else if (strcmp(field->key, "adam_optimizer") == 0) {
                 nn->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
                 float result[4];
                 unsigned int numberOfItems, len=4;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
-                if (numberOfItems < 4) fatal(DEFAULT_CONSOLE_WRITER, "The step size, two decay rates and a small constant should be given for the Adam method.");
+                if (numberOfItems < 4) fatal(DEFAULT_CONSOLE_WRITER, "The step size, two decay rates and a delta value should be given to the Adam optimizer.");
                 nn->train->adam->time = 0;
                 nn->train->adam->stepSize = result[0];
                 nn->train->adam->decayRate1 = result[1];
@@ -472,6 +497,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->train->adam->weightsBiasedSecondMomentEstimate = NULL;
                 nn->train->adam->biasesBiasedFirstMomentEstimate = NULL;
                 nn->train->adam->biasesBiasedSecondMomentEstimate = NULL;
+                nn->train->adam->minimize = adamOptimizer;
+                FOUND_OPTIMIZER = 1;
             }
             field = field->next;
         }
@@ -501,7 +528,9 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
             nn->regularizer[i] = nn->l0_regularizer;
         }
     }
-    
+    if (FOUND_OPTIMIZER == 0) {
+        fatal(DEFAULT_CONSOLE_WRITER, "missing optimizer in parameters input.");
+    }
     
     return 0;
 }

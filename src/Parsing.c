@@ -85,7 +85,7 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
             buff[idx] = ch;
             idx++;
             if (ch == '{' && !first_character) {
-                bool alreadyCanonized = false;
+                short alreadyCanonized = 0;
                 memset(str, 0, sizeof(str));
                 memcpy(str, buff, strlen(keyword));
                 if (strcmp(str, keyword) != 0) {
@@ -117,10 +117,10 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
                     if (ch == ' ') {
                         // A space in the key name is replaced internally by '_'
                         // (NB: Spaces in the key value are just ignored)
-                        if (found_key == 0 && buff[0] != 0 && !alreadyCanonized) {
+                        if (found_key == 0 && buff[0] != 0 && (alreadyCanonized < 2)) {
                             buff[idx] = '_';
                             idx++;
-                            alreadyCanonized = true;
+                            alreadyCanonized++;
                         }
                         continue;
                     }

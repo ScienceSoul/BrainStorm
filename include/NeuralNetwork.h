@@ -108,6 +108,8 @@ typedef struct NeuralNetwork {
     float (* _Nullable l2_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
     float (* _Nullable regularizer[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, int i, int j, int n, int stride);
     
+    void (* _Nullable train_loop)(void * _Nonnull neural);
+    
 } NeuralNetwork;
 
 NeuralNetwork * _Nonnull newNeuralNetwork(void);

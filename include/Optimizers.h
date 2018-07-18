@@ -11,13 +11,13 @@
 
 typedef struct GradientDescentOptimizer {
     float learning_rate;
-    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
+    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } GradientDescentOptimizer;
 
 typedef struct MomentumOptimizer {
     float learning_rate;
     float momentum_coefficient;
-    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
+    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } MomentumOptimizer;
 
 typedef struct AdaGradOptimizer {
@@ -25,7 +25,7 @@ typedef struct AdaGradOptimizer {
     float delta;
     float * _Nullable costWeightDerivativeSquaredAccumulated;
     float * _Nullable costBiasDerivativeSquaredAccumulated;
-    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
+    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } AdaGradOptimizer;
 
 typedef struct RMSPropOptimizer {
@@ -34,7 +34,7 @@ typedef struct RMSPropOptimizer {
     float decayRate;
     float * _Nullable costWeightDerivativeSquaredAccumulated;
     float * _Nullable costBiasDerivativeSquaredAccumulated;
-    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
+    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } RMSPropOptimizer;
 
 typedef struct AdamOptimizer {
@@ -47,13 +47,13 @@ typedef struct AdamOptimizer {
     float * _Nullable weightsBiasedSecondMomentEstimate;
     float * _Nullable biasesBiasedFirstMomentEstimate;
     float * _Nullable biasesBiasedSecondMomentEstimate;
-    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
+    void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } AdamOptimizer;
 
-void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
-void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
-void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
-void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
-void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch);
+void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
+void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
+void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
+void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
+void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 
 #endif /* Optimization_h */
