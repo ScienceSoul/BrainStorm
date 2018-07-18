@@ -1,13 +1,13 @@
 //
-//  NetworkPrimitiveFunctions.h
+//  NetworkOps.h
 //  BrainStorm
 //
-//  Created by Hakime Seddik on 12/07/2018.
+//  Created by Hakime Seddik on 18/07/2018.
 //  Copyright © 2018 Hakime Seddik. All rights reserved.
 //
 
-#ifndef NetworkPrimitiveFunctions_h
-#define NetworkPrimitiveFunctions_h
+#ifndef NetworkOps_h
+#define NetworkOps_h
 
 typedef struct progress_dict {
     unsigned int batch_size;
@@ -28,4 +28,6 @@ void progression(void * _Nonnull neural, progress_dict progress_dict);
 // Only used when loading a network from a param file
 void trainLoop(void * _Nonnull  neural);
 
-#endif /* NetworkPrimitiveFunctions_h */
+float math_ops(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
+
+#endif /* NetworkOps_h */

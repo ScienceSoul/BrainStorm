@@ -1,24 +1,19 @@
 //
-//  NetworkPrimitiveFunctions.c
+//  NetworkOps.c
 //  BrainStorm
 //
-//  Created by Hakime Seddik on 12/07/2018.
+//  Created by Hakime Seddik on 18/07/2018.
 //  Copyright © 2018 Hakime Seddik. All rights reserved.
 //
 
-
 #ifdef __APPLE__
     #include <Accelerate/Accelerate.h>
-#else
-    #include "cblas.h"
-    #include "cblas_f77.h"
 #endif
 
-#include <stdio.h>
-#include "NetworkPrimitiveFunctions.h"
 #include "NeuralNetwork.h"
 #include "TimeProfile.h"
 #include "Memory.h"
+#include "NetworkOps.h"
 
 void feedforward(void * _Nonnull self) {
     
@@ -165,7 +160,7 @@ void backpropagation(void * _Nonnull self) {
 }
 
 void batchAccumulation(void * _Nonnull self) {
- 
+    
     // Accumulate dcdw and dc/db
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
@@ -193,7 +188,7 @@ void batchAccumulation(void * _Nonnull self) {
 void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-
+    
 #ifdef VERBOSE
     double rt = realtime();
 #endif
@@ -274,7 +269,7 @@ void trainLoop(void * _Nonnull  neural) {
             nn->train->next_batch((void *)nn, miniBatch, nn->parameters->miniBatchSize);
             
             if (nn->train->gradient_descent != NULL) {
-             nn->train->gradient_descent->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+                nn->train->gradient_descent->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
             } else if (nn->train->momentum != NULL) {
                 nn->train->momentum->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
             } else if (nn->train->ada_grad != NULL) {
@@ -295,4 +290,21 @@ void trainLoop(void * _Nonnull  neural) {
     }
     
     free_fmatrix(miniBatch, 0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
+}
+
+float math_ops(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
+    
+    float result = 0.0f;
+    
+    if (strcmp(op, "reduce mean") == 0) {
+        vDSP_meanv(vector, 1, &result, n);
+    } else if (strcmp(op, "reduce sum") == 0) {
+        vDSP_sve(vector, 1, &result, n);
+    } else if (strcmp(op, "reduce max") == 0) {
+        vDSP_maxv(vector, 1, &result, n);
+    } else if (strcmp(op, "reduce min") == 0) {
+        vDSP_minv(vector, 1, &result, n);
+    } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized math operation.");
+    
+    return result;
 }
