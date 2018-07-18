@@ -65,14 +65,13 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     strcpy(nn->parameters->supported_parameters[5], "classification");
     strcpy(nn->parameters->supported_parameters[6], "epochs");
     strcpy(nn->parameters->supported_parameters[7], "batch_size");
-    strcpy(nn->parameters->supported_parameters[8], "learning_rate");
-    strcpy(nn->parameters->supported_parameters[9], "l1_regularization");
-    strcpy(nn->parameters->supported_parameters[10], "l2_regularization");
-    strcpy(nn->parameters->supported_parameters[11], "gradient_descent_optimizer");
-    strcpy(nn->parameters->supported_parameters[12], "momentum_optimizer");
-    strcpy(nn->parameters->supported_parameters[13], "adagrad_optimizer");
-    strcpy(nn->parameters->supported_parameters[14], "rmsprop_optimizer");
-    strcpy(nn->parameters->supported_parameters[15], "adam_optimizer");
+    strcpy(nn->parameters->supported_parameters[8], "l1_regularization");
+    strcpy(nn->parameters->supported_parameters[9], "l2_regularization");
+    strcpy(nn->parameters->supported_parameters[10], "gradient_descent_optimizer");
+    strcpy(nn->parameters->supported_parameters[11], "momentum_optimizer");
+    strcpy(nn->parameters->supported_parameters[12], "adagrad_optimizer");
+    strcpy(nn->parameters->supported_parameters[13], "rmsprop_optimizer");
+    strcpy(nn->parameters->supported_parameters[14], "adam_optimizer");
     
     bzero(nn->parameters->data, MAX_LONG_STRING_LENGTH);
     strcpy(nn->parameters->dataName, "<empty>");
@@ -80,7 +79,6 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->parameters->miniBatchSize = 0;
     nn->parameters->eta = 0.0f;
     nn->parameters->lambda = 0.0f;
-    nn->parameters->mu = 0.0f;
     nn->parameters->numberOfLayers = 0;
     nn->parameters->numberOfActivationFunctions = 0;
     nn->parameters->numberOfClassifications = 0;
