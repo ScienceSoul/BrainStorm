@@ -15,11 +15,6 @@ typedef struct scalar_dict {
     int epochs, mini_batch_size;
 } scalar_dict;
 
-typedef struct adaptive_dict {
-    float scalar;
-    float * _Nullable vector;
-} adaptive_dict;
-
 typedef struct optimizer_dict {
     char * _Nullable optimizer;
     float learning_rate;
@@ -43,7 +38,6 @@ typedef struct networkConstructor {
     void (* _Nullable training_data)(void * _Nonnull neural, char * _Nonnull str);
     void (* _Nullable classification)(void * _Nonnull neural, int * _Nonnull vector, int n);
     void (* _Nullable scalars)(void * _Nonnull neural, scalar_dict scalars);
-    void (* _Nullable adaptive_learning)(void * _Nonnull neural, char * _Nonnull method, adaptive_dict adaptive_dict);
     void * _Nonnull (* _Nullable optimizer)(void * _Nonnull neural, optimizer_dict optimizer_dict);
     
 } networkConstructor;

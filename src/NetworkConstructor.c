@@ -119,18 +119,21 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
     if (strcmp(optimizer_dict.optimizer, "gradient descent") == 0) {
         nn->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
         nn->train->gradient_descent->learning_rate = optimizer_dict.learning_rate;
+        nn->parameters->eta = optimizer_dict.learning_rate;
         nn->train->gradient_descent->minimize = gradientDescentOptimizer;
         optimizer = (void *)nn->train->gradient_descent;
     } else if (strcmp(optimizer_dict.optimizer, "momentum") == 0) {
         nn->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
         nn->train->momentum->learning_rate = optimizer_dict.learning_rate;
         nn->train->momentum->momentum_coefficient = optimizer_dict.momentum;
+        nn->parameters->eta = optimizer_dict.learning_rate;
         nn->train->momentum->minimize = momentumOptimizer;
         optimizer = (void *)nn->train->momentum;
     } else if (strcmp(optimizer_dict.optimizer, "adagrad") == 0) {
         nn->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
         nn->train->ada_grad->learning_rate = optimizer_dict.learning_rate;
         nn->train->ada_grad->delta = optimizer_dict.delta;
+        nn->parameters->eta = optimizer_dict.learning_rate;;
         nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
         nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
         nn->train->ada_grad->minimize = adamOptimizer;
@@ -140,6 +143,7 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
         nn->train->rms_prop->learning_rate = optimizer_dict.learning_rate;
         nn->train->rms_prop->decayRate = optimizer_dict.decay_rate1;
         nn->train->rms_prop->delta = optimizer_dict.delta;
+        nn->parameters->eta = optimizer_dict.learning_rate;
         nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
         nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
         nn->train->rms_prop->minimize = rmsPropOptimizer;
@@ -151,6 +155,7 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
         nn->train->adam->decayRate1 = optimizer_dict.decay_rate1;
         nn->train->adam->decayRate2 = optimizer_dict.decay_rate2;
         nn->train->adam->delta = optimizer_dict.delta;
+        nn->parameters->eta = optimizer_dict.step_size;
         nn->train->adam->weightsBiasedFirstMomentEstimate = NULL;
         nn->train->adam->weightsBiasedSecondMomentEstimate = NULL;
         nn->train->adam->biasesBiasedFirstMomentEstimate = NULL;

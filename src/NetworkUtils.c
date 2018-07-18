@@ -441,6 +441,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
             } else if (strcmp(field->key, "gradient_descent_optimizer") == 0) {
                 nn->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
                 nn->train->gradient_descent->learning_rate = strtof(field->value, NULL);
+                nn->parameters->eta = strtof(field->value, NULL);
                 nn->train->gradient_descent->minimize = gradientDescentOptimizer;
                 FOUND_OPTIMIZER = 1;
                 
@@ -452,6 +453,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and the momentum coefficient should be given to the momentum optimizer.");
                 nn->train->momentum->learning_rate = result[0];
                 nn->train->momentum->momentum_coefficient = result[1];
+                nn->parameters->eta = result[0];
                 nn->train->momentum->minimize = momentumOptimizer;
                 FOUND_OPTIMIZER = 1;
             
@@ -463,6 +465,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and a delta value should be given to the AdaGrad optimizer.");
                 nn->train->ada_grad->learning_rate = result[0];
                 nn->train->ada_grad->delta = result[1];
+                nn->parameters->eta = result[0];
                 nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
                 nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
                 nn->train->ada_grad->minimize = adamOptimizer;
@@ -477,6 +480,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->train->rms_prop->learning_rate = result[0];
                 nn->train->rms_prop->decayRate = result[1];
                 nn->train->rms_prop->delta = result[2];
+                nn->parameters->eta = result[0];
                 nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
                 nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
                 nn->train->rms_prop->minimize = rmsPropOptimizer;
@@ -493,6 +497,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->train->adam->decayRate1 = result[1];
                 nn->train->adam->decayRate2 = result[2];
                 nn->train->adam->delta = result[3];
+                nn->parameters->eta = result[0];
                 nn->train->adam->weightsBiasedFirstMomentEstimate = NULL;
                 nn->train->adam->weightsBiasedSecondMomentEstimate = NULL;
                 nn->train->adam->biasesBiasedFirstMomentEstimate = NULL;
