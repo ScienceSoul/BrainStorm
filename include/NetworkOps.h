@@ -25,9 +25,11 @@ int batchRange(void * _Nonnull neural, unsigned int batchSize);
 
 void progression(void * _Nonnull neural, progress_dict progress_dict);
 
+float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
+
+void evalPrediction(void * _Nonnull self, char * _Nonnull type, float * _Nonnull out, bool metal);
+
 // Only used when loading a network from a param file
 void trainLoop(void * _Nonnull  neural);
-
-float math_ops(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
 
 #endif /* NetworkOps_h */

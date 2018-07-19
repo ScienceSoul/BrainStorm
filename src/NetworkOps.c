@@ -255,16 +255,105 @@ void progression(void * _Nonnull neural, progress_dict progress_dict) {
     } else count++;
 }
 
+float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
+    
+    float result = 0.0f;
+    
+    if (strcmp(op, "reduce mean") == 0) {
+        vDSP_meanv(vector, 1, &result, n);
+    } else if (strcmp(op, "reduce sum") == 0) {
+        vDSP_sve(vector, 1, &result, n);
+    } else if (strcmp(op, "reduce max") == 0) {
+        vDSP_maxv(vector, 1, &result, n);
+    } else if (strcmp(op, "reduce min") == 0) {
+        vDSP_minv(vector, 1, &result, n);
+    } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized math operation.");
+    
+    return result;
+}
+
+static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    activationNode *aNodePt = NULL;
+    
+    for (int k=0; k<data_size; k++) {
+        
+        aNodePt = nn->networkActivations;
+        for (int i=0; i<nn->number_of_features; i++) {
+            aNodePt->a[i] = data[k][i];
+        }
+        
+        feedforward(self);
+        
+        aNodePt = nn->networkActivations;
+        while (aNodePt != NULL && aNodePt->next != NULL) {
+            aNodePt = aNodePt->next;
+        }
+        
+        out[k] = (float)argmax(aNodePt->a, aNodePt->n) == data[k][nn->number_of_features];
+    }
+}
+
+void evalPrediction(void * _Nonnull self, char * _Nonnull type, float * _Nonnull out, bool metal) {
+    
+    static bool test_check = false;
+    static bool validation_check = false;
+    
+    NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    float **data = NULL;
+    unsigned int data_size = 0;
+    if (strcmp(type, "validation") == 0) {
+        if (!validation_check) {
+            if (nn->data->validation->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on validation data but the data do not exist.");
+            validation_check = true;
+        }
+        data = nn->data->validation->set;
+        data_size = nn->data->validation->m;
+    } else if (strcmp(type, "test") == 0) {
+        if (!test_check) {
+            if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on test data but the data  do not exist.");
+            test_check = true;
+        }
+        data = nn->data->test->set;
+        data_size = nn->data->test->m;
+    } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized type for prediction evaluation.");
+    
+#ifdef __APPLE__
+    if (metal) {
+        unsigned int weightsTableSize = 0;
+        unsigned int biasesTableSize = 0;
+        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+            weightsTableSize = weightsTableSize + (nn->weightsDimensions[l].m * nn->weightsDimensions[l].n);
+            biasesTableSize = biasesTableSize + nn->biasesDimensions[l].n;
+        }
+        
+        nn->gpu->allocate_buffers((void *)nn);
+        nn->gpu->prepare("feedforward");
+        nn->gpu->format_data(data, data_size, nn->number_of_features);
+        nn->gpu->feedforward((void *)nn, out);
+        
+    } else {
+        eval(self, data, data_size, out);
+    }
+#else
+    eval(self, data, data_size, out);
+#endif
+}
+
+
 void trainLoop(void * _Nonnull  neural) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
     float **miniBatch = floatmatrix(0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
+    float out_test[nn->data->test->m];
     
     for (int k=1; k<=nn->parameters->epochs; k++) {
         shuffle(nn->data->training->set, nn->data->training->m, nn->data->training->n);
         
-        fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs);
         for (int l=1; l<=nn->train->batch_range((void *)neural,  nn->parameters->miniBatchSize); l++) {
             nn->train->next_batch((void *)nn, miniBatch, nn->parameters->miniBatchSize);
             
@@ -281,30 +370,12 @@ void trainLoop(void * _Nonnull  neural) {
             }
         }
         
-        if (nn->data->test->set != NULL) {
-            fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, nn->data->test->m);
-            int result = nn->evaluate((void *)nn, false);
-            fprintf(stdout, "%s: Epoch {%d/%d}: {%d} / {%u}.\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, result, nn->data->test->m);
-        }
+        fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, nn->data->test->m);
+        nn->eval_prediction((void *)nn, "test", out_test, false);
+        float acc_test = nn->math_ops(out_test, nn->data->test->m, "reduce sum");
+        fprintf(stdout, "{%d/%d}: Test accuracy: %d/%d.\n", k, nn->parameters->epochs, (int)acc_test, nn->data->test->m);
         fprintf(stdout, "\n");
     }
     
     free_fmatrix(miniBatch, 0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
-}
-
-float math_ops(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
-    
-    float result = 0.0f;
-    
-    if (strcmp(op, "reduce mean") == 0) {
-        vDSP_meanv(vector, 1, &result, n);
-    } else if (strcmp(op, "reduce sum") == 0) {
-        vDSP_sve(vector, 1, &result, n);
-    } else if (strcmp(op, "reduce max") == 0) {
-        vDSP_maxv(vector, 1, &result, n);
-    } else if (strcmp(op, "reduce min") == 0) {
-        vDSP_minv(vector, 1, &result, n);
-    } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized math operation.");
-    
-    return result;
 }

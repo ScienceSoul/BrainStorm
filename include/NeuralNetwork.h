@@ -14,7 +14,7 @@
 #include "NetworkUtils.h"
 #include "MetalCompute.h"
 #include "Optimizers.h"
-#include "NetworkPrimitiveFunctions.h"
+#include "NetworkOps.h"
 
 typedef struct weightMatrixDimension {
     unsigned int m, n;
@@ -100,8 +100,6 @@ typedef struct NeuralNetwork {
     
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
-    int (* _Nullable evaluate)(void * _Nonnull self, bool metal);
-    float (* _Nullable totalCost)(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert);
     
     float (* _Nullable l0_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
     float (* _Nullable l1_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
@@ -109,6 +107,13 @@ typedef struct NeuralNetwork {
     float (* _Nullable regularizer[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, int i, int j, int n, int stride);
     
     void (* _Nullable train_loop)(void * _Nonnull neural);
+    
+    // Function pointer to math ops
+    float (* _Nullable math_ops)(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
+    
+    // Function pointer to prediction evaluator
+    void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull type, float * _Nonnull out, bool metal);
+    float (* _Nullable eval_cost)(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert);
     
 } NeuralNetwork;
 

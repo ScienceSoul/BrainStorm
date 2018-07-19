@@ -17,14 +17,13 @@
 #include "Parsing.h"
 #include "Regularization.h"
 #include "TimeProfile.h"
+#include "NetworkOps.h"
 
 static void initNeuralData(void * _Nonnull self);
 
 static void genesis(void * _Nonnull self, char * _Nonnull init_stategy);
 static void finale(void * _Nonnull self);
 static void gpu_alloc(void * _Nonnull self);
-
-static int evaluate(void * _Nonnull self, bool metal);
 
 static float totalCost(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert);
 
@@ -109,8 +108,6 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->finale = finale;
     nn->tensor = tensor;
     nn->gpu_alloc = gpu_alloc;
-    nn->evaluate = evaluate;
-    nn->totalCost = totalCost;
     
     nn->l0_regularizer = l0_regularizer;
     nn->l1_regularizer = l1_regularizer;
@@ -118,6 +115,11 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     
     // This function is only used when loading a network from a param file
     nn->train_loop = trainLoop;
+    
+    nn->math_ops = mathOps;
+    
+    nn->eval_prediction = evalPrediction;
+    nn->eval_cost = totalCost;
     
     return nn;
 }
@@ -371,81 +373,6 @@ static void gpu_alloc(void * _Nonnull self) {
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
     nn->gpu = metalCompute();
-}
-
-static int eval(void * _Nonnull self) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    float result = 0.0f;
-    activationNode *aNodePt = NULL;
-    
-    int sum = 0;
-    for (int k=0; k<nn->data->test->m; k++) {
-        
-        aNodePt = nn->networkActivations;
-        for (int i=0; i<nn->number_of_features; i++) {
-            aNodePt->a[i] = nn->data->test->set[k][i];
-        }
-
-        feedforward(self);
-        
-        aNodePt = nn->networkActivations;
-        while (aNodePt != NULL && aNodePt->next != NULL) {
-            aNodePt = aNodePt->next;
-        }
-        
-        result = (float)argmax(aNodePt->a, aNodePt->n);
-        sum = sum + (result == nn->data->test->set[k][nn->number_of_features]);
-    }
-    
-    return sum;
-}
-
-static int evaluate(void * _Nonnull self, bool metal) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    int sum = 0;
-    double rt = 0.0;
-    
-#ifdef __APPLE__
-    if (metal) {
-        unsigned int weightsTableSize = 0;
-        unsigned int biasesTableSize = 0;
-        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
-            weightsTableSize = weightsTableSize + (nn->weightsDimensions[l].m * nn->weightsDimensions[l].n);
-            biasesTableSize = biasesTableSize + nn->biasesDimensions[l].n;
-        }
-        
-        nn->gpu->allocate_buffers((void *)nn);
-        nn->gpu->prepare("feedforward");
-        nn->gpu->format_data(nn->data->test->set, nn->data->test->m, nn->number_of_features);
-        
-        float result[nn->data->test->m];
-        rt = realtime();
-        
-        nn->gpu->feedforward((void *)nn, result);
-        float vector_sum = 0.0;
-        vDSP_sve(result, 1, &vector_sum, nn->data->test->m);
-        sum = (int)vector_sum;
-        
-        rt = realtime() - rt;
-        
-    } else {
-        rt = realtime();
-        sum = eval(self);
-        rt = realtime() - rt;
-    }
-#else
-    rt = realtime();
-    sum = eval(self);
-    rt = realtime() - rt;
-#endif
-    
-    fprintf(stdout, "%s: total infer time in evaluation for %u input test data (s): %f\n", DEFAULT_CONSOLE_WRITER, nn->data->test->m, rt);
-    
-    return sum;
 }
 
 //

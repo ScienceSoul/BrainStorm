@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "Optimizers.h"
 #include "NeuralNetwork.h"
-#include "NetworkPrimitiveFunctions.h"
+#include "NetworkOps.h"
 
 void init(void *neural) {
 

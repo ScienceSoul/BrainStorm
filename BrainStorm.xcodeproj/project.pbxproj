@@ -58,11 +58,11 @@
 		0161759C20F70E4F00FC40FF /* NetworkParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161758C20EF3E8D00FC40FF /* NetworkParams.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161759D20F70E4F00FC40FF /* Regularization.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161759720F70DEB00FC40FF /* Regularization.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161759E20F70E5C00FC40FF /* Regularization.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161759720F70DEB00FC40FF /* Regularization.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		016175A120F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */; };
-		016175A220F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */; };
 		016175A420F73DDB00FC40FF /* Optimizers.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A320F73DDB00FC40FF /* Optimizers.c */; };
 		016175A520F73DDB00FC40FF /* Optimizers.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A320F73DDB00FC40FF /* Optimizers.c */; };
-		016175A620F8882B00FC40FF /* NetworkPrimitiveFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = 0161759F20F7379000FC40FF /* NetworkPrimitiveFunctions.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		016175AA20FF107600FC40FF /* NetworkOps.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A920FF107600FC40FF /* NetworkOps.c */; };
+		016175AB20FF107600FC40FF /* NetworkOps.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A920FF107600FC40FF /* NetworkOps.c */; };
+		016175AC20FF176A00FC40FF /* NetworkOps.h in Headers */ = {isa = PBXBuildFile; fileRef = 016175A820FF105C00FC40FF /* NetworkOps.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -96,9 +96,9 @@
 		0161758F20EF443E00FC40FF /* NetworkConstructor.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkConstructor.c; path = src/NetworkConstructor.c; sourceTree = "<group>"; };
 		0161759720F70DEB00FC40FF /* Regularization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Regularization.h; path = include/Regularization.h; sourceTree = SOURCE_ROOT; };
 		0161759820F70E1600FC40FF /* Regularization.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Regularization.c; path = src/Regularization.c; sourceTree = "<group>"; };
-		0161759F20F7379000FC40FF /* NetworkPrimitiveFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkPrimitiveFunctions.h; path = include/NetworkPrimitiveFunctions.h; sourceTree = SOURCE_ROOT; };
-		016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkPrimitiveFunctions.c; path = src/NetworkPrimitiveFunctions.c; sourceTree = "<group>"; };
 		016175A320F73DDB00FC40FF /* Optimizers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Optimizers.c; path = src/Optimizers.c; sourceTree = "<group>"; };
+		016175A820FF105C00FC40FF /* NetworkOps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkOps.h; path = include/NetworkOps.h; sourceTree = SOURCE_ROOT; };
+		016175A920FF107600FC40FF /* NetworkOps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkOps.c; path = src/NetworkOps.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -171,8 +171,8 @@
 				0161752E20EDE03000FC40FF /* Memory.h */,
 				0161752F20EDE03000FC40FF /* MetalCompute.h */,
 				0161758E20EF401B00FC40FF /* NetworkConstructor.h */,
+				016175A820FF105C00FC40FF /* NetworkOps.h */,
 				0161758C20EF3E8D00FC40FF /* NetworkParams.h */,
-				0161759F20F7379000FC40FF /* NetworkPrimitiveFunctions.h */,
 				0161752A20EDE03000FC40FF /* NetworkUtils.h */,
 				0161752B20EDE03000FC40FF /* NeuralNetwork.h */,
 				0161752C20EDE03000FC40FF /* Optimizers.h */,
@@ -192,7 +192,7 @@
 				0161753B20EDE05000FC40FF /* Memory.c */,
 				0161753920EDE05000FC40FF /* MetalCompute.m */,
 				0161758F20EF443E00FC40FF /* NetworkConstructor.c */,
-				016175A020F737C600FC40FF /* NetworkPrimitiveFunctions.c */,
+				016175A920FF107600FC40FF /* NetworkOps.c */,
 				0161753820EDE05000FC40FF /* NetworkUtils.c */,
 				0161753720EDE05000FC40FF /* NeuralNetwork.c */,
 				016175A320F73DDB00FC40FF /* Optimizers.c */,
@@ -235,9 +235,9 @@
 				0161757E20EEEFCB00FC40FF /* Data.h in Headers */,
 				0161757F20EEEFCB00FC40FF /* Memory.h in Headers */,
 				0161758020EEEFCB00FC40FF /* MetalCompute.h in Headers */,
+				016175AC20FF176A00FC40FF /* NetworkOps.h in Headers */,
 				0161759220EF46D300FC40FF /* NetworkConstructor.h in Headers */,
 				0161759320EF46D300FC40FF /* NetworkParams.h in Headers */,
-				016175A620F8882B00FC40FF /* NetworkPrimitiveFunctions.h in Headers */,
 				0161758120EEEFCB00FC40FF /* NetworkUtils.h in Headers */,
 				0161758220EEEFCB00FC40FF /* NeuralNetwork.h in Headers */,
 				0161758320EEEFCB00FC40FF /* Optimizers.h in Headers */,
@@ -365,8 +365,8 @@
 				016175A420F73DDB00FC40FF /* Optimizers.c in Sources */,
 				0161753D20EDE05000FC40FF /* Data.c in Sources */,
 				0161753C20EDE05000FC40FF /* TimeProfile.c in Sources */,
-				016175A120F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */,
 				0161753E20EDE05000FC40FF /* Parsing.c in Sources */,
+				016175AA20FF107600FC40FF /* NetworkOps.c in Sources */,
 				0161752820EDDFD800FC40FF /* MetalKernels.metal in Sources */,
 				0161759020EF443E00FC40FF /* NetworkConstructor.c in Sources */,
 			);
@@ -378,7 +378,7 @@
 			files = (
 				0161757220EEEE2400FC40FF /* Data.c in Sources */,
 				0161759120EF443E00FC40FF /* NetworkConstructor.c in Sources */,
-				016175A220F737C600FC40FF /* NetworkPrimitiveFunctions.c in Sources */,
+				016175AB20FF107600FC40FF /* NetworkOps.c in Sources */,
 				0161757320EEEE2400FC40FF /* Memory.c in Sources */,
 				0161757420EEEE2400FC40FF /* MetalCompute.m in Sources */,
 				0161757520EEEE2400FC40FF /* NetworkUtils.c in Sources */,
