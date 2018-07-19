@@ -27,7 +27,8 @@ void progression(void * _Nonnull neural, progress_dict progress_dict);
 
 float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
 
-void evalPrediction(void * _Nonnull self, char * _Nonnull type, float * _Nonnull out, bool metal);
+void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
+float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
 
 // Only used when loading a network from a param file
 void trainLoop(void * _Nonnull  neural);

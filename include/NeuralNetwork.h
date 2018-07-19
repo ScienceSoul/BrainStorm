@@ -112,8 +112,8 @@ typedef struct NeuralNetwork {
     float (* _Nullable math_ops)(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
     
     // Function pointer to prediction evaluator
-    void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull type, float * _Nonnull out, bool metal);
-    float (* _Nullable eval_cost)(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert);
+    void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
+    float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
     
 } NeuralNetwork;
 

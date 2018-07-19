@@ -25,8 +25,6 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy);
 static void finale(void * _Nonnull self);
 static void gpu_alloc(void * _Nonnull self);
 
-static float totalCost(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert);
-
 static void initNeuralData(void * _Nonnull self) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
@@ -119,7 +117,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->math_ops = mathOps;
     
     nn->eval_prediction = evalPrediction;
-    nn->eval_cost = totalCost;
+    nn->eval_cost = evalCost;
     
     return nn;
 }
@@ -373,60 +371,4 @@ static void gpu_alloc(void * _Nonnull self) {
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
     nn->gpu = metalCompute();
-}
-
-//
-//  Compute the total cost function using a cross-entropy formulation
-//
-static float totalCost(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int m, bool convert) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    float norm, sum;
-    activationNode *aNodePt = NULL;
-    
-    float cost = 0.0f;
-    for (int i=0; i<m; i++) {
-
-        aNodePt = nn->networkActivations;
-        for (int j=0; j<nn->number_of_features; j++) {
-            aNodePt->a[j] = data[i][j];
-        }
-        
-        feedforward(self);
-        aNodePt = nn->networkActivations;
-        while (aNodePt != NULL && aNodePt->next != NULL) {
-            aNodePt = aNodePt->next;
-        }
-        
-        float y[aNodePt->n];
-        memset(y, 0.0f, sizeof(y));
-        if (convert == true) {
-            for (int j=0; j<aNodePt->n; j++) {
-                if (data[i][nn->number_of_features] == nn->parameters->classifications[j]) {
-                    y[j] = 1.0f;
-                }
-            }
-        } else {
-            int idx = (int)nn->number_of_features;
-            for (int j=0; j<aNodePt->n; j++) {
-                y[j] = data[i][idx];
-                idx++;
-            }
-        }
-        cost = cost + crossEntropyCost(aNodePt->a, y, aNodePt->n) / m;
-        
-        sum = 0.0f;
-        unsigned int stride = 0;
-        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
-            unsigned int m = nn->weightsDimensions[l].m;
-            unsigned int n = nn->weightsDimensions[l].n;
-            norm = frobeniusNorm(nn->weights+stride, (m * n));
-            sum = sum + (norm*norm);
-            stride = stride + (m * n);
-        }
-        cost = cost + 0.5f*(nn->parameters->lambda/(float)m)*sum;
-    }
-    
-    return cost;
 }

@@ -296,7 +296,7 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
     }
 }
 
-void evalPrediction(void * _Nonnull self, char * _Nonnull type, float * _Nonnull out, bool metal) {
+void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal) {
     
     static bool test_check = false;
     static bool validation_check = false;
@@ -305,21 +305,21 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull type, float * _Nonnull
     
     float **data = NULL;
     unsigned int data_size = 0;
-    if (strcmp(type, "validation") == 0) {
+    if (strcmp(dataSet, "validation") == 0) {
         if (!validation_check) {
             if (nn->data->validation->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on validation data but the data do not exist.");
             validation_check = true;
         }
         data = nn->data->validation->set;
         data_size = nn->data->validation->m;
-    } else if (strcmp(type, "test") == 0) {
+    } else if (strcmp(dataSet, "test") == 0) {
         if (!test_check) {
             if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on test data but the data  do not exist.");
             test_check = true;
         }
         data = nn->data->test->set;
         data_size = nn->data->test->m;
-    } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized type for prediction evaluation.");
+    } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized data set in prediction evaluation.");
     
 #ifdef __APPLE__
     if (metal) {
@@ -343,6 +343,85 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull type, float * _Nonnull
 #endif
 }
 
+//
+//  Compute the total cost function using a cross-entropy formulation
+//
+float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization) {
+    
+    static bool test_check = false;
+    static bool validation_check = false;
+    
+    NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    float **data = NULL;
+    unsigned int data_size = 0;
+    if (strcmp(dataSet, "training") == 0) {
+        data = nn->data->training->set;
+        data_size = nn->data->training->m;
+    } else if (strcmp(dataSet, "validation") == 0) {
+        if (!validation_check) {
+            if (nn->data->validation->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate cost on validation data but the data do not exist.");
+            validation_check = true;
+        }
+        data = nn->data->validation->set;
+        data_size = nn->data->validation->m;
+    } else if (strcmp(dataSet, "test") == 0) {
+        if (!test_check) {
+            if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate cost on test data but the data  do not exist.");
+            test_check = true;
+        }
+        data = nn->data->test->set;
+        data_size = nn->data->test->m;
+    } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized data set in cost evaluation.");
+    
+    float norm, sum;
+    activationNode *aNodePt = NULL;
+    
+    float cost = 0.0f;
+    for (int i=0; i<data_size; i++) {
+        
+        aNodePt = nn->networkActivations;
+        for (int j=0; j<nn->number_of_features; j++) {
+            aNodePt->a[j] = data[i][j];
+        }
+        
+        feedforward(self);
+        aNodePt = nn->networkActivations;
+        while (aNodePt != NULL && aNodePt->next != NULL) {
+            aNodePt = aNodePt->next;
+        }
+        
+        float y[aNodePt->n];
+        memset(y, 0.0f, sizeof(y));
+        if (binarization == true) {
+            for (int j=0; j<aNodePt->n; j++) {
+                if (data[i][nn->number_of_features] == nn->parameters->classifications[j]) {
+                    y[j] = 1.0f;
+                }
+            }
+        } else {
+            int idx = (int)nn->number_of_features;
+            for (int j=0; j<aNodePt->n; j++) {
+                y[j] = data[i][idx];
+                idx++;
+            }
+        }
+        cost = cost + crossEntropyCost(aNodePt->a, y, aNodePt->n) / data_size;
+        
+        sum = 0.0f;
+        unsigned int stride = 0;
+        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+            unsigned int m = nn->weightsDimensions[l].m;
+            unsigned int n = nn->weightsDimensions[l].n;
+            norm = frobeniusNorm(nn->weights+stride, (m * n));
+            sum = sum + (norm*norm);
+            stride = stride + (m * n);
+        }
+        cost = cost + 0.5f*(nn->parameters->lambda/(float)data_size)*sum;
+    }
+    
+    return cost;
+}
 
 void trainLoop(void * _Nonnull  neural) {
     
