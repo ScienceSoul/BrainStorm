@@ -24,7 +24,7 @@ void feedforward(void * _Nonnull self) {
     
     unsigned int stride1 = 0;
     unsigned int stride2 = 0;
-    for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+    for (int l=0; l<nn->network_num_layers-1; l++) {
         unsigned int m = nn->weightsDimensions[l].m;
         unsigned int n = nn->weightsDimensions[l].n;
         
@@ -62,7 +62,7 @@ void backpropagation(void * _Nonnull self) {
     
     // Activations at the input layer
     activationNode *aNodePt = nn->networkActivations;
-    for (int i=0; i<nn->number_of_features; i++) {
+    for (int i=0; i<nn->parameters->number_of_features; i++) {
         aNodePt->a[i] = nn->batch[nn->example_idx][i];
     }
     
@@ -81,13 +81,13 @@ void backpropagation(void * _Nonnull self) {
         zTail = zTail->next;
     }
     
-    float delta[nn->max_number_of_nodes_in_layer];
-    float buffer[nn->max_number_of_nodes_in_layer];
+    float delta[nn->parameters->max_number_of_nodes_in_layer];
+    float buffer[nn->parameters->max_number_of_nodes_in_layer];
     memset(delta, 0.0f, sizeof(delta));
     memset(buffer, 0.0f, sizeof(buffer));
     
     // Compute delta
-    int k = (int)nn->number_of_features;
+    int k = (int)nn->parameters->number_of_features;
     for (int i=0; i<aTail->n; i++) {
         delta[i] = aTail->a[i] - nn->batch[nn->example_idx][k];
         k++;
@@ -117,7 +117,7 @@ void backpropagation(void * _Nonnull self) {
     // Stride to weithts at last layer
     unsigned int stride = 0;
     unsigned int m, n;
-    for (int l=0; l<nn->parameters->numberOfLayers-2; l++) {
+    for (int l=0; l<nn->network_num_layers-2; l++) {
         m = nn->weightsDimensions[l].m;
         n = nn->weightsDimensions[l].n;
         stride = stride + (m * n);
@@ -127,7 +127,7 @@ void backpropagation(void * _Nonnull self) {
     costWeightDerivativeNode *dcdwNodePt = dcdwTail->previous;
     costBiaseDerivativeNode *dcdbNodePt = dcdbTail->previous;
     
-    unsigned int l = nn->parameters->numberOfLayers - 2;
+    unsigned int l = nn->network_num_layers - 2;
     while (dcdwNodePt != NULL && dcdbNodePt != NULL) {
         aNodePt = aNodePt->previous;
         
@@ -281,7 +281,7 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
     for (int k=0; k<data_size; k++) {
         
         aNodePt = nn->networkActivations;
-        for (int i=0; i<nn->number_of_features; i++) {
+        for (int i=0; i<nn->parameters->number_of_features; i++) {
             aNodePt->a[i] = data[k][i];
         }
         
@@ -292,7 +292,7 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
             aNodePt = aNodePt->next;
         }
         
-        out[k] = (float)argmax(aNodePt->a, aNodePt->n) == data[k][nn->number_of_features];
+        out[k] = (float)argmax(aNodePt->a, aNodePt->n) == data[k][nn->parameters->number_of_features];
     }
 }
 
@@ -325,14 +325,14 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
     if (metal) {
         unsigned int weightsTableSize = 0;
         unsigned int biasesTableSize = 0;
-        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+        for (int l=0; l<nn->network_num_layers-1; l++) {
             weightsTableSize = weightsTableSize + (nn->weightsDimensions[l].m * nn->weightsDimensions[l].n);
             biasesTableSize = biasesTableSize + nn->biasesDimensions[l].n;
         }
         
         nn->gpu->allocate_buffers((void *)nn);
         nn->gpu->prepare("feedforward");
-        nn->gpu->format_data(data, data_size, nn->number_of_features);
+        nn->gpu->format_data(data, data_size, nn->parameters->number_of_features);
         nn->gpu->feedforward((void *)nn, out);
         
     } else {
@@ -381,7 +381,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
     for (int i=0; i<data_size; i++) {
         
         aNodePt = nn->networkActivations;
-        for (int j=0; j<nn->number_of_features; j++) {
+        for (int j=0; j<nn->parameters->number_of_features; j++) {
             aNodePt->a[j] = data[i][j];
         }
         
@@ -395,12 +395,12 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
         memset(y, 0.0f, sizeof(y));
         if (binarization == true) {
             for (int j=0; j<aNodePt->n; j++) {
-                if (data[i][nn->number_of_features] == nn->parameters->classifications[j]) {
+                if (data[i][nn->parameters->number_of_features] == nn->parameters->classifications[j]) {
                     y[j] = 1.0f;
                 }
             }
         } else {
-            int idx = (int)nn->number_of_features;
+            int idx = (int)nn->parameters->number_of_features;
             for (int j=0; j<aNodePt->n; j++) {
                 y[j] = data[i][idx];
                 idx++;
@@ -410,7 +410,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
         
         sum = 0.0f;
         unsigned int stride = 0;
-        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+        for (int l=0; l<nn->network_num_layers-1; l++) {
             unsigned int m = nn->weightsDimensions[l].m;
             unsigned int n = nn->weightsDimensions[l].n;
             norm = frobeniusNorm(nn->weights+stride, (m * n));

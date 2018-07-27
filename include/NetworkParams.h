@@ -13,7 +13,9 @@
 
 typedef struct networkParameters {
     int epochs, miniBatchSize;
-    unsigned int numberOfLayers, numberOfClassifications, numberOfActivationFunctions;
+    unsigned int numberOfClassifications, numberOfActivationFunctions;
+    unsigned int max_number_of_nodes_in_layer;
+    unsigned int number_of_features;
     float eta, lambda;
     
     char supported_parameters[MAX_SUPPORTED_PARAMETERS][MAX_SHORT_STRING_LENGTH];

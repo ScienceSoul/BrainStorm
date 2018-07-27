@@ -71,10 +71,8 @@ typedef struct NeuralNetwork {
     networkParameters * _Nullable parameters;
     int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
     
+    unsigned int network_num_layers;
     int example_idx;
-    unsigned int number_of_parameters;
-    unsigned int number_of_features;
-    unsigned int max_number_of_nodes_in_layer;
     
     float * _Nullable weights;
     float * _Nullable weightsVelocity;

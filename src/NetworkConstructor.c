@@ -21,21 +21,21 @@ void set_layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull t
         firstTime = false;
     }
     
-    if (nn->parameters->numberOfLayers >= MAX_NUMBER_NETWORK_LAYERS)
+    if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
     
     if (strcmp(type, "input") == 0) {
         if (activation != NULL) {
             fprintf(stdout, "%s: activation function passed to input layer. Will be ignored.", DEFAULT_CONSOLE_WRITER);
         }
-        nn->parameters->topology[nn->parameters->numberOfLayers] = nbNeurons;
-        nn->parameters->numberOfLayers++;
+        nn->parameters->topology[nn->network_num_layers] = nbNeurons;
+        nn->network_num_layers++;
         
     } else if (strcmp(type, "hidden") == 0 || strcmp(type, "output") == 0) {
         if (activation == NULL) fatal(DEFAULT_CONSOLE_WRITER, "activation function is null in constructor.");
         
-        nn->parameters->topology[nn->parameters->numberOfLayers] = nbNeurons;
-        nn->parameters->numberOfLayers++;;
+        nn->parameters->topology[nn->network_num_layers] = nbNeurons;
+        nn->network_num_layers++;;
         
         if (strcmp(type, "hidden") == 0) {
             if (strcmp(activation, "softmax") == 0) fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units.");
@@ -69,7 +69,7 @@ void set_layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull t
             fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activation);
         }
         
-        // Add a regularizer if provided
+        // Add the regularizer if given
         if (regularizer != NULL) {
             nn->parameters->lambda = regularizer->regularization_factor;
             nn->regularizer[nn->parameters->numberOfActivationFunctions] = regularizer->regularizer_func;

@@ -51,7 +51,7 @@ static float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _No
     }
     
     int dim = 0;
-    for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+    for (int l=0; l<nn->network_num_layers-1; l++) {
         dim = dim + (nn->parameters->topology[l+1]*nn->parameters->topology[l]);
     }
     fprintf(stdout, "%s: matrices allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)dim*sizeof(float))/(float)(1024*1024));
@@ -59,17 +59,17 @@ static float * _Nonnull initMatrices(void * _Nonnull self, bool init, char * _No
     
     if (init) {
         int stride = 0;
-        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+        for (int l=0; l<nn->network_num_layers-1; l++) {
             int m = nn->parameters->topology[l+1];
             int n = nn->parameters->topology[l];
             // Output layer always initialized the same way
-            if (strcmp(strategy, "default") == 0 || l == nn->parameters->numberOfLayers-2) {
+            if (strcmp(strategy, "default") == 0 || l == nn->network_num_layers-2) {
                 for (int i = 0; i<m; i++) {
                     for (int j=0; j<n; j++) {
                         matrices[stride+((i*n)+j)] = randn(0.0f, 1.0f) / sqrtf((float)n);
                     }
                 }
-            } else if (strcmp(strategy, "xavier-he") == 0  && l < nn->parameters->numberOfLayers-2) { // xavier-he only used for hidden layers
+            } else if (strcmp(strategy, "xavier-he") == 0  && l < nn->network_num_layers-2) { // xavier-he only used for hidden layers
                 float standard_deviation = 0.0f;
                 int n_inputs = m * n;
                 int n_outputs = m * nn->parameters->topology[l+2];
@@ -113,7 +113,7 @@ static float * _Nonnull initVectors(void * _Nonnull self, bool init, char * _Non
     }
     
     int dim = 0;
-    for (int l=1; l<nn->parameters->numberOfLayers; l++) {
+    for (int l=1; l<nn->network_num_layers; l++) {
         dim  = dim + nn->parameters->topology[l];
     }
     fprintf(stdout, "%s: vectors allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)dim*sizeof(float))/(float)(1024*1024));
@@ -121,7 +121,7 @@ static float * _Nonnull initVectors(void * _Nonnull self, bool init, char * _Non
     
     if (init) {
         int stride = 0;
-        for (int l=1; l<nn->parameters->numberOfLayers; l++) {
+        for (int l=1; l<nn->network_num_layers; l++) {
             int n = nn->parameters->topology[l];
             for (int i = 0; i<n; i++) {
                 vectors[stride+i] = randn(0.0f, 1.0f);
@@ -321,7 +321,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 
             } else if (strcmp(field->key, "topology") == 0) {
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->parameters->topology, &nn->parameters->numberOfLayers, &len);
+                parseArgument(field->value, field->key, nn->parameters->topology, &nn->network_num_layers, &len);
                 FOUND_TOPOLOGY = 1;
                 
             } else if (strcmp(field->key, "activations") == 0) {
@@ -339,10 +339,10 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
                 parseArgument(field->value, field->key, nn->parameters->activationFunctions, &nn->parameters->numberOfActivationFunctions, &len);
                 
-                if (nn->parameters->numberOfActivationFunctions > 1 && nn->parameters->numberOfActivationFunctions < nn->parameters->numberOfLayers-1) {
+                if (nn->parameters->numberOfActivationFunctions > 1 && nn->parameters->numberOfActivationFunctions < nn->network_num_layers-1) {
                     fatal(DEFAULT_CONSOLE_WRITER, "the number of activation functions in parameters is too low. Can't resolve how to use the provided activations. ");
                 }
-                if (nn->parameters->numberOfActivationFunctions > nn->parameters->numberOfLayers-1) {
+                if (nn->parameters->numberOfActivationFunctions > nn->network_num_layers-1) {
                     fprintf(stdout, "%s: too many activation functions given to network. Will ignore the extra ones.\n", DEFAULT_CONSOLE_WRITER);
                 }
                 
@@ -350,7 +350,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     if (strcmp(nn->parameters->activationFunctions[0], "softmax") == 0) {
                         fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units, not for the entire network.");
                     }
-                    for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+                    for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(nn->parameters->activationFunctions[0], "sigmoid") == 0) {
                             nn->activationFunctions[i] = sigmoid;
                             nn->activationDerivatives[i] = sigmoidPrime;
@@ -369,7 +369,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                         } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[0]);
                     }
                 } else {
-                    for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+                    for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(nn->parameters->activationFunctions[i], "sigmoid") == 0) {
                             nn->activationFunctions[i] = sigmoid;
                             nn->activationDerivatives[i] = sigmoidPrime;
@@ -387,7 +387,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                             nn->activationDerivatives[i] = tanhPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[i], "softmax") == 0) {
                             // The sofmax function is only supported for the output units
-                            if (i < nn->parameters->numberOfLayers-2) {
+                            if (i < nn->network_num_layers-2) {
                                 fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can't be used for the hiden units, only for the output units.");
                             }
                             nn->activationFunctions[i] = softmax;
@@ -425,7 +425,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
                 }
                 nn->parameters->lambda = strtof(field->value, NULL);
-                for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+                for (int i=0; i<nn->network_num_layers-1; i++) {
                     nn->regularizer[i] = nn->l1_regularizer;
                     FOUND_REGULARIZATION = 1;
                 }
@@ -434,7 +434,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
                 }
                 nn->parameters->lambda = strtof(field->value, NULL);
-                for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+                for (int i=0; i<nn->network_num_layers-1; i++) {
                     nn->regularizer[i] = nn->l2_regularizer;
                     FOUND_REGULARIZATION = 1;
                 }
@@ -517,7 +517,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
         fatal(DEFAULT_CONSOLE_WRITER, "missing topology in parameters input.");
     }
     if (FOUND_ACTIVATIONS == 0) {
-        for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+        for (int i=0; i<nn->network_num_layers-1; i++) {
             nn->activationFunctions[i] = sigmoid;
             nn->activationDerivatives[i] = sigmoidPrime;
         }
@@ -529,7 +529,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
         fatal(DEFAULT_CONSOLE_WRITER, "missing classification in parameters input.");
     }
     if (FOUND_REGULARIZATION == 0) {
-        for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+        for (int i=0; i<nn->network_num_layers-1; i++) {
             nn->regularizer[i] = nn->l0_regularizer;
         }
     }

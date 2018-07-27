@@ -109,16 +109,16 @@ void allocate_buffers(void * _Nonnull network) {
         NeuralNetwork *nn = (NeuralNetwork *)network;
         parameters_container *params = (parameters_container *)malloc(sizeof(parameters_container));
         
-        unsigned int entriesTableSize = nn->data->test->m * nn->number_of_features;
+        unsigned int entriesTableSize = nn->data->test->m * nn->parameters->number_of_features;
         
         unsigned int weightsTableSize = 0;
         unsigned int biasesTableSize = 0;
-        for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+        for (int l=0; l<nn->network_num_layers-1; l++) {
             weightsTableSize = weightsTableSize + (nn->weightsDimensions[l].m*nn->weightsDimensions[l].n);
             biasesTableSize = biasesTableSize + nn->biasesDimensions[l].n;
         }
         
-        int max = max_array(nn->parameters->topology, nn->parameters->numberOfLayers);
+        int max = max_array(nn->parameters->topology, nn->network_num_layers);
         unsigned int activationsTableSize = max * nn->data->test->m;
         
         kernel_data = [device newBufferWithLength:entriesTableSize*sizeof(float) options:MTLResourceStorageModeShared];
@@ -128,9 +128,9 @@ void allocate_buffers(void * _Nonnull network) {
         kernel_ground_truth = [device newBufferWithLength:nn->data->test->m*sizeof(float) options:MTLResourceStorageModeShared];
         
         params->gridDimension = nn->data->test->m;
-        params->numberOfLayers = nn->parameters->numberOfLayers;
+        params->numberOfLayers = nn->network_num_layers;
         params->numberOfFeatures = nn->parameters->topology[0];
-        params->numberOfOutputs = nn->parameters->topology[nn->parameters->numberOfLayers-1];
+        params->numberOfOutputs = nn->parameters->topology[nn->network_num_layers-1];
         memcpy(params->weightsDim, nn->weightsDimensions, sizeof(nn->weightsDimensions));
         memcpy(params->biasesDim, nn->biasesDimensions, sizeof(nn->biasesDimensions));
         kernel_parameters = [device newBufferWithBytes:params length:sizeof(parameters_container) options:MTLResourceStorageModeShared];
@@ -203,7 +203,7 @@ void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     
     unsigned int weightsTableSize = 0;
     unsigned int biasesTableSize = 0;
-    for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+    for (int l=0; l<nn->network_num_layers-1; l++) {
         weightsTableSize = weightsTableSize + (nn->weightsDimensions[l].m * nn->weightsDimensions[l].n);
         biasesTableSize = biasesTableSize + nn->biasesDimensions[l].n;
     }
@@ -217,7 +217,7 @@ void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     buffer = kernel_ground_truth.contents;
     float *pt = buffer;
     for (int i=0; i<nn->data->test->m; i++) {
-        pt[i] = nn->data->test->set[i][nn->number_of_features];
+        pt[i] = nn->data->test->set[i][nn->parameters->number_of_features];
     }
     
     @autoreleasepool{

@@ -64,7 +64,7 @@ void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const cha
     raw_training = nn->data->training->reader(trainFile, &len1, &len2);
     shuffle(raw_training, len1, len2);
     
-    nn->data->training->set = createTrainigData(raw_training, 0, nn->parameters->split[0], &nn->data->training->m, &nn->data->training->n, nn->parameters->classifications, nn->parameters->numberOfClassifications, nn->parameters->topology, nn->parameters->numberOfLayers);
+    nn->data->training->set = createTrainigData(raw_training, 0, nn->parameters->split[0], &nn->data->training->m, &nn->data->training->n, nn->parameters->classifications, nn->parameters->numberOfClassifications, nn->parameters->topology, nn->network_num_layers);
     
     if (testData) {
          fprintf(stdout, "%s: load test data set in <%s>...\n", DEFAULT_CONSOLE_WRITER, dataSetName);

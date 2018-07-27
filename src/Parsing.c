@@ -34,9 +34,7 @@ dictionary * _Nonnull allocateDictionaryNode(void) {
 // Get the network parameters definitions
 //
 definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonnull paramsDefFile, const char * _Nonnull keyword) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
-    
+        
     definition *definitions = NULL;
     
     FILE *f1 = fopen(paramsDefFile,"r");
@@ -92,7 +90,6 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
                     fatal(DEFAULT_CONSOLE_WRITER, "incorrect keyword for parameter definition. Should be:", (char *)keyword);
                 }
                 // New parameter definition starts here
-                nn->number_of_parameters++;
                 memset(buff, 0, sizeof(buff));
                 memset(tag, 0, sizeof(tag));
                 idx = 0;

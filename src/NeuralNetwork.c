@@ -76,7 +76,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->parameters->miniBatchSize = 0;
     nn->parameters->eta = 0.0f;
     nn->parameters->lambda = 0.0f;
-    nn->parameters->numberOfLayers = 0;
+    nn->network_num_layers = 0;
     nn->parameters->numberOfActivationFunctions = 0;
     nn->parameters->numberOfClassifications = 0;
     memset(nn->parameters->topology, 0, sizeof(nn->parameters->topology));
@@ -131,10 +131,10 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     
     // If the network is constructed with the constructor API, check that all required parameters were defined
     if (nn->constructor->networkConstruction) {
-        if (nn->parameters->numberOfLayers == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology not defined. Use a constructor or define it in a parameter file.");
+        if (nn->network_num_layers == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology not defined. Use a constructor or define it in a parameter file.");
         
         if (nn->parameters->numberOfActivationFunctions == 0) {
-            for (int i=0; i<nn->parameters->numberOfLayers-1; i++) {
+            for (int i=0; i<nn->network_num_layers-1; i++) {
                 nn->activationFunctions[i] = sigmoid;
                 nn->activationDerivatives[i] = sigmoidPrime;
             }
@@ -150,22 +150,21 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     }
     
     fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
-    fprintf(stdout, "%s: full connected network with %d layers.\n", DEFAULT_CONSOLE_WRITER, nn->parameters->numberOfLayers);
+    fprintf(stdout, "%s: full connected network with %d layers.\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
     
     nn->example_idx = 0;
-    nn->number_of_parameters = 0;
-    nn->number_of_features = nn->parameters->topology[0];;
-    nn->max_number_of_nodes_in_layer = max_array(nn->parameters->topology, nn->parameters->numberOfLayers);
+    nn->parameters->number_of_features = nn->parameters->topology[0];;
+    nn->parameters->max_number_of_nodes_in_layer = max_array(nn->parameters->topology, nn->network_num_layers);
     
     nn->data = (data *)malloc(sizeof(data));
     nn->data->init = initNeuralData;
     nn->data->load = loadData;
     
-    for (int l=0; l<nn->parameters->numberOfLayers-1; l++) {
+    for (int l=0; l<nn->network_num_layers-1; l++) {
         nn->weightsDimensions[l].m = nn->parameters->topology[l+1];
         nn->weightsDimensions[l].n = nn->parameters->topology[l];
     }
-    for (int l=1; l<nn->parameters->numberOfLayers; l++) {
+    for (int l=1; l<nn->network_num_layers; l++) {
         nn->biasesDimensions[l-1].n = nn->parameters->topology[l];
     }
     
@@ -175,17 +174,17 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
         nn->biases = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=true, .init_stategy=init_stategy});
     
     if (nn->networkActivations == NULL)
-        nn->networkActivations = (activationNode *)initNetworkActivations(nn->parameters->topology, nn->parameters->numberOfLayers);
+        nn->networkActivations = (activationNode *)initNetworkActivations(nn->parameters->topology, nn->network_num_layers);
     if (nn->networkAffineTransformations == NULL)
-        nn->networkAffineTransformations = (affineTransformationNode *)initNetworkAffineTransformations(nn->parameters->topology, nn->parameters->numberOfLayers);
+        nn->networkAffineTransformations = (affineTransformationNode *)initNetworkAffineTransformations(nn->parameters->topology, nn->network_num_layers);
     if (nn->networkCostWeightDerivatives == NULL)
-        nn->networkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+        nn->networkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->network_num_layers);
     if (nn->networkCostBiaseDerivatives == NULL)
-        nn->networkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+        nn->networkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->network_num_layers);
     if (nn->deltaNetworkCostWeightDerivatives == NULL)
-        nn->deltaNetworkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+        nn->deltaNetworkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->network_num_layers);
     if (nn->deltaNetworkCostBiaseDerivatives == NULL)
-        nn->deltaNetworkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->parameters->numberOfLayers);
+        nn->deltaNetworkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->network_num_layers);
     
     if (nn->train->momentum != NULL) {
         if (nn->weightsVelocity == NULL)
