@@ -51,7 +51,7 @@ static void initNeuralData(void * _Nonnull self) {
 NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     
     NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-    *nn = (NeuralNetwork){.weights=NULL, .weightsVelocity=NULL, .biases=NULL, .biasesVelocity=NULL, .networkActivations=NULL, .networkAffineTransformations=NULL, .networkCostWeightDerivatives=NULL, .networkCostBiaseDerivatives=NULL, .deltaNetworkCostWeightDerivatives=NULL, .deltaNetworkCostBiaseDerivatives=NULL};
+    *nn = (NeuralNetwork){.dense_weights=NULL, .dense_weightsVelocity=NULL, .dense_biases=NULL, .dense_biasesVelocity=NULL, .dense_activations=NULL, .dense_affineTransformations=NULL, .dense_costWeightDerivatives=NULL, .dense_costBiasDerivatives=NULL, .dense_batchCostWeightDeriv=NULL, .dense_batchCostBiasDeriv=NULL};
     
     nn->parameters = (networkParameters *)malloc(sizeof(networkParameters));
     strcpy(nn->parameters->supported_parameters[0], "data_name");
@@ -77,6 +77,8 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->parameters->eta = 0.0f;
     nn->parameters->lambda = 0.0f;
     nn->network_num_layers = 0;
+    nn->num_dense_layers = 0;
+    nn->num_conv2d_layers = 0;
     nn->parameters->numberOfActivationFunctions = 0;
     nn->parameters->numberOfClassifications = 0;
     memset(nn->parameters->topology, 0, sizeof(nn->parameters->topology));
@@ -104,7 +106,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     
     nn->genesis = genesis;
     nn->finale = finale;
-    nn->tensor = tensor;
+    nn->tensor = tensor_create;
     nn->gpu_alloc = gpu_alloc;
     
     nn->l0_regularizer = l0_regularizer;
@@ -160,60 +162,154 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
     nn->data->init = initNeuralData;
     nn->data->load = loadData;
     
-    for (int l=0; l<nn->network_num_layers-1; l++) {
-        nn->weightsDimensions[l].m = nn->parameters->topology[l+1];
-        nn->weightsDimensions[l].n = nn->parameters->topology[l];
-    }
-    for (int l=1; l<nn->network_num_layers; l++) {
-        nn->biasesDimensions[l-1].n = nn->parameters->topology[l];
+    if (nn->dense_weights == NULL) {
+        tensor_dict dict;
+        dict.rank = 2;
+        for (int l=0; l<nn->network_num_layers-1; l++) {
+            dict.shape[l][0][0] = nn->parameters->topology[l+1];
+            dict.shape[l][1][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers-1;
+        dict.init = true;
+        dict.init_strategy = init_stategy;
+        nn->dense_weights = (tensor *)nn->tensor((void *)self, dict);
+        
+        if (nn->train->momentum != NULL) {
+            if (nn->dense_weightsVelocity == NULL) {
+                dict.init = false;
+                nn->dense_weightsVelocity = (tensor *)nn->tensor((void *)self, dict);
+            }
+        }
+        if (nn->train->ada_grad != NULL) {
+            if (nn->train->ada_grad->costWeightDerivativeSquaredAccumulated == NULL) {
+                dict.init = false;
+                nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+            }
+        }
+        if (nn->train->rms_prop != NULL) {
+            if (nn->train->rms_prop->costWeightDerivativeSquaredAccumulated == NULL) {
+                dict.init = false;
+                nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+            }
+        }
+        if (nn->train->adam != NULL) {
+            dict.init = false;
+            if (nn->train->adam->weightsBiasedFirstMomentEstimate == NULL) {
+                nn->train->adam->weightsBiasedFirstMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+            }
+            if (nn->train->adam->weightsBiasedSecondMomentEstimate == NULL) {
+                nn->train->adam->weightsBiasedSecondMomentEstimate = (tensor *)nn->tensor((void *)self,  dict);
+            }
+        }
     }
     
-    if (nn->weights == NULL)
-        nn->weights = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=true, .init_stategy=init_stategy});
-    if (nn->biases == NULL)
-        nn->biases = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=true, .init_stategy=init_stategy});
-    
-    if (nn->networkActivations == NULL)
-        nn->networkActivations = (activationNode *)initNetworkActivations(nn->parameters->topology, nn->network_num_layers);
-    if (nn->networkAffineTransformations == NULL)
-        nn->networkAffineTransformations = (affineTransformationNode *)initNetworkAffineTransformations(nn->parameters->topology, nn->network_num_layers);
-    if (nn->networkCostWeightDerivatives == NULL)
-        nn->networkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->network_num_layers);
-    if (nn->networkCostBiaseDerivatives == NULL)
-        nn->networkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->network_num_layers);
-    if (nn->deltaNetworkCostWeightDerivatives == NULL)
-        nn->deltaNetworkCostWeightDerivatives = (costWeightDerivativeNode *)initNetworkCostWeightDerivatives(nn->parameters->topology, nn->network_num_layers);
-    if (nn->deltaNetworkCostBiaseDerivatives == NULL)
-        nn->deltaNetworkCostBiaseDerivatives = (costBiaseDerivativeNode *)initNetworkCostBiaseDerivatives(nn->parameters->topology, nn->network_num_layers);
-    
-    if (nn->train->momentum != NULL) {
-        if (nn->weightsVelocity == NULL)
-            nn->weightsVelocity = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->biasesVelocity == NULL)
-            nn->biasesVelocity = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+    if (nn->dense_biases == NULL) {
+        tensor_dict dict;
+        dict.rank = 1;
+        for (int l=1; l<nn->network_num_layers; l++) {
+            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers-1;
+        dict.init = true;
+        dict.init_strategy = init_stategy;
+        nn->dense_biases = (tensor *)nn->tensor((void *)self, dict);
+        
+        if (nn->train->momentum != NULL) {
+            if (nn->dense_biasesVelocity ==  NULL) {
+                dict.init = false;
+                nn->dense_biasesVelocity = (tensor *)nn->tensor((void *)self, dict);
+            }
+        }
+        if (nn->train->ada_grad != NULL) {
+            if (nn->train->ada_grad->costBiasDerivativeSquaredAccumulated == NULL) {
+                dict.init = false;
+                nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+            }
+        }
+        if (nn->train->rms_prop != NULL) {
+            if (nn->train->rms_prop->costBiasDerivativeSquaredAccumulated == NULL) {
+                dict.init = false;
+                nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+            }
+        }
+         if (nn->train->adam != NULL) {
+             dict.init = false;
+             if (nn->train->adam->biasesBiasedFirstMomentEstimate == NULL) {
+                 nn->train->adam->biasesBiasedFirstMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+             }
+             if (nn->train->adam->biasesBiasedSecondMomentEstimate == NULL) {
+                 nn->train->adam->biasesBiasedSecondMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+             }
+         
+         }
     }
     
-    if (nn->train->ada_grad != NULL) {
-        if (nn->train->ada_grad->costWeightDerivativeSquaredAccumulated == NULL)
-            nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->train->ada_grad->costBiasDerivativeSquaredAccumulated == NULL)
-            nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+    if (nn->dense_activations == NULL) {
+        tensor_dict dict;
+        dict.rank = 1;
+        for (int l=0; l<nn->network_num_layers; l++) {
+            dict.shape[l][0][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers;
+        dict.init = false;
+        nn->dense_activations = (tensor *)nn->tensor((void *)self, dict);
     }
-    if (nn->train->rms_prop != NULL) {
-        if (nn->train->rms_prop->costWeightDerivativeSquaredAccumulated == NULL)
-            nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->train->rms_prop->costBiasDerivativeSquaredAccumulated == NULL)
-            nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+
+    if (nn->dense_affineTransformations == NULL) {
+        tensor_dict dict;
+        dict.rank = 1;
+        for (int l=1; l<nn->network_num_layers; l++) {
+            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers-1;
+        dict.init = false;
+        nn->dense_affineTransformations = (tensor *)nn->tensor((void *)self, dict);
     }
-    if (nn->train->adam != NULL) {
-        if (nn->train->adam->weightsBiasedFirstMomentEstimate == NULL)
-            nn->train->adam->weightsBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->train->adam->weightsBiasedSecondMomentEstimate == NULL)
-            nn->train->adam->weightsBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=2, .init=false});
-        if (nn->train->adam->biasesBiasedFirstMomentEstimate == NULL)
-            nn->train->adam->biasesBiasedFirstMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
-        if (nn->train->adam->biasesBiasedSecondMomentEstimate == NULL)
-            nn->train->adam->biasesBiasedSecondMomentEstimate = nn->tensor((void *)self, (tensor_dict){.rank=1, .init=false});
+    
+    if (nn->dense_costWeightDerivatives == NULL) {
+        tensor_dict dict;
+        dict.rank = 2;
+        for (int l=0; l<nn->network_num_layers-1; l++) {
+            dict.shape[l][0][0] = nn->parameters->topology[l+1];
+            dict.shape[l][1][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers-1;
+        dict.init = false;
+        nn->dense_costWeightDerivatives = (tensor *)nn->tensor((void *)self, dict);
+    }
+    
+    if (nn->dense_costBiasDerivatives == NULL) {
+        tensor_dict dict;
+        dict.rank = 1;
+        for (int l=1; l<nn->network_num_layers; l++) {
+            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers-1;
+        dict.init = false;
+        nn->dense_costBiasDerivatives = (tensor *)nn->tensor((void *)self, dict);
+    }
+    
+    if (nn->dense_batchCostWeightDeriv == NULL) {
+        tensor_dict dict;
+        dict.rank = 2;
+        for (int l=0; l<nn->network_num_layers-1; l++) {
+            dict.shape[l][0][0] = nn->parameters->topology[l+1];
+            dict.shape[l][1][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers-1;
+        dict.init = false;
+        nn->dense_batchCostWeightDeriv = (tensor *)nn->tensor((void *)self, dict);
+    }
+    
+    if (nn->dense_batchCostBiasDeriv == NULL) {
+        tensor_dict dict;
+        dict.rank = 1;
+        for (int l=1; l<nn->network_num_layers; l++) {
+            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+        }
+        dict.flattening_length = nn->network_num_layers-1;
+        dict.init = false;
+        nn->dense_batchCostBiasDeriv = (tensor *)nn->tensor((void *)self, dict);
     }
 }
 
@@ -238,97 +334,44 @@ static void finale(void * _Nonnull self) {
     free(nn->parameters);
     free(nn->constructor);
     
-    free(nn->weights);
-    free(nn->biases);
-    
-    costWeightDerivativeNode *dcdwTail = nn->networkCostWeightDerivatives;
-    while (dcdwTail != NULL && dcdwTail->next ) {
-        dcdwTail = dcdwTail->next;
-    }
-    costWeightDerivativeNode *dcdwNodePt = NULL;
-    while (dcdwTail != NULL) {
-        dcdwNodePt = dcdwTail->previous;
-        free_fmatrix(dcdwTail->dcdw, 0, dcdwTail->m-1, 0, dcdwTail->n-1);
-        dcdwTail->dcdw = NULL;
-        dcdwTail->next = NULL;
-        dcdwTail->previous = NULL;
-        free(dcdwTail);
-        dcdwTail = dcdwNodePt;
+    if (nn->dense_weights != NULL) {
+        free(nn->dense_weights->val);
+        free(nn->dense_weights);
     }
     
-    costWeightDerivativeNode *delta_dcdwTail = nn->deltaNetworkCostWeightDerivatives;
-    while (delta_dcdwTail != NULL && delta_dcdwTail->next ) {
-        delta_dcdwTail = delta_dcdwTail->next;
-    }
-    costWeightDerivativeNode *delta_dcdwNodePt = NULL;
-    while (delta_dcdwTail != NULL) {
-        delta_dcdwNodePt = delta_dcdwTail->previous;
-        free_fmatrix(delta_dcdwTail->dcdw, 0, delta_dcdwTail->m-1, 0, delta_dcdwTail->n-1);
-        delta_dcdwTail->dcdw = NULL;
-        delta_dcdwTail->next = NULL;
-        delta_dcdwTail->previous = NULL;
-        free(delta_dcdwTail);
-        delta_dcdwTail = delta_dcdwNodePt;
+    if (nn->dense_biases != NULL) {
+        free(nn->dense_biases->val);
+        free(nn->dense_biases);
     }
     
-    costBiaseDerivativeNode *dcdbTail = nn->networkCostBiaseDerivatives;
-    while (dcdbTail != NULL && dcdbTail->next != NULL) {
-        dcdbTail = dcdbTail->next;
-    }
-    costBiaseDerivativeNode *dcdbNodePt = NULL;
-    while (dcdbTail != NULL) {
-        dcdbNodePt = dcdbTail->previous;
-        free_fvector(dcdbTail->dcdb, 0, dcdbTail->n);
-        dcdbTail->dcdb = NULL;
-        dcdbTail->next = NULL;
-        dcdbTail->previous = NULL;
-        free(dcdbTail);
-        dcdbTail = dcdbNodePt;
+    if (nn->dense_costWeightDerivatives != NULL) {
+        free(nn->dense_costWeightDerivatives->val);
+        free(nn->dense_costWeightDerivatives);
     }
     
-    costBiaseDerivativeNode *delta_dcdbTail = nn->deltaNetworkCostBiaseDerivatives;
-    while (delta_dcdbTail != NULL && delta_dcdbTail->next != NULL) {
-        delta_dcdbTail = delta_dcdbTail->next;
-    }
-    costBiaseDerivativeNode *delta_dcdbNodePt = NULL;
-    while (delta_dcdbTail != NULL) {
-        delta_dcdbNodePt = delta_dcdbTail->previous;
-        free_fvector(delta_dcdbTail->dcdb, 0, delta_dcdbTail->n);
-        delta_dcdbTail->dcdb = NULL;
-        delta_dcdbTail->next = NULL;
-        delta_dcdbTail->previous = NULL;
-        free(delta_dcdbTail);
-        delta_dcdbTail = delta_dcdbNodePt;
+    if (nn->dense_batchCostWeightDeriv != NULL) {
+        free(nn->dense_batchCostWeightDeriv->val);
+        free(nn->dense_batchCostWeightDeriv);
     }
     
-    activationNode *aTail = nn->networkActivations;
-    while (aTail != NULL && aTail->next != NULL) {
-        aTail = aTail->next;
-    }
-    activationNode *aNodePt = NULL;
-    while (aTail != NULL) {
-        aNodePt = aTail->previous;
-        free_fvector(aTail->a, 0, aTail->n);
-        aTail->a = NULL;
-        aTail->next = NULL;
-        aTail->previous = NULL;
-        free(aTail);
-        aTail = aNodePt;
+    if (nn->dense_costBiasDerivatives != NULL) {
+        free(nn->dense_costBiasDerivatives->val);
+        free(nn->dense_costBiasDerivatives);
     }
     
-    affineTransformationNode *zTail = nn->networkAffineTransformations;
-    while (zTail != NULL && zTail->next != NULL) {
-        zTail = zTail->next;
+    if (nn->dense_batchCostBiasDeriv != NULL) {
+        free(nn->dense_batchCostBiasDeriv->val);
+        free(nn->dense_batchCostBiasDeriv);
     }
-    affineTransformationNode *zNodePt = NULL;
-    while (zTail != NULL) {
-        zNodePt = zTail->previous;
-        free_fvector(zTail->z, 0, zTail->n);
-        zTail->z = NULL;
-        zTail->next = NULL;
-        zTail->previous = NULL;
-        free(zTail);
-        zTail = zNodePt;
+    
+    if (nn->dense_activations != NULL) {
+        free(nn->dense_activations->val);
+        free(nn->dense_activations);
+    }
+    
+    if (nn->dense_affineTransformations != NULL) {
+        free(nn->dense_affineTransformations->val);
+        free(nn->dense_affineTransformations);
     }
     
     if (nn->gpu != NULL) {
@@ -340,26 +383,56 @@ static void finale(void * _Nonnull self) {
         free(nn->train->gradient_descent);
     }
     if (nn->train->momentum != NULL) {
-        if (nn->weightsVelocity != NULL) free(nn->weightsVelocity);
-        if (nn->biasesVelocity != NULL) free(nn->biasesVelocity);
+        if (nn->dense_weightsVelocity != NULL) {
+            free(nn->dense_weightsVelocity->val);
+            free(nn->dense_weightsVelocity);
+        }
+        if (nn->dense_biasesVelocity != NULL) {
+            free(nn->dense_biasesVelocity->val);
+            free(nn->dense_biasesVelocity);
+        }
         free(nn->train->momentum);
     }
     if (nn->train->ada_grad != NULL) {
-        if (nn->train->ada_grad->costWeightDerivativeSquaredAccumulated != NULL) free(nn->train->ada_grad->costWeightDerivativeSquaredAccumulated);
-        if (nn->train->ada_grad->costBiasDerivativeSquaredAccumulated != NULL) free(nn->train->ada_grad->costBiasDerivativeSquaredAccumulated);
+        if (nn->train->ada_grad->costWeightDerivativeSquaredAccumulated != NULL) {
+            free(nn->train->ada_grad->costWeightDerivativeSquaredAccumulated->val);
+            free(nn->train->ada_grad->costWeightDerivativeSquaredAccumulated);
+        }
+        if (nn->train->ada_grad->costBiasDerivativeSquaredAccumulated != NULL) {
+            free(nn->train->ada_grad->costBiasDerivativeSquaredAccumulated->val);
+            free(nn->train->ada_grad->costBiasDerivativeSquaredAccumulated);
+        }
         free(nn->train->ada_grad);
     }
     if (nn->train->rms_prop != NULL) {
-        if (nn->train->rms_prop->costWeightDerivativeSquaredAccumulated != NULL) free(nn->train->rms_prop->costWeightDerivativeSquaredAccumulated);
-        if (nn->train->rms_prop->costBiasDerivativeSquaredAccumulated != NULL) free(nn->train->rms_prop->costBiasDerivativeSquaredAccumulated);
+        if (nn->train->rms_prop->costWeightDerivativeSquaredAccumulated != NULL) {
+            free(nn->train->rms_prop->costWeightDerivativeSquaredAccumulated->val);
+            free(nn->train->rms_prop->costWeightDerivativeSquaredAccumulated);
+        }
+        if (nn->train->rms_prop->costBiasDerivativeSquaredAccumulated != NULL) {
+            free(nn->train->rms_prop->costBiasDerivativeSquaredAccumulated->val);
+            free(nn->train->rms_prop->costBiasDerivativeSquaredAccumulated);
+        }
         free(nn->train->rms_prop);
     }
     if (nn->train->adam != NULL) {
-        if (nn->train->adam->weightsBiasedFirstMomentEstimate != NULL) free(nn->train->adam->weightsBiasedFirstMomentEstimate);
-        if (nn->train->adam->weightsBiasedSecondMomentEstimate != NULL) free(nn->train->adam->weightsBiasedSecondMomentEstimate);
+        if (nn->train->adam->weightsBiasedFirstMomentEstimate != NULL) {
+            free(nn->train->adam->weightsBiasedFirstMomentEstimate->val);
+            free(nn->train->adam->weightsBiasedFirstMomentEstimate);
+        }
+        if (nn->train->adam->weightsBiasedSecondMomentEstimate != NULL) {
+            free(nn->train->adam->weightsBiasedSecondMomentEstimate->val);
+            free(nn->train->adam->weightsBiasedSecondMomentEstimate);
+        }
         
-        if (nn->train->adam->biasesBiasedFirstMomentEstimate != NULL) free(nn->train->adam->biasesBiasedFirstMomentEstimate);
-        if (nn->train->adam->biasesBiasedSecondMomentEstimate != NULL) free(nn->train->adam->biasesBiasedSecondMomentEstimate);
+        if (nn->train->adam->biasesBiasedFirstMomentEstimate != NULL) {
+            free(nn->train->adam->biasesBiasedFirstMomentEstimate->val);
+            free(nn->train->adam->biasesBiasedFirstMomentEstimate);
+        }
+        if (nn->train->adam->biasesBiasedSecondMomentEstimate != NULL) {
+            free(nn->train->adam->biasesBiasedSecondMomentEstimate->val);
+            free(nn->train->adam->biasesBiasedSecondMomentEstimate);
+        }
         free(nn->train->adam);
     }
     free(nn->train);

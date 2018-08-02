@@ -11,46 +11,9 @@
 #include "Data.h"
 #include "NetworkParams.h"
 #include "NetworkConstructor.h"
-#include "NetworkUtils.h"
 #include "MetalCompute.h"
 #include "Optimizers.h"
 #include "NetworkOps.h"
-
-typedef struct weightMatrixDimension {
-    unsigned int m, n;
-} weightMatrixDimension;
-
-typedef struct biasVectorDimension {
-    unsigned int n;
-} biasVectorDimension;
-
-typedef struct activationNode {
-    unsigned int n;
-    float * _Nullable a;
-    struct activationNode * _Nullable next;
-    struct activationNode * _Nullable previous;
-} activationNode;
-
-typedef struct affineTransformationNode {
-    unsigned int n;
-    float * _Nullable z;
-    struct affineTransformationNode * _Nullable next;
-    struct affineTransformationNode * _Nullable previous;
-} affineTransformationNode;
-
-typedef struct costWeightDerivativeNode {
-    unsigned int m, n;
-    float * _Nullable * _Nullable dcdw;
-    struct costWeightDerivativeNode * _Nullable next;
-    struct costWeightDerivativeNode * _Nullable previous;
-} costWeightDerivativeNode;
-
-typedef struct costBiaseDerivativeNode {
-    unsigned int n;
-    float * _Nullable dcdb;
-    struct costBiaseDerivativeNode * _Nullable next;
-    struct costBiaseDerivativeNode * _Nullable previous;
-} costBiaseDerivativeNode;
 
 typedef struct Train {
     GradientDescentOptimizer * _Nullable gradient_descent;
@@ -71,29 +34,29 @@ typedef struct NeuralNetwork {
     networkParameters * _Nullable parameters;
     int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
     
-    unsigned int network_num_layers;
+    unsigned int network_num_layers; // Total number of layers in the network from input to output
+    unsigned int num_dense_layers;   // Number of fully connected layers
+    unsigned int num_conv2d_layers;  // Number of 2D convolutional layers
     int example_idx;
     
-    float * _Nullable weights;
-    float * _Nullable weightsVelocity;
-    float * _Nullable biases;
-    float * _Nullable biasesVelocity;
-    weightMatrixDimension weightsDimensions[MAX_NUMBER_NETWORK_LAYERS];
-    biasVectorDimension biasesDimensions[MAX_NUMBER_NETWORK_LAYERS];
+    tensor * _Nullable dense_weights;
+    tensor * _Nullable dense_weightsVelocity;
+    tensor * _Nullable dense_biases;
+    tensor * _Nullable dense_biasesVelocity;
     
-    activationNode * _Nullable networkActivations;
-    affineTransformationNode * _Nullable networkAffineTransformations;
-    costWeightDerivativeNode * _Nullable networkCostWeightDerivatives;
-    costBiaseDerivativeNode * _Nullable networkCostBiaseDerivatives;
-    costWeightDerivativeNode * _Nullable deltaNetworkCostWeightDerivatives;
-    costBiaseDerivativeNode * _Nullable deltaNetworkCostBiaseDerivatives;
+    tensor * _Nullable dense_activations;
+    tensor * _Nullable dense_affineTransformations;
+    tensor * _Nullable dense_costWeightDerivatives;
+    tensor * _Nullable dense_costBiasDerivatives;
+    tensor * _Nullable dense_batchCostWeightDeriv;
+    tensor * _Nullable dense_batchCostBiasDeriv;
     
     Train * _Nullable train;
     MetalCompute * _Nullable gpu;
     
     void (* _Nullable genesis)(void * _Nonnull self, char * _Nonnull init_stategy);
     void (* _Nullable finale)(void * _Nonnull self);
-    float * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
+    void * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);

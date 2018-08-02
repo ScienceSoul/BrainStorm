@@ -80,25 +80,25 @@
 		0161753020EDE03000FC40FF /* Parsing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Parsing.h; path = include/Parsing.h; sourceTree = SOURCE_ROOT; };
 		0161753120EDE03000FC40FF /* TimeProfile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TimeProfile.h; path = include/TimeProfile.h; sourceTree = SOURCE_ROOT; };
 		0161753220EDE03000FC40FF /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = include/Utils.h; sourceTree = SOURCE_ROOT; };
-		0161753420EDE04F00FC40FF /* TimeProfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TimeProfile.c; path = src/TimeProfile.c; sourceTree = "<group>"; };
-		0161753520EDE04F00FC40FF /* Data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Data.c; path = src/Data.c; sourceTree = "<group>"; };
-		0161753620EDE04F00FC40FF /* Parsing.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Parsing.c; path = src/Parsing.c; sourceTree = "<group>"; };
-		0161753720EDE05000FC40FF /* NeuralNetwork.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NeuralNetwork.c; path = src/NeuralNetwork.c; sourceTree = "<group>"; };
-		0161753820EDE05000FC40FF /* NetworkUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NetworkUtils.c; path = src/NetworkUtils.c; sourceTree = "<group>"; };
-		0161753920EDE05000FC40FF /* MetalCompute.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MetalCompute.m; path = src/MetalCompute.m; sourceTree = "<group>"; };
-		0161753A20EDE05000FC40FF /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Utils.c; path = src/Utils.c; sourceTree = "<group>"; };
-		0161753B20EDE05000FC40FF /* Memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Memory.c; path = src/Memory.c; sourceTree = "<group>"; };
+		0161753420EDE04F00FC40FF /* TimeProfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TimeProfile.c; sourceTree = "<group>"; };
+		0161753520EDE04F00FC40FF /* Data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Data.c; sourceTree = "<group>"; };
+		0161753620EDE04F00FC40FF /* Parsing.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Parsing.c; sourceTree = "<group>"; };
+		0161753720EDE05000FC40FF /* NeuralNetwork.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NeuralNetwork.c; sourceTree = "<group>"; };
+		0161753820EDE05000FC40FF /* NetworkUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NetworkUtils.c; sourceTree = "<group>"; };
+		0161753920EDE05000FC40FF /* MetalCompute.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MetalCompute.m; sourceTree = "<group>"; };
+		0161753A20EDE05000FC40FF /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
+		0161753B20EDE05000FC40FF /* Memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Memory.c; sourceTree = "<group>"; };
 		0161756120EDE9E800FC40FF /* BrainStorm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BrainStorm.h; path = include/BrainStorm.h; sourceTree = SOURCE_ROOT; };
 		0161756E20EEEDE500FC40FF /* libBrainStorm.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBrainStorm.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		0161758920EEF25600FC40FF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0161758C20EF3E8D00FC40FF /* NetworkParams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkParams.h; path = include/NetworkParams.h; sourceTree = SOURCE_ROOT; };
 		0161758E20EF401B00FC40FF /* NetworkConstructor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkConstructor.h; path = include/NetworkConstructor.h; sourceTree = SOURCE_ROOT; };
-		0161758F20EF443E00FC40FF /* NetworkConstructor.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkConstructor.c; path = src/NetworkConstructor.c; sourceTree = "<group>"; };
+		0161758F20EF443E00FC40FF /* NetworkConstructor.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = NetworkConstructor.c; sourceTree = "<group>"; };
 		0161759720F70DEB00FC40FF /* Regularization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Regularization.h; path = include/Regularization.h; sourceTree = SOURCE_ROOT; };
-		0161759820F70E1600FC40FF /* Regularization.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Regularization.c; path = src/Regularization.c; sourceTree = "<group>"; };
-		016175A320F73DDB00FC40FF /* Optimizers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Optimizers.c; path = src/Optimizers.c; sourceTree = "<group>"; };
+		0161759820F70E1600FC40FF /* Regularization.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Regularization.c; sourceTree = "<group>"; };
+		016175A320F73DDB00FC40FF /* Optimizers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Optimizers.c; sourceTree = "<group>"; };
 		016175A820FF105C00FC40FF /* NetworkOps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkOps.h; path = include/NetworkOps.h; sourceTree = SOURCE_ROOT; };
-		016175A920FF107600FC40FF /* NetworkOps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NetworkOps.c; path = src/NetworkOps.c; sourceTree = "<group>"; };
+		016175A920FF107600FC40FF /* NetworkOps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = NetworkOps.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,8 +160,8 @@
 				0161752720EDDFD800FC40FF /* MetalKernels.metal */,
 			);
 			name = metal;
-			path = "New Group";
-			sourceTree = "<group>";
+			path = /Users/hakimeseddik/Documents/BrainStorm/metal;
+			sourceTree = "<absolute>";
 		};
 		0161752920EDDFE600FC40FF /* include */ = {
 			isa = PBXGroup;
@@ -182,8 +182,8 @@
 				0161753220EDE03000FC40FF /* Utils.h */,
 			);
 			name = include;
-			path = "New Group/include";
-			sourceTree = "<group>";
+			path = /Users/hakimeseddik/Documents/BrainStorm/include;
+			sourceTree = "<absolute>";
 		};
 		0161753320EDE03800FC40FF /* src */ = {
 			isa = PBXGroup;
@@ -202,7 +202,8 @@
 				0161753A20EDE05000FC40FF /* Utils.c */,
 			);
 			name = src;
-			sourceTree = "<group>";
+			path = /Users/hakimeseddik/Documents/BrainStorm/src;
+			sourceTree = "<absolute>";
 		};
 /* End PBXGroup section */
 

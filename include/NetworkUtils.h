@@ -12,19 +12,22 @@
 #include <stdbool.h>
 #include "Utils.h"
 
-typedef struct tensor_dict {
+typedef struct tensor {
+    float * _Nullable val;
+    unsigned int shape[MAX_NUMBER_NETWORK_LAYERS][MAX_TENSOR_RANK][1];
     unsigned int rank;
+} tensor;
+
+typedef struct tensor_dict {
     bool init;
-    char * _Nullable init_stategy;
+    bool full_connected;
+    unsigned int flattening_length;
+    unsigned int shape[MAX_NUMBER_NETWORK_LAYERS][MAX_TENSOR_RANK][1];
+    unsigned int rank;
+    char * _Nullable init_strategy;
 } tensor_dict;
 
-float * _Nonnull tensor(void * _Nonnull self, tensor_dict tensor_dict);
-
-void * _Nonnull initNetworkActivations(int * _Nonnull ntLayers, unsigned int numberOfLayers);
-void * _Nonnull initNetworkAffineTransformations(int * _Nonnull ntLayers, unsigned int numberOfLayers);
-
-void * _Nonnull initNetworkCostWeightDerivatives(int * _Nonnull ntLayers, unsigned int numberOfLayers);
-void * _Nonnull initNetworkCostBiaseDerivatives(int * _Nonnull ntLayers, unsigned int numberOfLayers);
+void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict);
 
 int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
 
