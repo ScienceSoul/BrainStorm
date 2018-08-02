@@ -33,7 +33,7 @@ typedef struct regularizer_dict {
 
 typedef struct networkConstructor {
     bool networkConstruction;
-    void (* _Nullable layer)(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation, regularizer_dict * _Nullable regularizer);
+    void (* _Nullable layer_dense)(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation, regularizer_dict * _Nullable regularizer);
     void (* _Nullable split)(void * _Nonnull neural, int n1, int n2);
     void (* _Nullable training_data)(void * _Nonnull neural, char * _Nonnull str);
     void (* _Nullable classification)(void * _Nonnull neural, int * _Nonnull vector, int n);

@@ -237,7 +237,6 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
              if (nn->dense->train->adam->biasesBiasedSecondMomentEstimate == NULL) {
                  nn->dense->train->adam->biasesBiasedSecondMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
              }
-         
          }
     }
     

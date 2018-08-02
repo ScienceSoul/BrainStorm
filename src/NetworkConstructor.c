@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "NeuralNetwork.h"
 
-void set_layer(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation, regularizer_dict * _Nullable regularizer) {
+void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation, regularizer_dict * _Nullable regularizer) {
     
     static bool firstTime = true;
     
@@ -173,7 +173,7 @@ networkConstructor * _Nonnull allocateConstructor(void) {
     
     networkConstructor *constructor = (networkConstructor *)malloc(sizeof(networkConstructor));
     constructor->networkConstruction = false;
-    constructor->layer = set_layer;
+    constructor->layer_dense = set_layer_dense;
     constructor->split = set_split;
     constructor->training_data = set_training_data;
     constructor->classification = set_classification;
