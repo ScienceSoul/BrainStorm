@@ -23,15 +23,15 @@ void feedforward(void * _Nonnull self) {
     unsigned int stride2 = 0;
     unsigned int stride3 = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
-        unsigned int m = nn->dense_weights->shape[l][0][0];
-        unsigned int n = nn->dense_weights->shape[l][1][0];
+        unsigned int m = nn->dense->weights->shape[l][0][0];
+        unsigned int n = nn->dense->weights->shape[l][1][0];
         
-        float buffer[nn->dense_activations->shape[l+1][0][0]];
+        float buffer[nn->dense->activations->shape[l+1][0][0]];
         memset(buffer, 0.0f, sizeof(buffer));
         
-        cblas_sgemv(CblasRowMajor, CblasNoTrans, (int)m, (int)n, 1.0, nn->dense_weights->val+stride1, (int)n, nn->dense_activations->val+stride3, 1, 0.0, buffer, 1);
+        cblas_sgemv(CblasRowMajor, CblasNoTrans, (int)m, (int)n, 1.0, nn->dense->weights->val+stride1, (int)n, nn->dense->activations->val+stride3, 1, 0.0, buffer, 1);
 #ifdef __APPLE__
-        vDSP_vadd(buffer, 1, nn->dense_biases->val+stride2, 1, nn->dense_affineTransformations->val+stride2, 1, nn->dense_biases->shape[l][0][0]);
+        vDSP_vadd(buffer, 1, nn->dense->biases->val+stride2, 1, nn->dense->affineTransformations->val+stride2, 1, nn->dense->biases->shape[l][0][0]);
 #else
         for (int i=0; i<nn->biasesDimensions[l].n; i++) {
             nn->dense_affineTransformations->val[stride2+i] = buffer[i] + nn->biases[stride2+i];
@@ -40,19 +40,19 @@ void feedforward(void * _Nonnull self) {
         float *vec = NULL;
         unsigned int *vec_length = NULL;
         if (strcmp(nn->parameters->activationFunctions[l], "softmax") == 0) {
-            vec = nn->dense_affineTransformations->val+stride2;
-            vec_length = &(nn->dense_affineTransformations->shape[l][0][0]);
+            vec = nn->dense->affineTransformations->val+stride2;
+            vec_length = &(nn->dense->affineTransformations->shape[l][0][0]);
         }
         
-        stride3 = stride3 + nn->dense_activations->shape[l][0][0];
-        for (int i=0; i<nn->dense_activations->shape[l+1][0][0]; i++) {
-            nn->dense_activations->val[stride3+i] = nn->activationFunctions[l](nn->dense_affineTransformations->val[stride2+i], vec, vec_length);
+        stride3 = stride3 + nn->dense->activations->shape[l][0][0];
+        for (int i=0; i<nn->dense->activations->shape[l+1][0][0]; i++) {
+            nn->dense->activations->val[stride3+i] = nn->activationFunctions[l](nn->dense->affineTransformations->val[stride2+i], vec, vec_length);
         }
         
-        nanToNum(nn->dense_activations->val+stride3, nn->dense_activations->shape[l+1][0][0]);
+        nanToNum(nn->dense->activations->val+stride3, nn->dense->activations->shape[l+1][0][0]);
         
         stride1 = stride1 + (m * n);
-        stride2 = stride2 + nn->dense_biases->shape[l][0][0];
+        stride2 = stride2 + nn->dense->biases->shape[l][0][0];
     }
 }
 
@@ -61,7 +61,7 @@ void backpropagation(void * _Nonnull self) {
     
     // Activations at the input layer
     for (int i=0; i<nn->parameters->number_of_features; i++) {
-        nn->dense_activations->val[i] = nn->batch[nn->example_idx][i];
+        nn->dense->activations->val[i] = nn->batch[nn->example_idx][i];
     }
     
     // Feedforward
@@ -73,13 +73,13 @@ void backpropagation(void * _Nonnull self) {
     // Stride to activations at last layer
     unsigned stride2 = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
-        stride2 = stride2 + nn->dense_activations->shape[l][0][0];
+        stride2 = stride2 + nn->dense->activations->shape[l][0][0];
     }
     
     // Stride to affine transformations and dc/db at last layer
     unsigned stride3 = 0;
     for (int l=0; l<nn->network_num_layers-2; l++) {
-        stride3 = stride3 + nn->dense_affineTransformations->shape[l][0][0];
+        stride3 = stride3 + nn->dense->affineTransformations->shape[l][0][0];
     }
     
     float delta[nn->parameters->max_number_of_nodes_in_layer];
@@ -89,8 +89,8 @@ void backpropagation(void * _Nonnull self) {
     
     // Compute delta
     int k = (int)nn->parameters->number_of_features;
-    for (int i=0; i<nn->dense_activations->shape[nn->network_num_layers-1][0][0]; i++) {
-        delta[i] = nn->dense_activations->val[stride2+i] - nn->batch[nn->example_idx][k];
+    for (int i=0; i<nn->dense->activations->shape[nn->network_num_layers-1][0][0]; i++) {
+        delta[i] = nn->dense->activations->val[stride2+i] - nn->batch[nn->example_idx][k];
         k++;
     }
     
@@ -98,20 +98,20 @@ void backpropagation(void * _Nonnull self) {
     unsigned int stride4 = 0;
     unsigned int m, n;
     for (int l=0; l<nn->network_num_layers-2; l++) {
-        m = nn->dense_batchCostWeightDeriv->shape[l][0][0];
-        n = nn->dense_batchCostWeightDeriv->shape[l][1][0];
+        m = nn->dense->batchCostWeightDeriv->shape[l][0][0];
+        n = nn->dense->batchCostWeightDeriv->shape[l][1][0];
         stride4 = stride4 + (m * n);
     }
     
-    stride2 = stride2 - nn->dense_activations->shape[nn->network_num_layers-2][0][0];
-    n = nn->dense_batchCostWeightDeriv->shape[nn->network_num_layers-2][1][0];
-    for (int i=0; i<nn->dense_batchCostWeightDeriv->shape[nn->network_num_layers-2][0][0]; i++) {
-        for (int j=0; j<nn->dense_batchCostWeightDeriv->shape[nn->network_num_layers-2][1][0]; j++) {
-            nn->dense_batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense_activations->val[stride2+j] * delta[i];
+    stride2 = stride2 - nn->dense->activations->shape[nn->network_num_layers-2][0][0];
+    n = nn->dense->batchCostWeightDeriv->shape[nn->network_num_layers-2][1][0];
+    for (int i=0; i<nn->dense->batchCostWeightDeriv->shape[nn->network_num_layers-2][0][0]; i++) {
+        for (int j=0; j<nn->dense->batchCostWeightDeriv->shape[nn->network_num_layers-2][1][0]; j++) {
+            nn->dense->batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
         }
     }
-    for (int i=0; i<nn->dense_batchCostBiasDeriv->shape[nn->network_num_layers-2][0][0]; i++) {
-        nn->dense_batchCostBiasDeriv->val[stride3+i] = delta[i];
+    for (int i=0; i<nn->dense->batchCostBiasDeriv->shape[nn->network_num_layers-2][0][0]; i++) {
+        nn->dense->batchCostBiasDeriv->val[stride3+i] = delta[i];
     }
     
     // The backward pass loop
@@ -119,39 +119,39 @@ void backpropagation(void * _Nonnull self) {
     // Stride to weithts at last layer
     unsigned int stride = 0;
     for (int l=0; l<nn->network_num_layers-2; l++) {
-        m = nn->dense_weights->shape[l][0][0];
-        n = nn->dense_weights->shape[l][1][0];
+        m = nn->dense->weights->shape[l][0][0];
+        n = nn->dense->weights->shape[l][1][0];
         stride = stride + (m * n);
     }
     
     for (int l=nn->network_num_layers-2; l>=0; l--) {
-        stride2 = stride2 - nn->dense_activations->shape[l-1][0][0];
-        stride3 = stride3 - nn->dense_affineTransformations->shape[l-1][0][0];
-        stride4 = stride4 - (nn->dense_batchCostWeightDeriv->shape[l-1][0][0]*nn->dense_batchCostWeightDeriv->shape[l-1][1][0]);
+        stride2 = stride2 - nn->dense->activations->shape[l-1][0][0];
+        stride3 = stride3 - nn->dense->affineTransformations->shape[l-1][0][0];
+        stride4 = stride4 - (nn->dense->batchCostWeightDeriv->shape[l-1][0][0]*nn->dense->batchCostWeightDeriv->shape[l-1][1][0]);
         
-        float sp[nn->dense_affineTransformations->shape[l-1][0][0]];
-        for (int i=0; i<nn->dense_affineTransformations->shape[l-1][0][0]; i++) {
-            sp[i] = nn->activationDerivatives[l-1](nn->dense_affineTransformations->val[stride3+i]);
+        float sp[nn->dense->affineTransformations->shape[l-1][0][0]];
+        for (int i=0; i<nn->dense->affineTransformations->shape[l-1][0][0]; i++) {
+            sp[i] = nn->activationDerivatives[l-1](nn->dense->affineTransformations->val[stride3+i]);
         }
         
-        cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->dense_weights->shape[l][0][0], (int)nn->dense_weights->shape[l][1][0], 1.0, nn->dense_weights->val+stride, (int)nn->dense_weights->shape[l][1][0], delta, 1, 0.0, buffer, 1);
-        for (int i=0; i<nn->dense_affineTransformations->shape[l-1][0][0]; i++) {
+        cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->dense->weights->shape[l][0][0], (int)nn->dense->weights->shape[l][1][0], 1.0, nn->dense->weights->val+stride, (int)nn->dense->weights->shape[l][1][0], delta, 1, 0.0, buffer, 1);
+        for (int i=0; i<nn->dense->affineTransformations->shape[l-1][0][0]; i++) {
             delta[i] = buffer[i] * sp[i];
         }
         // dc/dw at layer l
-        m = nn->dense_batchCostWeightDeriv->shape[l-1][0][0];
-        n = nn->dense_batchCostWeightDeriv->shape[l-1][1][0];
+        m = nn->dense->batchCostWeightDeriv->shape[l-1][0][0];
+        n = nn->dense->batchCostWeightDeriv->shape[l-1][1][0];
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense_batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense_activations->val[stride2+j] * delta[i];
+                nn->dense->batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
             }
         }
         // dc/db at layer l
-        for (int i=0; i<nn->dense_batchCostBiasDeriv->shape[l-1][0][0]; i++) {
-            nn->dense_batchCostBiasDeriv->val[stride3+i] = delta[i];
+        for (int i=0; i<nn->dense->batchCostBiasDeriv->shape[l-1][0][0]; i++) {
+            nn->dense->batchCostBiasDeriv->val[stride3+i] = delta[i];
         }
         
-        stride = stride - (nn->dense_weights->shape[l-1][0][0] * nn->dense_weights->shape[l-1][1][0]);
+        stride = stride - (nn->dense->weights->shape[l-1][0][0] * nn->dense->weights->shape[l-1][1][0]);
     }
 }
 
@@ -164,16 +164,16 @@ void batchAccumulation(void * _Nonnull self) {
     unsigned stride1 = 0;
     unsigned stride2 = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
-        unsigned int m = nn->dense_costWeightDerivatives->shape[l][0][0];
-        unsigned int n = nn->dense_costWeightDerivatives->shape[l][1][0];
+        unsigned int m = nn->dense->costWeightDerivatives->shape[l][0][0];
+        unsigned int n = nn->dense->costWeightDerivatives->shape[l][1][0];
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense_costWeightDerivatives->val[stride1+((i*n)+j)] = nn->dense_costWeightDerivatives->val[stride1+((i*n)+j)] + nn->dense_batchCostWeightDeriv->val[stride1+((i*n)+j)];
+                nn->dense->costWeightDerivatives->val[stride1+((i*n)+j)] = nn->dense->costWeightDerivatives->val[stride1+((i*n)+j)] + nn->dense->batchCostWeightDeriv->val[stride1+((i*n)+j)];
             }
         }
         for (int i=0; i<m; i++) {
-            nn->dense_costBiasDerivatives->val[stride2+i] = nn->dense_costBiasDerivatives->val[stride2+i] + nn->dense_batchCostBiasDeriv->val[stride2+i];
+            nn->dense->costBiasDerivatives->val[stride2+i] = nn->dense->costBiasDerivatives->val[stride2+i] + nn->dense->batchCostBiasDeriv->val[stride2+i];
         }
 
         stride1 = stride1 + (m * n);
@@ -275,7 +275,7 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
     for (int k=0; k<data_size; k++) {
         
         for (int i=0; i<nn->parameters->number_of_features; i++) {
-            nn->dense_activations->val[i] = data[k][i];
+            nn->dense->activations->val[i] = data[k][i];
         }
         
         feedforward(self);
@@ -283,10 +283,10 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
         // Stride to activations at last layer
         unsigned stride = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            stride = stride + nn->dense_activations->shape[l][0][0];
+            stride = stride + nn->dense->activations->shape[l][0][0];
         }
         
-        out[k] = (float)argmax(nn->dense_activations->val+stride, nn->dense_activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->parameters->number_of_features];
+        out[k] = (float)argmax(nn->dense->activations->val+stride, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->parameters->number_of_features];
     }
 }
 
@@ -320,8 +320,8 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
         unsigned int weightsTableSize = 0;
         unsigned int biasesTableSize = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            weightsTableSize = weightsTableSize + (nn->dense_weights->shape[l][0][0] * nn->dense_weights->shape[l][1][0]);
-            biasesTableSize = biasesTableSize + nn->dense_biases->shape[l][0][0];
+            weightsTableSize = weightsTableSize + (nn->dense->weights->shape[l][0][0] * nn->dense->weights->shape[l][1][0]);
+            biasesTableSize = biasesTableSize + nn->dense->biases->shape[l][0][0];
         }
         
         nn->gpu->allocate_buffers((void *)nn);
@@ -374,7 +374,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
     for (int i=0; i<data_size; i++) {
         
         for (int j=0; j<nn->parameters->number_of_features; j++) {
-            nn->dense_activations->val[j] = data[i][j];
+            nn->dense->activations->val[j] = data[i][j];
         }
         
         feedforward(self);
@@ -382,32 +382,32 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
         // Stride to activations at last layer
         unsigned stride1 = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            stride1 = stride1 + nn->dense_activations->shape[l][0][0];
+            stride1 = stride1 + nn->dense->activations->shape[l][0][0];
         }
         
-        float y[nn->dense_activations->shape[nn->network_num_layers-1][0][0]];
+        float y[nn->dense->activations->shape[nn->network_num_layers-1][0][0]];
         memset(y, 0.0f, sizeof(y));
         if (binarization == true) {
-            for (int j=0; j<nn->dense_activations->shape[nn->network_num_layers-1][0][0]; j++) {
+            for (int j=0; j<nn->dense->activations->shape[nn->network_num_layers-1][0][0]; j++) {
                 if (data[i][nn->parameters->number_of_features] == nn->parameters->classifications[j]) {
                     y[j] = 1.0f;
                 }
             }
         } else {
             int idx = (int)nn->parameters->number_of_features;
-            for (int j=0; j<nn->dense_activations->shape[nn->network_num_layers-1][0][0]; j++) {
+            for (int j=0; j<nn->dense->activations->shape[nn->network_num_layers-1][0][0]; j++) {
                 y[j] = data[i][idx];
                 idx++;
             }
         }
-        cost = cost + crossEntropyCost(nn->dense_activations->val+stride1, y, nn->dense_activations->shape[nn->network_num_layers-1][0][0]) / data_size;
+        cost = cost + crossEntropyCost(nn->dense->activations->val+stride1, y, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) / data_size;
         
         sum = 0.0f;
         unsigned int stride = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            unsigned int m = nn->dense_weights->shape[l][0][0];
-            unsigned int n = nn->dense_weights->shape[l][1][0];
-            norm = frobeniusNorm(nn->dense_weights->val+stride, (m * n));
+            unsigned int m = nn->dense->weights->shape[l][0][0];
+            unsigned int n = nn->dense->weights->shape[l][1][0];
+            norm = frobeniusNorm(nn->dense->weights->val+stride, (m * n));
             sum = sum + (norm*norm);
             stride = stride + (m * n);
         }
@@ -427,19 +427,19 @@ void trainLoop(void * _Nonnull  neural) {
     for (int k=1; k<=nn->parameters->epochs; k++) {
         shuffle(nn->data->training->set, nn->data->training->m, nn->data->training->n);
         
-        for (int l=1; l<=nn->train->batch_range((void *)neural,  nn->parameters->miniBatchSize); l++) {
-            nn->train->next_batch((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+        for (int l=1; l<=nn->dense->train->batch_range((void *)neural,  nn->parameters->miniBatchSize); l++) {
+            nn->dense->train->next_batch((void *)nn, miniBatch, nn->parameters->miniBatchSize);
             
-            if (nn->train->gradient_descent != NULL) {
-                nn->train->gradient_descent->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
-            } else if (nn->train->momentum != NULL) {
-                nn->train->momentum->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
-            } else if (nn->train->ada_grad != NULL) {
-                nn->train->ada_grad->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
-            } else if (nn->train->rms_prop != NULL) {
-                nn->train->rms_prop->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
-            }  else if (nn->train->adam != NULL) {
-                nn->train->adam->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            if (nn->dense->train->gradient_descent != NULL) {
+                nn->dense->train->gradient_descent->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            } else if (nn->dense->train->momentum != NULL) {
+                nn->dense->train->momentum->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            } else if (nn->dense->train->ada_grad != NULL) {
+                nn->dense->train->ada_grad->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            } else if (nn->dense->train->rms_prop != NULL) {
+                nn->dense->train->rms_prop->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+            }  else if (nn->dense->train->adam != NULL) {
+                nn->dense->train->adam->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
             }
         }
         

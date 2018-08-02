@@ -117,51 +117,51 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
     void * optimizer = NULL;
     
     if (strcmp(optimizer_dict.optimizer, "gradient descent") == 0) {
-        nn->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
-        nn->train->gradient_descent->learning_rate = optimizer_dict.learning_rate;
+        nn->dense->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
+        nn->dense->train->gradient_descent->learning_rate = optimizer_dict.learning_rate;
         nn->parameters->eta = optimizer_dict.learning_rate;
-        nn->train->gradient_descent->minimize = gradientDescentOptimizer;
-        optimizer = (void *)nn->train->gradient_descent;
+        nn->dense->train->gradient_descent->minimize = gradientDescentOptimizer;
+        optimizer = (void *)nn->dense->train->gradient_descent;
     } else if (strcmp(optimizer_dict.optimizer, "momentum") == 0) {
-        nn->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
-        nn->train->momentum->learning_rate = optimizer_dict.learning_rate;
-        nn->train->momentum->momentum_coefficient = optimizer_dict.momentum;
+        nn->dense->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
+        nn->dense->train->momentum->learning_rate = optimizer_dict.learning_rate;
+        nn->dense->train->momentum->momentum_coefficient = optimizer_dict.momentum;
         nn->parameters->eta = optimizer_dict.learning_rate;
-        nn->train->momentum->minimize = momentumOptimizer;
-        optimizer = (void *)nn->train->momentum;
+        nn->dense->train->momentum->minimize = momentumOptimizer;
+        optimizer = (void *)nn->dense->train->momentum;
     } else if (strcmp(optimizer_dict.optimizer, "adagrad") == 0) {
-        nn->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
-        nn->train->ada_grad->learning_rate = optimizer_dict.learning_rate;
-        nn->train->ada_grad->delta = optimizer_dict.delta;
+        nn->dense->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
+        nn->dense->train->ada_grad->learning_rate = optimizer_dict.learning_rate;
+        nn->dense->train->ada_grad->delta = optimizer_dict.delta;
         nn->parameters->eta = optimizer_dict.learning_rate;;
-        nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
-        nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
-        nn->train->ada_grad->minimize = adamOptimizer;
-        optimizer = (void *)nn->train->ada_grad;
+        nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->ada_grad->minimize = adamOptimizer;
+        optimizer = (void *)nn->dense->train->ada_grad;
     } else if (strcmp(optimizer_dict.optimizer, "rmsprop") == 0) {
-        nn->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
-        nn->train->rms_prop->learning_rate = optimizer_dict.learning_rate;
-        nn->train->rms_prop->decayRate = optimizer_dict.decay_rate1;
-        nn->train->rms_prop->delta = optimizer_dict.delta;
+        nn->dense->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
+        nn->dense->train->rms_prop->learning_rate = optimizer_dict.learning_rate;
+        nn->dense->train->rms_prop->decayRate = optimizer_dict.decay_rate1;
+        nn->dense->train->rms_prop->delta = optimizer_dict.delta;
         nn->parameters->eta = optimizer_dict.learning_rate;
-        nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
-        nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
-        nn->train->rms_prop->minimize = rmsPropOptimizer;
-        optimizer = (void *)nn->train->rms_prop;
+        nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->rms_prop->minimize = rmsPropOptimizer;
+        optimizer = (void *)nn->dense->train->rms_prop;
     } else if (strcmp(optimizer_dict.optimizer, "adam") == 0) {
-        nn->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
-        nn->train->adam->time = 0;
-        nn->train->adam->stepSize = optimizer_dict.step_size;
-        nn->train->adam->decayRate1 = optimizer_dict.decay_rate1;
-        nn->train->adam->decayRate2 = optimizer_dict.decay_rate2;
-        nn->train->adam->delta = optimizer_dict.delta;
+        nn->dense->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
+        nn->dense->train->adam->time = 0;
+        nn->dense->train->adam->stepSize = optimizer_dict.step_size;
+        nn->dense->train->adam->decayRate1 = optimizer_dict.decay_rate1;
+        nn->dense->train->adam->decayRate2 = optimizer_dict.decay_rate2;
+        nn->dense->train->adam->delta = optimizer_dict.delta;
         nn->parameters->eta = optimizer_dict.step_size;
-        nn->train->adam->weightsBiasedFirstMomentEstimate = NULL;
-        nn->train->adam->weightsBiasedSecondMomentEstimate = NULL;
-        nn->train->adam->biasesBiasedFirstMomentEstimate = NULL;
-        nn->train->adam->biasesBiasedSecondMomentEstimate = NULL;
-        nn->train->adam->minimize = adamOptimizer;
-        optimizer = (void *)nn->train->adam;
+        nn->dense->train->adam->weightsBiasedFirstMomentEstimate = NULL;
+        nn->dense->train->adam->weightsBiasedSecondMomentEstimate = NULL;
+        nn->dense->train->adam->biasesBiasedFirstMomentEstimate = NULL;
+        nn->dense->train->adam->biasesBiasedSecondMomentEstimate = NULL;
+        nn->dense->train->adam->minimize = adamOptimizer;
+        optimizer = (void *)nn->dense->train->adam;
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized optimizer. Currently supported optimizers are: GradiendDescent, Momentum, AdaGrad, RMSProp and Adam.");
     }

@@ -26,6 +26,23 @@ typedef struct Train {
     void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
 } Train;
 
+typedef struct dense_network {
+    unsigned int num_dense_layers;
+    
+    tensor * _Nullable weights;
+    tensor * _Nullable weightsVelocity;
+    tensor * _Nullable biases;
+    tensor * _Nullable biasesVelocity;
+    tensor * _Nullable activations;
+    tensor * _Nullable affineTransformations;
+    tensor * _Nullable costWeightDerivatives;
+    tensor * _Nullable costBiasDerivatives;
+    tensor * _Nullable batchCostWeightDeriv;
+    tensor * _Nullable batchCostBiasDeriv;
+    
+    Train * _Nullable train;
+} dense_network;
+
 typedef struct NeuralNetwork {
     
     data * _Nullable data;
@@ -35,23 +52,10 @@ typedef struct NeuralNetwork {
     int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
     
     unsigned int network_num_layers; // Total number of layers in the network from input to output
-    unsigned int num_dense_layers;   // Number of fully connected layers
     unsigned int num_conv2d_layers;  // Number of 2D convolutional layers
     int example_idx;
     
-    tensor * _Nullable dense_weights;
-    tensor * _Nullable dense_weightsVelocity;
-    tensor * _Nullable dense_biases;
-    tensor * _Nullable dense_biasesVelocity;
-    
-    tensor * _Nullable dense_activations;
-    tensor * _Nullable dense_affineTransformations;
-    tensor * _Nullable dense_costWeightDerivatives;
-    tensor * _Nullable dense_costBiasDerivatives;
-    tensor * _Nullable dense_batchCostWeightDeriv;
-    tensor * _Nullable dense_batchCostBiasDeriv;
-    
-    Train * _Nullable train;
+    dense_network * _Nullable dense;
     MetalCompute * _Nullable gpu;
     
     void (* _Nullable genesis)(void * _Nonnull self, char * _Nonnull init_stategy);

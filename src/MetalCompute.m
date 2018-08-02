@@ -122,8 +122,8 @@ void allocate_buffers(void * _Nonnull network) {
         unsigned int weightsTableSize = 0;
         unsigned int biasesTableSize = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            weightsTableSize = weightsTableSize + (nn->dense_weights->shape[l][0][0]*nn->dense_weights->shape[l][1][0]);
-            biasesTableSize = biasesTableSize + nn->dense_biases->shape[l][0][0];
+            weightsTableSize = weightsTableSize + (nn->dense->weights->shape[l][0][0]*nn->dense->weights->shape[l][1][0]);
+            biasesTableSize = biasesTableSize + nn->dense->biases->shape[l][0][0];
         }
         
         int max = max_array(nn->parameters->topology, nn->network_num_layers);
@@ -141,10 +141,10 @@ void allocate_buffers(void * _Nonnull network) {
         params->numberOfOutputs = nn->parameters->topology[nn->network_num_layers-1];
         
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            params->weightsDim[l].m = nn->dense_weights->shape[l][0][0];
-            params->weightsDim[l].n = nn->dense_weights->shape[l][1][0];
+            params->weightsDim[l].m = nn->dense->weights->shape[l][0][0];
+            params->weightsDim[l].n = nn->dense->weights->shape[l][1][0];
             
-            params->biasesDim[l].n = nn->dense_biases->shape[l][0][0];
+            params->biasesDim[l].n = nn->dense->biases->shape[l][0][0];
         }
 
         kernel_parameters = [device newBufferWithBytes:params length:sizeof(parameters_container) options:MTLResourceStorageModeShared];
@@ -218,15 +218,15 @@ void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     unsigned int weightsTableSize = 0;
     unsigned int biasesTableSize = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
-        weightsTableSize = weightsTableSize + (nn->dense_weights->shape[l][0][0]*nn->dense_weights->shape[l][1][0]);
-        biasesTableSize = biasesTableSize + nn->dense_biases->shape[l][0][0];
+        weightsTableSize = weightsTableSize + (nn->dense->weights->shape[l][0][0]*nn->dense->weights->shape[l][1][0]);
+        biasesTableSize = biasesTableSize + nn->dense->biases->shape[l][0][0];
     }
     
     void *buffer = kernel_weights.contents;
-    memcpy(buffer, nn->dense_weights, weightsTableSize*sizeof(float));
+    memcpy(buffer, nn->dense->weights, weightsTableSize*sizeof(float));
     
     buffer = kernel_biases.contents;
-    memcpy(buffer, nn->dense_biases, biasesTableSize*sizeof(float));
+    memcpy(buffer, nn->dense->biases, biasesTableSize*sizeof(float));
     
     buffer = kernel_ground_truth.contents;
     float *pt = buffer;

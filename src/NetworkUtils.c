@@ -420,70 +420,70 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     FOUND_REGULARIZATION = 1;
                 }
             } else if (strcmp(field->key, "gradient_descent_optimizer") == 0) {
-                nn->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
-                nn->train->gradient_descent->learning_rate = strtof(field->value, NULL);
+                nn->dense->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
+                nn->dense->train->gradient_descent->learning_rate = strtof(field->value, NULL);
                 nn->parameters->eta = strtof(field->value, NULL);
-                nn->train->gradient_descent->minimize = gradientDescentOptimizer;
+                nn->dense->train->gradient_descent->minimize = gradientDescentOptimizer;
                 FOUND_OPTIMIZER = 1;
                 
             } else if (strcmp(field->key, "momentum_optimizer") == 0) {
-                nn->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
+                nn->dense->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and the momentum coefficient should be given to the momentum optimizer.");
-                nn->train->momentum->learning_rate = result[0];
-                nn->train->momentum->momentum_coefficient = result[1];
+                nn->dense->train->momentum->learning_rate = result[0];
+                nn->dense->train->momentum->momentum_coefficient = result[1];
                 nn->parameters->eta = result[0];
-                nn->train->momentum->minimize = momentumOptimizer;
+                nn->dense->train->momentum->minimize = momentumOptimizer;
                 FOUND_OPTIMIZER = 1;
             
             } else if (strcmp(field->key, "adagrad_optimizer") == 0) {
-                nn->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
+                nn->dense->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and a delta value should be given to the AdaGrad optimizer.");
-                nn->train->ada_grad->learning_rate = result[0];
-                nn->train->ada_grad->delta = result[1];
+                nn->dense->train->ada_grad->learning_rate = result[0];
+                nn->dense->train->ada_grad->delta = result[1];
                 nn->parameters->eta = result[0];
-                nn->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
-                nn->train->ada_grad->minimize = adamOptimizer;
+                nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->ada_grad->minimize = adamOptimizer;
                 FOUND_OPTIMIZER = 1;
             
             } else if (strcmp(field->key, "rmsprop_optimizer") == 0) {
-                nn->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
+                nn->dense->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
                 float result[3];
                 unsigned int numberOfItems, len = 3;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 3) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate, the decay rate and a delata value should be given to the RMSProp optimizer.");
-                nn->train->rms_prop->learning_rate = result[0];
-                nn->train->rms_prop->decayRate = result[1];
-                nn->train->rms_prop->delta = result[2];
+                nn->dense->train->rms_prop->learning_rate = result[0];
+                nn->dense->train->rms_prop->decayRate = result[1];
+                nn->dense->train->rms_prop->delta = result[2];
                 nn->parameters->eta = result[0];
-                nn->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
-                nn->train->rms_prop->minimize = rmsPropOptimizer;
+                nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->rms_prop->minimize = rmsPropOptimizer;
                 FOUND_OPTIMIZER = 1;
             
             } else if (strcmp(field->key, "adam_optimizer") == 0) {
-                nn->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
+                nn->dense->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
                 float result[4];
                 unsigned int numberOfItems, len=4;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 4) fatal(DEFAULT_CONSOLE_WRITER, "The step size, two decay rates and a delta value should be given to the Adam optimizer.");
-                nn->train->adam->time = 0;
-                nn->train->adam->stepSize = result[0];
-                nn->train->adam->decayRate1 = result[1];
-                nn->train->adam->decayRate2 = result[2];
-                nn->train->adam->delta = result[3];
+                nn->dense->train->adam->time = 0;
+                nn->dense->train->adam->stepSize = result[0];
+                nn->dense->train->adam->decayRate1 = result[1];
+                nn->dense->train->adam->decayRate2 = result[2];
+                nn->dense->train->adam->delta = result[3];
                 nn->parameters->eta = result[0];
-                nn->train->adam->weightsBiasedFirstMomentEstimate = NULL;
-                nn->train->adam->weightsBiasedSecondMomentEstimate = NULL;
-                nn->train->adam->biasesBiasedFirstMomentEstimate = NULL;
-                nn->train->adam->biasesBiasedSecondMomentEstimate = NULL;
-                nn->train->adam->minimize = adamOptimizer;
+                nn->dense->train->adam->weightsBiasedFirstMomentEstimate = NULL;
+                nn->dense->train->adam->weightsBiasedSecondMomentEstimate = NULL;
+                nn->dense->train->adam->biasesBiasedFirstMomentEstimate = NULL;
+                nn->dense->train->adam->biasesBiasedSecondMomentEstimate = NULL;
+                nn->dense->train->adam->minimize = adamOptimizer;
                 FOUND_OPTIMIZER = 1;
             }
             field = field->next;
