@@ -41,6 +41,10 @@ typedef struct dense_network {
     tensor * _Nullable batchCostBiasDeriv;
     
     Train * _Nullable train;
+    
+    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset);
+    float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
+    float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
 } dense_network;
 
 typedef struct NeuralNetwork {
@@ -58,13 +62,10 @@ typedef struct NeuralNetwork {
     dense_network * _Nullable dense;
     MetalCompute * _Nullable gpu;
     
-    void (* _Nullable genesis)(void * _Nonnull self, char * _Nonnull init_stategy);
+    void (* _Nullable genesis)(void * _Nonnull self);
     void (* _Nullable finale)(void * _Nonnull self);
     void * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
-    
-    float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
-    float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
     
     float (* _Nullable l0_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
     float (* _Nullable l1_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);

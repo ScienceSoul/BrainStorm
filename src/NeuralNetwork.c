@@ -21,7 +21,7 @@
 
 static void initNeuralData(void * _Nonnull self);
 
-static void genesis(void * _Nonnull self, char * _Nonnull init_stategy);
+static void genesis(void * _Nonnull self);
 static void finale(void * _Nonnull self);
 static void gpu_alloc(void * _Nonnull self);
 
@@ -53,6 +53,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
     *nn = (NeuralNetwork){.network_num_layers=0};
     
+    // A full-connected network
     nn->dense = (dense_network *)malloc(sizeof(dense_network));
     *(nn->dense) = (dense_network){.num_dense_layers=0, .weights=NULL, .weightsVelocity=NULL, .biases=NULL, .biasesVelocity=NULL, .activations=NULL, .affineTransformations=NULL, .costWeightDerivatives=NULL, .costBiasDerivatives=NULL, .batchCostWeightDeriv=NULL, .batchCostBiasDeriv=NULL};
     nn->dense->train = (Train *)malloc(sizeof(Train));
@@ -60,6 +61,11 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->dense->train->next_batch = nextBatch;
     nn->dense->train->batch_range = batchRange;
     nn->dense->train->progression = progression;
+    
+    for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
+        nn->dense->activationFunctions[i] = NULL;
+        nn->dense->activationDerivatives[i] = NULL;
+    }
     
     nn->parameters = (networkParameters *)malloc(sizeof(networkParameters));
     strcpy(nn->parameters->supported_parameters[0], "data_name");
@@ -92,11 +98,6 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     
     memset(*nn->parameters->activationFunctions, 0, (MAX_NUMBER_NETWORK_LAYERS*128)*sizeof(char));
     
-    for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
-        nn->activationFunctions[i] = NULL;
-        nn->activationDerivatives[i] = NULL;
-    }
-    
     nn->constructor = allocateConstructor();
     
     nn->load_params_from_input_file = loadParametersFromImputFile;
@@ -124,7 +125,7 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
 //
 //  Create the network layers, i.e. allocates memory for the weight, bias, activation, z, dC/dx and dC/db data structures
 //
-static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
+static void genesis(void * _Nonnull self) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
@@ -134,8 +135,8 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
         
         if (nn->parameters->numberOfActivationFunctions == 0) {
             for (int i=0; i<nn->network_num_layers-1; i++) {
-                nn->activationFunctions[i] = sigmoid;
-                nn->activationDerivatives[i] = sigmoidPrime;
+                nn->dense->activationFunctions[i] = sigmoid;
+                nn->dense->activationDerivatives[i] = sigmoidPrime;
             }
         }
         
@@ -168,7 +169,6 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = true;
-        dict.init_strategy = init_stategy;
         nn->dense->weights = (tensor *)nn->tensor((void *)self, dict);
         
         if (nn->dense->train->momentum != NULL) {
@@ -208,7 +208,6 @@ static void genesis(void * _Nonnull self, char * _Nonnull init_stategy) {
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = true;
-        dict.init_strategy = init_stategy;
         nn->dense->biases = (tensor *)nn->tensor((void *)self, dict);
         
         if (nn->dense->train->momentum != NULL) {

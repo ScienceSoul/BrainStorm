@@ -46,7 +46,7 @@ void feedforward(void * _Nonnull self) {
         
         stride3 = stride3 + nn->dense->activations->shape[l][0][0];
         for (int i=0; i<nn->dense->activations->shape[l+1][0][0]; i++) {
-            nn->dense->activations->val[stride3+i] = nn->activationFunctions[l](nn->dense->affineTransformations->val[stride2+i], vec, vec_length);
+            nn->dense->activations->val[stride3+i] = nn->dense->activationFunctions[l](nn->dense->affineTransformations->val[stride2+i], vec, vec_length);
         }
         
         nanToNum(nn->dense->activations->val+stride3, nn->dense->activations->shape[l+1][0][0]);
@@ -116,7 +116,7 @@ void backpropagation(void * _Nonnull self) {
     
     // The backward pass loop
     
-    // Stride to weithts at last layer
+    // Stride to weights at last layer
     unsigned int stride = 0;
     for (int l=0; l<nn->network_num_layers-2; l++) {
         m = nn->dense->weights->shape[l][0][0];
@@ -124,14 +124,14 @@ void backpropagation(void * _Nonnull self) {
         stride = stride + (m * n);
     }
     
-    for (int l=nn->network_num_layers-2; l>=0; l--) {
+    for (int l=nn->network_num_layers-2; l>0; l--) {
         stride2 = stride2 - nn->dense->activations->shape[l-1][0][0];
         stride3 = stride3 - nn->dense->affineTransformations->shape[l-1][0][0];
         stride4 = stride4 - (nn->dense->batchCostWeightDeriv->shape[l-1][0][0]*nn->dense->batchCostWeightDeriv->shape[l-1][1][0]);
         
         float sp[nn->dense->affineTransformations->shape[l-1][0][0]];
         for (int i=0; i<nn->dense->affineTransformations->shape[l-1][0][0]; i++) {
-            sp[i] = nn->activationDerivatives[l-1](nn->dense->affineTransformations->val[stride3+i]);
+            sp[i] = nn->dense->activationDerivatives[l-1](nn->dense->affineTransformations->val[stride3+i]);
         }
         
         cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->dense->weights->shape[l][0][0], (int)nn->dense->weights->shape[l][1][0], 1.0, nn->dense->weights->val+stride, (int)nn->dense->weights->shape[l][1][0], delta, 1, 0.0, buffer, 1);

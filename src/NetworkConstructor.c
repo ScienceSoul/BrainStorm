@@ -10,75 +10,73 @@
 #include <stdlib.h>
 #include "NeuralNetwork.h"
 
-void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, char * _Nonnull type, char * _Nullable activation, regularizer_dict * _Nullable regularizer) {
-    
-    static bool firstTime = true;
+void set_feed(void * _Nonnull neural, unsigned int nbNeurons) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
-    if (firstTime) {
-        nn->constructor->networkConstruction = true;
-        firstTime = false;
+    nn->constructor->networkConstruction = true;
+    if (nn->network_num_layers != 0) {
+        fatal(DEFAULT_CONSOLE_WRITER, "network topolgy error. The feeding layer must be created first.");
     }
+    nn->parameters->topology[nn->network_num_layers] = nbNeurons;
+    nn->network_num_layers++;
+}
+
+void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, layer_dict layer_dict, regularizer_dict * _Nullable regularizer) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
     
-    if (strcmp(type, "input") == 0) {
-        if (activation != NULL) {
-            fprintf(stdout, "%s: activation function passed to input layer. Will be ignored.", DEFAULT_CONSOLE_WRITER);
-        }
-        nn->parameters->topology[nn->network_num_layers] = nbNeurons;
-        nn->network_num_layers++;
-        
-    } else if (strcmp(type, "hidden") == 0 || strcmp(type, "output") == 0) {
-        if (activation == NULL) fatal(DEFAULT_CONSOLE_WRITER, "activation function is null in constructor.");
-        
-        nn->parameters->topology[nn->network_num_layers] = nbNeurons;
-        nn->network_num_layers++;;
-        
-        if (strcmp(type, "hidden") == 0) {
-            if (strcmp(activation, "softmax") == 0) fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units.");
-        }
-        
-        if (strcmp(activation, "sigmoid") == 0) {
-            strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "sigmoid");
-            nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = sigmoid;
-            nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = sigmoidPrime;
-        } else if (strcmp(activation, "relu") == 0) {
-            strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "relu");
-            nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = relu;
-            nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = reluPrime;
-        } else if (strcmp(activation, "leakyrelu") == 0) {
-            strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "leakyrelu");
-            nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = leakyrelu;
-            nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = leakyreluPrime;
-        } else if (strcmp(activation, "elu") == 0) {
-            strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "elu");
-            nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = elu;
-            nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = eluPrime;
-        } else if (strcmp(activation, "tanh") == 0) {
-            strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "tanh");
-            nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = tan_h;
-            nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = tanhPrime;
-        } else if (strcmp(activation, "softmax") == 0) {
-            strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "softmax");
-            nn->activationFunctions[nn->parameters->numberOfActivationFunctions] = softmax;
-            nn->activationDerivatives[nn->parameters->numberOfActivationFunctions] = NULL;
-        } else {
-            fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activation);
-        }
-        
-        // Add the regularizer if given
-        if (regularizer != NULL) {
-            nn->parameters->lambda = regularizer->regularization_factor;
-            nn->regularizer[nn->parameters->numberOfActivationFunctions] = regularizer->regularizer_func;
-        } else nn->regularizer[nn->parameters->numberOfActivationFunctions] = nn->l0_regularizer;
-        
-        nn->parameters->numberOfActivationFunctions++;
+    if (layer_dict.activation == NULL) fatal(DEFAULT_CONSOLE_WRITER, "activation function is null in constructor.");
+    
+    nn->parameters->topology[nn->network_num_layers] = nbNeurons;
+    nn->network_num_layers++;;
+    
+    if (strcmp(layer_dict.activation, "sigmoid") == 0) {
+        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "sigmoid");
+        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = sigmoid;
+        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = sigmoidPrime;
+    } else if (strcmp(layer_dict.activation, "relu") == 0) {
+        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "relu");
+        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = relu;
+        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = reluPrime;
+    } else if (strcmp(layer_dict.activation, "leakyrelu") == 0) {
+        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "leakyrelu");
+        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = leakyrelu;
+        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = leakyreluPrime;
+    } else if (strcmp(layer_dict.activation, "elu") == 0) {
+        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "elu");
+        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = elu;
+        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = eluPrime;
+    } else if (strcmp(layer_dict.activation, "tanh") == 0) {
+        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "tanh");
+        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = tan_h;
+        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = tanhPrime;
+    } else if (strcmp(layer_dict.activation, "softmax") == 0) {
+        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "softmax");
+        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = softmax;
+        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = NULL;
     } else {
-        fatal(DEFAULT_CONSOLE_WRITER, "unknown layer type in network construction.");
+        fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", layer_dict.activation);
     }
+    
+    if (layer_dict.kernel_initializer == NULL) {
+        fprintf(stdout, "%s: no initializer given to layer, default to standard nornmal distribution.\n", DEFAULT_CONSOLE_WRITER);
+        nn->dense->kernelInitializers[nn->dense->num_dense_layers] = standard_normal_initializer;
+    } else {
+        nn->dense->kernelInitializers[nn->dense->num_dense_layers] = layer_dict.kernel_initializer;
+    }
+    nn->dense->num_dense_layers++;
+    
+    // Add the regularizer if given
+    if (regularizer != NULL) {
+        nn->parameters->lambda = regularizer->regularization_factor;
+        nn->regularizer[nn->parameters->numberOfActivationFunctions] = regularizer->regularizer_func;
+    } else nn->regularizer[nn->parameters->numberOfActivationFunctions] = nn->l0_regularizer;
+    
+    nn->parameters->numberOfActivationFunctions++;
 }
 
 void set_split(void * _Nonnull neural, int n1, int n2) {
@@ -173,6 +171,7 @@ networkConstructor * _Nonnull allocateConstructor(void) {
     
     networkConstructor *constructor = (networkConstructor *)malloc(sizeof(networkConstructor));
     constructor->networkConstruction = false;
+    constructor->feed = set_feed;
     constructor->layer_dense = set_layer_dense;
     constructor->split = set_split;
     constructor->training_data = set_training_data;

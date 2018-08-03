@@ -12,6 +12,139 @@
 #include "Memory.h"
 #include "Parsing.h"
 
+void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset) {
+
+    tensor *tensor_object = (tensor *)kernel;
+    
+    // The last two dimensions define the right most increments
+    int indx = tensor_object->rank - 2;
+    int m = tensor_object->shape[l][indx][0];
+    int n = tensor_object->shape[l][indx+1][0];
+    
+    if (tensor_object->rank == 2) {
+        for (int i = 0; i<m; i++) {
+            for (int j=0; j<n; j++) {
+                tensor_object->val[offset+((i*n)+j)] = randn(0.0f, 1.0f) / sqrtf((float)n);
+            }
+        }
+    } else if (tensor_object->rank == 3) {
+        int stride = 0;
+        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
+            for (int i = 0; i<m; i++) {
+                for (int j=0; j<n; j++) {
+                    tensor_object->val[offset+(stride+((i*n)+j))] = randn(0.0f, 1.0f) / sqrtf((float)n);
+                }
+            }
+            stride = stride + (m * n);
+        }
+    } else if (tensor_object->rank == 4) {
+        int stride1 = 0;
+        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
+            int stride2 = 0;
+            for (int ll=0; ll<tensor_object->shape[l][1][0]; ll++) {
+                for (int i = 0; i<m; i++) {
+                    for (int j=0; j<n; j++) {
+                        tensor_object->val[offset+(stride1+(stride2+((i*n)+j)))] = randn(0.0f, 1.0f) / sqrtf((float)n);
+                    }
+                }
+                stride2 = stride2 + (m * n);
+            }
+            stride1 = stride1 + (tensor_object->shape[l][1][0] * m * n);
+        }
+    } else if (tensor_object->rank == 5) {
+        int stride1 = 0;
+        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
+            int stride2 = 0;
+            for (int ll=0; ll<tensor_object->shape[l][1][0]; ll++) {
+                int stride3 = 0;
+                for (int ll=0; ll<tensor_object->shape[l][2][0]; ll++) {
+                    for (int i = 0; i<m; i++) {
+                        for (int j=0; j<n; j++) {
+                            tensor_object->val[offset+(stride1+(stride2+(stride3+((i*n)+j))))] = randn(0.0f, 1.0f) / sqrtf((float)n);
+                        }
+                    }
+                    stride3 = stride3 + (m * n);
+                }
+                stride2 = stride2 + (tensor_object->shape[l][2][0] * m *n);
+            }
+            stride1 = stride1 + (tensor_object->shape[l][1][0] * tensor_object->shape[l][2][0] * m * n);
+        }
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "tensors with rank > 5 are not supported.");
+    }
+}
+
+float standardDeviation(void * _Nonnull neural, int l, int n_inputs, int n_outputs) {
+    
+    float standard_deviation = 0.0f;
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (strcmp(nn->parameters->activationFunctions[l], "sigmoid") == 0) {
+        standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
+    } else if (strcmp(nn->parameters->activationFunctions[l], "tanh") == 0) {
+        standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
+    } else if (strcmp(nn->parameters->activationFunctions[l], "relu") == 0 ||
+               strcmp(nn->parameters->activationFunctions[l], "leakyrelu") == 0 ||
+               strcmp(nn->parameters->activationFunctions[l], "elu") == 0) {
+        standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only supported for the following activation functions: sigmoid, tanh and ReLU (and its variants).");
+    }
+    
+    return standard_deviation;
+}
+
+void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    tensor *tensor_object = (tensor *)kernel;
+    
+    if (tensor_object->rank == 1 || tensor_object->rank == 3 || tensor_object->rank == 5) {
+        fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only available for 2D and 4D tensors (aka fully-connected and convolution layers).");
+    }
+    
+    // The last two dimensions define the right most increments
+    int indx = tensor_object->rank - 2;
+    int m = tensor_object->shape[l][indx][0];
+    int n = tensor_object->shape[l][indx+1][0];
+    
+    if (tensor_object->rank == 2) {
+        float standard_deviation = 0.0f;
+        int n_inputs = 1;
+        for (int i=0; i<tensor_object->rank; i++) {
+            n_inputs =  n_inputs * tensor_object->shape[l][i][0];
+        }
+        int n_outputs = 1;
+        for (int i=0; i<tensor_object->rank; i++) {
+            n_outputs =  n_outputs * tensor_object->shape[l+1][i][0];
+        }
+        standard_deviation = standardDeviation((void *)nn, l, n_inputs, n_outputs);
+        for (int i = 0; i<m; i++) {
+            for (int j=0; j<n; j++) {
+                tensor_object->val[offset+((i*n)+j)] = randn(0.0f, standard_deviation);
+            }
+        }
+    } else if (tensor_object->rank == 4) {
+        int stride1 = 0;
+        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
+            int stride2 = 0;
+            for (int ll=0; ll<tensor_object->shape[l][1][0]; ll++) {
+                float standard_deviation = 0.0f;
+                int n_inputs = tensor_object->shape[l][0][0] * tensor_object->shape[l][1][0];
+                int n_outputs = tensor_object->shape[l][1][0];
+                standard_deviation = standardDeviation((void *)nn, l, n_inputs, n_outputs);
+                for (int i = 0; i<m; i++) {
+                    for (int j=0; j<n; j++) {
+                        tensor_object->val[offset+(stride1+(stride2+((i*n)+j)))] = randn(0.0f, standard_deviation);
+                    }
+                }
+                stride2 = stride2 + (m * n);
+            }
+            stride1 = stride1 + (tensor_object->shape[l][1][0] * m * n);
+        }
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////// Tensor allocation //////////////////////////////////////////
 //      This routine allocates a 1D, 2D, 3D, 4D or 5D tensor with the possibility to linearize several
@@ -27,10 +160,6 @@ void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
     tensor *tensor_object = (tensor *)malloc(sizeof(tensor));
     memset(*tensor_object->shape, 1, (MAX_NUMBER_NETWORK_LAYERS*MAX_TENSOR_RANK*1));
     
-    if (tensor_dict.init) {
-        if (tensor_dict.init_strategy == NULL) fatal(DEFAULT_CONSOLE_WRITER, " initialization required but NULL strategy.");
-    }
-    
     int tensor_length = 0;
     for (int l=0; l<tensor_dict.flattening_length; l++) {
         int dim = 1;
@@ -45,27 +174,7 @@ void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
     tensor_object->rank = tensor_dict.rank;
     fprintf(stdout, "%s: tensor allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)tensor_length*sizeof(float))/(float)(1024*1024));
     
-    
     if (tensor_object->rank == 1) {
-       if (tensor_dict.init) {
-           int stride = 0;
-           for (int l=0; l<tensor_dict.flattening_length; l++) {
-               // One single tensor step
-               int step = 1;
-               for (int i=0; i<tensor_object->rank; i++) {
-                   step = step * tensor_dict.shape[l][i][0];
-               }
-               
-               int n = tensor_object->shape[l][0][0];
-               for (int i=0; i<n; i++) {
-                   tensor_object->val[stride+i] = randn(0.0f, 1.0f);
-               }
-               stride = stride + step;
-           }
-       } else {
-           memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));
-       }
-    } else if (tensor_object->rank == 2) {
         if (tensor_dict.init) {
             int stride = 0;
             for (int l=0; l<tensor_dict.flattening_length; l++) {
@@ -75,189 +184,53 @@ void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
                     step = step * tensor_dict.shape[l][i][0];
                 }
                 
-                // The last two dimensions define the right most increments
-                int indx = tensor_object->rank - 2;
-                int m = tensor_object->shape[l][indx][0];
-                int n = tensor_object->shape[l][indx+1][0];
-                
-                if (strcmp(tensor_dict.init_strategy, "default") == 0 || l == nn->network_num_layers-2) {
-                    for (int i = 0; i<m; i++) {
-                        for (int j=0; j<n; j++) {
-                            tensor_object->val[stride+((i*n)+j)] = randn(0.0f, 1.0f) / sqrtf((float)n);
-                        }
-                    }
-                } else if (strcmp(tensor_dict.init_strategy, "xavier-he") == 0  && l < nn->network_num_layers-2) {
-                    float standard_deviation = 0.0f;
-                    int n_inputs = 1;
-                    for (int i=0; i<tensor_object->rank; i++) {
-                         n_inputs =  n_inputs * tensor_dict.shape[l][i][0];
-                    }
-                    int n_outputs = 1;
-                    for (int i=0; i<tensor_object->rank; i++) {
-                        n_outputs =  n_outputs * tensor_dict.shape[l+1][i][0];
-                    }
-                    if (strcmp(nn->parameters->activationFunctions[l], "sigmoid") == 0) {
-                        standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
-                    } else if (strcmp(nn->parameters->activationFunctions[l], "tanh") == 0) {
-                        standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
-                    } else if (strcmp(nn->parameters->activationFunctions[l], "relu") == 0 ||
-                               strcmp(nn->parameters->activationFunctions[l], "leakyrelu") == 0 ||
-                               strcmp(nn->parameters->activationFunctions[l], "elu") == 0) {
-                        standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
-                    }
-                    for (int i = 0; i<m; i++) {
-                        for (int j=0; j<n; j++) {
-                            tensor_object->val[stride+((i*n)+j)] = randn(0.0f, standard_deviation);
-                        }
-                    }
+                int n = tensor_object->shape[l][0][0];
+                for (int i=0; i<n; i++) {
+                    tensor_object->val[stride+i] = randn(0.0f, 1.0f);
                 }
                 stride = stride + step;
             }
         } else {
             memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));
         }
-    } else if (tensor_object->rank == 3) {
-        if (tensor_dict.init) {
-            int stride1 = 0;
-            for (int l=0; l<tensor_dict.flattening_length; l++) {
-                // One single tensor step
-                int step = 1;
-                for (int i=0; i<tensor_object->rank; i++) {
-                    step = step * tensor_dict.shape[l][i][0];
-                }
-                
-                // The last two dimensions define the right most increments
-                int indx = tensor_object->rank - 2;
-                int m = tensor_object->shape[l][indx][0];
-                int n = tensor_object->shape[l][indx+1][0];
-                
-                if (strcmp(tensor_dict.init_strategy, "default") == 0 || l == nn->network_num_layers-2) {
-                    int stride2 = 0;
-                    for (int k=0; k<tensor_dict.shape[l][0][0]; k++) {
-                        for (int i = 0; i<m; i++) {
-                            for (int j=0; j<n; j++) {
-                                tensor_object->val[stride1+(stride2+((i*n)+j))] = randn(0.0f, 1.0f) / sqrtf((float)n);
-                            }
-                        }
-                        stride2 = stride2 + (m * n);
-                    }
-                } else if (strcmp(tensor_dict.init_strategy, "xavier-he") == 0  && l < nn->network_num_layers-2) {
-                    fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is not supported for 3D tensors. Only available for 1D and 4D tensors (aka fully-connected and convolution layers).");
-                }
-                stride1 = stride1 + step;
+        return (void *)tensor_object;
+    }
+    
+    if (tensor_dict.init) {
+        int stride = 0;
+        for (int l=0; l<tensor_dict.flattening_length; l++) {
+            // One single tensor step
+            int step = 1;
+            for (int i=0; i<tensor_object->rank; i++) {
+                step = step * tensor_dict.shape[l][i][0];
             }
-        } else {
-            memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));
+            
+            nn->dense->kernelInitializers[l]((void *)nn, (void *)tensor_object, l, stride);
+            stride = stride + step;
         }
-    } else if (tensor_object->rank == 4) {
-        if (tensor_dict.init) {
-            int stride1 = 0;
-            for (int l=0; l<tensor_dict.flattening_length; l++) {
-                // One single tensor step
-                int step = 1;
-                for (int i=0; i<tensor_object->rank; i++) {
-                    step = step * tensor_dict.shape[l][i][0];
-                }
-                
-                // The last two dimensions define the right most increments
-                int indx = tensor_object->rank - 2;
-                int m = tensor_object->shape[l][indx][0];
-                int n = tensor_object->shape[l][indx+1][0];
-                
-                if (strcmp(tensor_dict.init_strategy, "default") == 0 || l == nn->network_num_layers-2) {
-                    int stride2 = 0;
-                    for (int k=0; k<tensor_dict.shape[l][0][0]; k++) {
-                        int stride3 = 0;
-                        for (int ll=0; ll<tensor_dict.shape[l][1][0]; ll++) {
-                            for (int i = 0; i<m; i++) {
-                                for (int j=0; j<n; j++) {
-                                    tensor_object->val[stride1+(stride2+(stride3+((i*n)+j)))] = randn(0.0f, 1.0f) / sqrtf((float)n);
-                                }
-                            }
-                            stride3 = stride3 + (m * n);
-                        }
-                        stride2 = stride2 + (tensor_dict.shape[l][1][0] * m * n);
-                    }
-                } else if (strcmp(tensor_dict.init_strategy, "xavier-he") == 0  && l < nn->network_num_layers-2) {
-                     int stride2 = 0;
-                     for (int k=0; k<tensor_dict.shape[l][0][0]; k++) {
-                         int stride3 = 0;
-                         for (int ll=0; ll<tensor_dict.shape[l][1][0]; ll++) {
-                             float standard_deviation = 0.0f;
-                             int n_inputs = tensor_dict.shape[l][0][0] * tensor_dict.shape[l][1][0];
-                             int n_outputs = tensor_dict.shape[l][1][0];
-                             if (strcmp(nn->parameters->activationFunctions[l], "sigmoid") == 0) {
-                                 standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
-                             } else if (strcmp(nn->parameters->activationFunctions[l], "tanh") == 0) {
-                                 standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
-                             } else if (strcmp(nn->parameters->activationFunctions[l], "relu") == 0 ||
-                                        strcmp(nn->parameters->activationFunctions[l], "leakyrelu") == 0 ||
-                                        strcmp(nn->parameters->activationFunctions[l], "elu") == 0) {
-                                 standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
-                             }
-                             for (int i = 0; i<m; i++) {
-                                 for (int j=0; j<n; j++) {
-                                     tensor_object->val[stride1+(stride2+(stride3+((i*n)+j)))] = randn(0.0f, standard_deviation);
-                                 }
-                             }
-                             stride3 = stride3 + (m * n);
-                         }
-                         stride2 = stride2 + (tensor_dict.shape[l][1][0] * m * n);
-                     }
-                }
-                stride1 = stride1 + step;
-            }
-        } else {
-            memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));
-        }
-    } else if (tensor_object->rank == 5) {
-         if (tensor_dict.init) {
-             int stride1 = 0;
-             for (int l=0; l<tensor_dict.flattening_length; l++) {
-                 // One single tensor step
-                 int step = 1;
-                 for (int i=0; i<tensor_object->rank; i++) {
-                     step = step * tensor_dict.shape[l][i][0];
-                 }
-                 
-                 // The last two dimensions define the right most increments
-                 int indx = tensor_object->rank - 2;
-                 int m = tensor_object->shape[l][indx][0];
-                 int n = tensor_object->shape[l][indx+1][0];
-                 
-                 if (strcmp(tensor_dict.init_strategy, "default") == 0 || l == nn->network_num_layers-2) {
-                     int stride2 = 0;
-                     for (int k=0; k<tensor_dict.shape[l][0][0]; k++) {
-                         int stride3 = 0;
-                         for (int ll=0; ll<tensor_dict.shape[l][1][0]; ll++) {
-                             int stride4 = 0;
-                             for (int ll=0; ll<tensor_dict.shape[l][2][0]; ll++) {
-                                 for (int i = 0; i<m; i++) {
-                                     for (int j=0; j<n; j++) {
-                                         tensor_object->val[stride1+(stride2+(stride3+(stride4+((i*n)+j))))] = randn(0.0f, 1.0f) / sqrtf((float)n);
-                                     }
-                                 }
-                                 stride4 = stride4 + (m * n);
-                             }
-                             stride3 = stride3 + (tensor_dict.shape[l][2][0] * m *n);
-                         }
-                         stride2 = stride2 + (tensor_dict.shape[l][1][0] * tensor_dict.shape[l][2][0] * m * n);
-                     }
-                 
-                 } else if (strcmp(tensor_dict.init_strategy, "xavier-he") == 0  && l < nn->network_num_layers-2) {
-                     fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is not supported for 5D tensors. Only available for 1D and 4D tensors (aka fully-connected and convolution layers).");
-                 }
-                 stride1 = stride1 + step;
-             }
-         } else {
-             memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));
-         }
     } else {
-        fatal(DEFAULT_CONSOLE_WRITER, "Tensors with rank > 5 are not supported.");
+        memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));
     }
     
     return (void *)tensor_object;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile) {
     
@@ -333,46 +306,46 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     }
                     for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(nn->parameters->activationFunctions[0], "sigmoid") == 0) {
-                            nn->activationFunctions[i] = sigmoid;
-                            nn->activationDerivatives[i] = sigmoidPrime;
+                            nn->dense->activationFunctions[i] = sigmoid;
+                            nn->dense->activationDerivatives[i] = sigmoidPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[0], "relu") == 0) {
-                            nn->activationFunctions[i] = relu;
-                            nn->activationDerivatives[i] = reluPrime;
+                            nn->dense->activationFunctions[i] = relu;
+                            nn->dense->activationDerivatives[i] = reluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[0], "leakyrelu") == 0) {
-                            nn->activationFunctions[i] = leakyrelu;
-                            nn->activationDerivatives[i] = leakyreluPrime;
+                            nn->dense->activationFunctions[i] = leakyrelu;
+                            nn->dense->activationDerivatives[i] = leakyreluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[0], "elu") == 0) {
-                            nn->activationFunctions[i] = elu;
-                            nn->activationDerivatives[i] = eluPrime;
+                            nn->dense->activationFunctions[i] = elu;
+                            nn->dense->activationDerivatives[i] = eluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[0], "tanh") == 0) {
-                            nn->activationFunctions[i] = tan_h;
-                            nn->activationDerivatives[i] = tanhPrime;
+                            nn->dense->activationFunctions[i] = tan_h;
+                            nn->dense->activationDerivatives[i] = tanhPrime;
                         } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[0]);
                     }
                 } else {
                     for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(nn->parameters->activationFunctions[i], "sigmoid") == 0) {
-                            nn->activationFunctions[i] = sigmoid;
-                            nn->activationDerivatives[i] = sigmoidPrime;
+                            nn->dense->activationFunctions[i] = sigmoid;
+                            nn->dense->activationDerivatives[i] = sigmoidPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[i], "relu") == 0) {
-                            nn->activationFunctions[i] = relu;
-                            nn->activationDerivatives[i] = reluPrime;
+                            nn->dense->activationFunctions[i] = relu;
+                            nn->dense->activationDerivatives[i] = reluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[i], "leakyrelu") == 0) {
-                            nn->activationFunctions[i] = leakyrelu;
-                            nn->activationDerivatives[i] = leakyreluPrime;
+                            nn->dense->activationFunctions[i] = leakyrelu;
+                            nn->dense->activationDerivatives[i] = leakyreluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[i], "elu") == 0) {
-                            nn->activationFunctions[i] = elu;
-                            nn->activationDerivatives[i] = eluPrime;
+                            nn->dense->activationFunctions[i] = elu;
+                            nn->dense->activationDerivatives[i] = eluPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[i], "tanh") == 0) {
-                            nn->activationFunctions[i] = tan_h;
-                            nn->activationDerivatives[i] = tanhPrime;
+                            nn->dense->activationFunctions[i] = tan_h;
+                            nn->dense->activationDerivatives[i] = tanhPrime;
                         } else if (strcmp(nn->parameters->activationFunctions[i], "softmax") == 0) {
                             // The sofmax function is only supported for the output units
                             if (i < nn->network_num_layers-2) {
                                 fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can't be used for the hiden units, only for the output units.");
                             }
-                            nn->activationFunctions[i] = softmax;
-                            nn->activationDerivatives[i] = NULL;
+                            nn->dense->activationFunctions[i] = softmax;
+                            nn->dense->activationDerivatives[i] = NULL;
                         } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[i]);
                     }
                 }
@@ -499,8 +472,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
     }
     if (FOUND_ACTIVATIONS == 0) {
         for (int i=0; i<nn->network_num_layers-1; i++) {
-            nn->activationFunctions[i] = sigmoid;
-            nn->activationDerivatives[i] = sigmoidPrime;
+            nn->dense->activationFunctions[i] = sigmoid;
+            nn->dense->activationDerivatives[i] = sigmoidPrime;
         }
     }
     if (FOUND_SPLIT == 0) {

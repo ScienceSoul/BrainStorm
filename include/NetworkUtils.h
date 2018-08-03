@@ -24,9 +24,12 @@ typedef struct tensor_dict {
     unsigned int flattening_length;
     unsigned int shape[MAX_NUMBER_NETWORK_LAYERS][MAX_TENSOR_RANK][1];
     unsigned int rank;
-    char * _Nullable init_strategy;
 } tensor_dict;
 
+void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset);
+void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset);
+
+void * _Nonnull tensor_create_(void * _Nonnull self, tensor_dict tensor_dict);
 void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict);
 
 int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
