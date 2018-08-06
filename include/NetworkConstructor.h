@@ -10,13 +10,14 @@
 #define NetworkConstructor_h
 
 #include <stdbool.h>
+#include "NetworkUtils.h"
 
 typedef struct scalar_dict {
     int epochs, mini_batch_size;
 } scalar_dict;
 
 typedef struct layer_dict {
-    char * _Nullable activation;
+    activation_functions activation;
     void (* _Nullable kernel_initializer)(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset);
 } layer_dict;
 

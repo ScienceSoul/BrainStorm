@@ -357,7 +357,6 @@ void new_network_common(void * _Nonnull neural) {
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
     nn->num_activation_functions = 0;
-    memset(*nn->activationFunctionsStr, 0, (MAX_NUMBER_NETWORK_LAYERS*128)*sizeof(char));
     
     bzero(nn->dataPath, MAX_LONG_STRING_LENGTH);
     strcpy(nn->dataName, "<empty>");

@@ -67,7 +67,8 @@ typedef struct NeuralNetwork {
     bool is_conv2d_network;
     
     char dataPath[MAX_LONG_STRING_LENGTH], dataName[MAX_LONG_STRING_LENGTH];
-    char activationFunctionsStr[MAX_NUMBER_NETWORK_LAYERS][MAX_SHORT_STRING_LENGTH];
+    
+    activation_functions activationFunctionsRef[MAX_NUMBER_NETWORK_LAYERS];
     
     void (* _Nullable genesis)(void * _Nonnull self);
     void (* _Nullable finale)(void * _Nonnull self);

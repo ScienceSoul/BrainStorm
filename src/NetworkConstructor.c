@@ -31,37 +31,38 @@ void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, layer_dict 
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
     
-    if (layer_dict.activation == NULL) fatal(DEFAULT_CONSOLE_WRITER, "activation function is null in constructor.");
-    
     nn->dense->parameters->topology[nn->network_num_layers] = nbNeurons;
     nn->network_num_layers++;;
     
-    if (strcmp(layer_dict.activation, "sigmoid") == 0) {
-        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "sigmoid");
+    if (layer_dict.activation == SIGMOID) {
+        nn->activationFunctionsRef[nn->num_activation_functions] = SIGMOID;
         nn->dense->activationFunctions[nn->num_activation_functions] = sigmoid;
         nn->dense->activationDerivatives[nn->num_activation_functions] = sigmoidPrime;
-    } else if (strcmp(layer_dict.activation, "relu") == 0) {
-        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "relu");
+    } else if (layer_dict.activation == RELU) {
+        nn->activationFunctionsRef[nn->num_activation_functions] = RELU;
         nn->dense->activationFunctions[nn->num_activation_functions] = relu;
         nn->dense->activationDerivatives[nn->num_activation_functions] = reluPrime;
-    } else if (strcmp(layer_dict.activation, "leakyrelu") == 0) {
-        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "leakyrelu");
+    } else if (layer_dict.activation == LEAKY_RELU) {
+        nn->activationFunctionsRef[nn->num_activation_functions] = LEAKY_RELU;
         nn->dense->activationFunctions[nn->num_activation_functions] = leakyrelu;
         nn->dense->activationDerivatives[nn->num_activation_functions] = leakyreluPrime;
-    } else if (strcmp(layer_dict.activation, "elu") == 0) {
-        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "elu");
+    } else if (layer_dict.activation == ELU) {
+        nn->activationFunctionsRef[nn->num_activation_functions] = ELU;
         nn->dense->activationFunctions[nn->num_activation_functions] = elu;
         nn->dense->activationDerivatives[nn->num_activation_functions] = eluPrime;
-    } else if (strcmp(layer_dict.activation, "tanh") == 0) {
-        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "tanh");
+    } else if (layer_dict.activation == TANH) {
+        nn->activationFunctionsRef[nn->num_activation_functions] = TANH;
         nn->dense->activationFunctions[nn->num_activation_functions] = tan_h;
         nn->dense->activationDerivatives[nn->num_activation_functions] = tanhPrime;
-    } else if (strcmp(layer_dict.activation, "softmax") == 0) {
-        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "softmax");
+    } else if (layer_dict.activation == SOFTMAX) {
+        nn->activationFunctionsRef[nn->num_activation_functions] = SOFTMAX;
         nn->dense->activationFunctions[nn->num_activation_functions] = softmax;
         nn->dense->activationDerivatives[nn->num_activation_functions] = NULL;
     } else {
-        fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", layer_dict.activation);
+        fprintf(stdout, "%s: activation fucntion for layer %d not given, default to sigmoid.\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
+        nn->activationFunctionsRef[nn->num_activation_functions] = SIGMOID;
+        nn->dense->activationFunctions[nn->num_activation_functions] = sigmoid;
+        nn->dense->activationDerivatives[nn->num_activation_functions] = sigmoidPrime;
     }
     
     if (layer_dict.kernel_initializer == NULL) {

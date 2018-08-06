@@ -79,13 +79,13 @@ float standardDeviation(void * _Nonnull neural, int l, int n_inputs, int n_outpu
     float standard_deviation = 0.0f;
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
-    if (strcmp(nn->activationFunctionsStr[l], "sigmoid") == 0) {
+    if (nn->activationFunctionsRef[l] == SIGMOID) {
         standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
-    } else if (strcmp(nn->activationFunctionsStr[l], "tanh") == 0) {
+    } else if (nn->activationFunctionsRef[l] == TANH) {
         standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
-    } else if (strcmp(nn->activationFunctionsStr[l], "relu") == 0 ||
-               strcmp(nn->activationFunctionsStr[l], "leakyrelu") == 0 ||
-               strcmp(nn->activationFunctionsStr[l], "elu") == 0) {
+    } else if (nn->activationFunctionsRef[l] == RELU ||
+               nn->activationFunctionsRef[l] == LEAKY_RELU ||
+               nn->activationFunctionsRef[l] == ELU) {
         standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only supported for the following activation functions: sigmoid, tanh and ReLU (and its variants).");
@@ -215,23 +215,6 @@ void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
     return (void *)tensor_object;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile) {
     
     definition *definitions = NULL;
@@ -290,8 +273,9 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
                 }
                 
+                char activationFunctionsStr[MAX_NUMBER_NETWORK_LAYERS][MAX_SHORT_STRING_LENGTH];
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->activationFunctionsStr, &nn->num_activation_functions, &len);
+                parseArgument(field->value, field->key, activationFunctionsStr, &nn->num_activation_functions, &len);
                 
                 if (nn->num_activation_functions > 1 && nn->num_activation_functions < nn->network_num_layers-1) {
                     fatal(DEFAULT_CONSOLE_WRITER, "the number of activation functions in parameters is too low. Can't resolve how to use the provided activations. ");
@@ -301,52 +285,63 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 }
                 
                 if (nn->num_activation_functions == 1) {
-                    if (strcmp(nn->activationFunctionsStr[0], "softmax") == 0) {
+                    if (strcmp(activationFunctionsStr[0], "softmax") == 0) {
                         fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units, not for the entire network.");
                     }
                     for (int i=0; i<nn->network_num_layers-1; i++) {
-                        if (strcmp(nn->activationFunctionsStr[0], "sigmoid") == 0) {
+                        if (strcmp(activationFunctionsStr[0], "sigmoid") == 0) {
+                            nn->activationFunctionsRef[i] = SIGMOID;
                             nn->dense->activationFunctions[i] = sigmoid;
                             nn->dense->activationDerivatives[i] = sigmoidPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[0], "relu") == 0) {
+                        } else if (strcmp(activationFunctionsStr[0], "relu") == 0) {
+                            nn->activationFunctionsRef[i] = RELU;
                             nn->dense->activationFunctions[i] = relu;
                             nn->dense->activationDerivatives[i] = reluPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[0], "leakyrelu") == 0) {
+                        } else if (strcmp(activationFunctionsStr[0], "leakyrelu") == 0) {
+                            nn->activationFunctionsRef[i] = LEAKY_RELU;
                             nn->dense->activationFunctions[i] = leakyrelu;
                             nn->dense->activationDerivatives[i] = leakyreluPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[0], "elu") == 0) {
+                        } else if (strcmp(activationFunctionsStr[0], "elu") == 0) {
+                            nn->activationFunctionsRef[i] = ELU;
                             nn->dense->activationFunctions[i] = elu;
                             nn->dense->activationDerivatives[i] = eluPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[0], "tanh") == 0) {
+                        } else if (strcmp(activationFunctionsStr[0], "tanh") == 0) {
+                            nn->activationFunctionsRef[i] = TANH;
                             nn->dense->activationFunctions[i] = tan_h;
                             nn->dense->activationDerivatives[i] = tanhPrime;
-                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->activationFunctionsStr[0]);
+                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activationFunctionsStr[0]);
                     }
                 } else {
                     for (int i=0; i<nn->network_num_layers-1; i++) {
-                        if (strcmp(nn->activationFunctionsStr[i], "sigmoid") == 0) {
+                        if (strcmp(activationFunctionsStr[i], "sigmoid") == 0) {
+                            nn->activationFunctionsRef[i] = SIGMOID;
                             nn->dense->activationFunctions[i] = sigmoid;
                             nn->dense->activationDerivatives[i] = sigmoidPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[i], "relu") == 0) {
+                        } else if (strcmp(activationFunctionsStr[i], "relu") == 0) {
+                            nn->activationFunctionsRef[i] = RELU;
                             nn->dense->activationFunctions[i] = relu;
                             nn->dense->activationDerivatives[i] = reluPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[i], "leakyrelu") == 0) {
+                        } else if (strcmp(activationFunctionsStr[i], "leakyrelu") == 0) {
+                            nn->activationFunctionsRef[i] = LEAKY_RELU;
                             nn->dense->activationFunctions[i] = leakyrelu;
                             nn->dense->activationDerivatives[i] = leakyreluPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[i], "elu") == 0) {
+                        } else if (strcmp(activationFunctionsStr[i], "elu") == 0) {
+                            nn->activationFunctionsRef[i] = ELU;
                             nn->dense->activationFunctions[i] = elu;
                             nn->dense->activationDerivatives[i] = eluPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[i], "tanh") == 0) {
+                        } else if (strcmp(activationFunctionsStr[i], "tanh") == 0) {
+                            nn->activationFunctionsRef[i] = TANH;
                             nn->dense->activationFunctions[i] = tan_h;
                             nn->dense->activationDerivatives[i] = tanhPrime;
-                        } else if (strcmp(nn->activationFunctionsStr[i], "softmax") == 0) {
+                        } else if (strcmp(activationFunctionsStr[i], "softmax") == 0) {
                             // The sofmax function is only supported for the output units
                             if (i < nn->network_num_layers-2) {
                                 fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can't be used for the hiden units, only for the output units.");
                             }
+                            nn->activationFunctionsRef[i] = SOFTMAX;
                             nn->dense->activationFunctions[i] = softmax;
                             nn->dense->activationDerivatives[i] = NULL;
-                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->activationFunctionsStr[i]);
+                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activationFunctionsStr[i]);
                     }
                 }
                 FOUND_ACTIVATIONS = 1;

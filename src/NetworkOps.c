@@ -39,7 +39,7 @@ void feedforward(void * _Nonnull self) {
 #endif
         float *vec = NULL;
         unsigned int *vec_length = NULL;
-        if (strcmp(nn->activationFunctionsStr[l], "softmax") == 0) {
+        if (nn->activationFunctionsRef[l] == SOFTMAX) {
             vec = nn->dense->affineTransformations->val+stride2;
             vec_length = &(nn->dense->affineTransformations->shape[l][0][0]);
         }

@@ -12,6 +12,15 @@
 #include <stdbool.h>
 #include "Utils.h"
 
+typedef enum activation_functions {
+    SIGMOID=1,     // Logistic sigmoid
+    RELU,          // Rectified linear unit
+    LEAKY_RELU,    // Leaky ReLU
+    ELU,           // Exponential linear unit
+    TANH,          // Hyperbolic tangent
+    SOFTMAX        // Softmax
+} activation_functions;
+
 typedef struct tensor {
     float * _Nullable val;
     unsigned int shape[MAX_NUMBER_NETWORK_LAYERS][MAX_TENSOR_RANK][1];
