@@ -117,7 +117,7 @@ void allocate_buffers(void * _Nonnull network) {
         NeuralNetwork *nn = (NeuralNetwork *)network;
         parameters_container *params = (parameters_container *)malloc(sizeof(parameters_container));
         
-        unsigned int entriesTableSize = nn->data->test->m * nn->parameters->number_of_features;
+        unsigned int entriesTableSize = nn->data->test->m * nn->num_channels;
         
         unsigned int weightsTableSize = 0;
         unsigned int biasesTableSize = 0;
@@ -126,7 +126,7 @@ void allocate_buffers(void * _Nonnull network) {
             biasesTableSize = biasesTableSize + nn->dense->biases->shape[l][0][0];
         }
         
-        int max = max_array(nn->parameters->topology, nn->network_num_layers);
+        int max = max_array(nn->dense->parameters->topology, nn->network_num_layers);
         unsigned int activationsTableSize = max * nn->data->test->m;
         
         kernel_data = [device newBufferWithLength:entriesTableSize*sizeof(float) options:MTLResourceStorageModeShared];
@@ -137,8 +137,8 @@ void allocate_buffers(void * _Nonnull network) {
         
         params->gridDimension = nn->data->test->m;
         params->numberOfLayers = nn->network_num_layers;
-        params->numberOfFeatures = nn->parameters->topology[0];
-        params->numberOfOutputs = nn->parameters->topology[nn->network_num_layers-1];
+        params->numberOfFeatures = nn->dense->parameters->topology[0];
+        params->numberOfOutputs = nn->dense->parameters->topology[nn->network_num_layers-1];
         
         for (int l=0; l<nn->network_num_layers-1; l++) {
             params->weightsDim[l].m = nn->dense->weights->shape[l][0][0];
@@ -231,7 +231,7 @@ void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     buffer = kernel_ground_truth.contents;
     float *pt = buffer;
     for (int i=0; i<nn->data->test->m; i++) {
-        pt[i] = nn->data->test->set[i][nn->parameters->number_of_features];
+        pt[i] = nn->data->test->set[i][nn->num_channels];
     }
     
     @autoreleasepool{

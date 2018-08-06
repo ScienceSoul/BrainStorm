@@ -39,7 +39,7 @@ void feedforward(void * _Nonnull self) {
 #endif
         float *vec = NULL;
         unsigned int *vec_length = NULL;
-        if (strcmp(nn->parameters->activationFunctions[l], "softmax") == 0) {
+        if (strcmp(nn->activationFunctionsStr[l], "softmax") == 0) {
             vec = nn->dense->affineTransformations->val+stride2;
             vec_length = &(nn->dense->affineTransformations->shape[l][0][0]);
         }
@@ -60,7 +60,7 @@ void backpropagation(void * _Nonnull self) {
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
     // Activations at the input layer
-    for (int i=0; i<nn->parameters->number_of_features; i++) {
+    for (int i=0; i<nn->num_channels; i++) {
         nn->dense->activations->val[i] = nn->batch[nn->example_idx][i];
     }
     
@@ -82,13 +82,13 @@ void backpropagation(void * _Nonnull self) {
         stride3 = stride3 + nn->dense->affineTransformations->shape[l][0][0];
     }
     
-    float delta[nn->parameters->max_number_of_nodes_in_layer];
-    float buffer[nn->parameters->max_number_of_nodes_in_layer];
+    float delta[nn->dense->parameters->max_number_of_nodes_in_layer];
+    float buffer[nn->dense->parameters->max_number_of_nodes_in_layer];
     memset(delta, 0.0f, sizeof(delta));
     memset(buffer, 0.0f, sizeof(buffer));
     
     // Compute delta
-    int k = (int)nn->parameters->number_of_features;
+    int k = (int)nn->num_channels;
     for (int i=0; i<nn->dense->activations->shape[nn->network_num_layers-1][0][0]; i++) {
         delta[i] = nn->dense->activations->val[stride2+i] - nn->batch[nn->example_idx][k];
         k++;
@@ -274,7 +274,7 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
     
     for (int k=0; k<data_size; k++) {
         
-        for (int i=0; i<nn->parameters->number_of_features; i++) {
+        for (int i=0; i<nn->num_channels; i++) {
             nn->dense->activations->val[i] = data[k][i];
         }
         
@@ -286,7 +286,7 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
             stride = stride + nn->dense->activations->shape[l][0][0];
         }
         
-        out[k] = (float)argmax(nn->dense->activations->val+stride, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->parameters->number_of_features];
+        out[k] = (float)argmax(nn->dense->activations->val+stride, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->num_channels];
     }
 }
 
@@ -326,7 +326,7 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
         
         nn->gpu->allocate_buffers((void *)nn);
         nn->gpu->prepare("feedforward");
-        nn->gpu->format_data(data, data_size, nn->parameters->number_of_features);
+        nn->gpu->format_data(data, data_size, nn->num_channels);
         nn->gpu->feedforward((void *)nn, out);
         
     } else {
@@ -373,7 +373,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
     float cost = 0.0f;
     for (int i=0; i<data_size; i++) {
         
-        for (int j=0; j<nn->parameters->number_of_features; j++) {
+        for (int j=0; j<nn->num_channels; j++) {
             nn->dense->activations->val[j] = data[i][j];
         }
         
@@ -389,12 +389,12 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
         memset(y, 0.0f, sizeof(y));
         if (binarization == true) {
             for (int j=0; j<nn->dense->activations->shape[nn->network_num_layers-1][0][0]; j++) {
-                if (data[i][nn->parameters->number_of_features] == nn->parameters->classifications[j]) {
+                if (data[i][nn->num_channels] == nn->dense->parameters->classifications[j]) {
                     y[j] = 1.0f;
                 }
             }
         } else {
-            int idx = (int)nn->parameters->number_of_features;
+            int idx = (int)nn->num_channels;
             for (int j=0; j<nn->dense->activations->shape[nn->network_num_layers-1][0][0]; j++) {
                 y[j] = data[i][idx];
                 idx++;
@@ -411,7 +411,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
             sum = sum + (norm*norm);
             stride = stride + (m * n);
         }
-        cost = cost + 0.5f*(nn->parameters->lambda/(float)data_size)*sum;
+        cost = cost + 0.5f*(nn->dense->parameters->lambda/(float)data_size)*sum;
     }
     
     return cost;
@@ -421,34 +421,34 @@ void trainLoop(void * _Nonnull  neural) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
-    float **miniBatch = floatmatrix(0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
+    float **miniBatch = floatmatrix(0, nn->dense->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
     float out_test[nn->data->test->m];
     
-    for (int k=1; k<=nn->parameters->epochs; k++) {
+    for (int k=1; k<=nn->dense->parameters->epochs; k++) {
         shuffle(nn->data->training->set, nn->data->training->m, nn->data->training->n);
         
-        for (int l=1; l<=nn->dense->train->batch_range((void *)neural,  nn->parameters->miniBatchSize); l++) {
-            nn->dense->train->next_batch((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+        for (int l=1; l<=nn->dense->train->batch_range((void *)neural,  nn->dense->parameters->miniBatchSize); l++) {
+            nn->dense->train->next_batch((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
             
             if (nn->dense->train->gradient_descent != NULL) {
-                nn->dense->train->gradient_descent->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+                nn->dense->train->gradient_descent->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
             } else if (nn->dense->train->momentum != NULL) {
-                nn->dense->train->momentum->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+                nn->dense->train->momentum->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
             } else if (nn->dense->train->ada_grad != NULL) {
-                nn->dense->train->ada_grad->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+                nn->dense->train->ada_grad->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
             } else if (nn->dense->train->rms_prop != NULL) {
-                nn->dense->train->rms_prop->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+                nn->dense->train->rms_prop->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
             }  else if (nn->dense->train->adam != NULL) {
-                nn->dense->train->adam->minimize((void *)nn, miniBatch, nn->parameters->miniBatchSize);
+                nn->dense->train->adam->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
             }
         }
         
-        fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", DEFAULT_CONSOLE_WRITER, k, nn->parameters->epochs, nn->data->test->m);
+        fprintf(stdout, "%s: Epoch {%d/%d}: testing network with {%u} inputs:\n", DEFAULT_CONSOLE_WRITER, k, nn->dense->parameters->epochs, nn->data->test->m);
         nn->eval_prediction((void *)nn, "test", out_test, false);
         float acc_test = nn->math_ops(out_test, nn->data->test->m, "reduce sum");
-        fprintf(stdout, "{%d/%d}: Test accuracy: %d/%d.\n", k, nn->parameters->epochs, (int)acc_test, nn->data->test->m);
+        fprintf(stdout, "{%d/%d}: Test accuracy: %d/%d.\n", k, nn->dense->parameters->epochs, (int)acc_test, nn->data->test->m);
         fprintf(stdout, "\n");
     }
     
-    free_fmatrix(miniBatch, 0, nn->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
+    free_fmatrix(miniBatch, 0, nn->dense->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
 }

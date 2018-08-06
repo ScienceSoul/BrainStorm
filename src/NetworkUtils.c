@@ -79,13 +79,13 @@ float standardDeviation(void * _Nonnull neural, int l, int n_inputs, int n_outpu
     float standard_deviation = 0.0f;
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
-    if (strcmp(nn->parameters->activationFunctions[l], "sigmoid") == 0) {
+    if (strcmp(nn->activationFunctionsStr[l], "sigmoid") == 0) {
         standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
-    } else if (strcmp(nn->parameters->activationFunctions[l], "tanh") == 0) {
+    } else if (strcmp(nn->activationFunctionsStr[l], "tanh") == 0) {
         standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
-    } else if (strcmp(nn->parameters->activationFunctions[l], "relu") == 0 ||
-               strcmp(nn->parameters->activationFunctions[l], "leakyrelu") == 0 ||
-               strcmp(nn->parameters->activationFunctions[l], "elu") == 0) {
+    } else if (strcmp(nn->activationFunctionsStr[l], "relu") == 0 ||
+               strcmp(nn->activationFunctionsStr[l], "leakyrelu") == 0 ||
+               strcmp(nn->activationFunctionsStr[l], "elu") == 0) {
         standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only supported for the following activation functions: sigmoid, tanh and ReLU (and its variants).");
@@ -259,7 +259,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
         while (field != NULL) {
             bool found = false;
             for (int i=0; i<MAX_SUPPORTED_PARAMETERS; i++) {
-                if (strcmp(field->key, nn->parameters->supported_parameters[i]) == 0) {
+                if (strcmp(field->key, nn->dense->parameters->supported_parameters[i]) == 0) {
                     found = true;
                     break;
                 }
@@ -267,15 +267,15 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
             if (!found) fatal(DEFAULT_CONSOLE_WRITER, "key for parameter not recognized:", field->key);
             
             if (strcmp(field->key, "data_name") == 0) {
-                strcpy(nn->parameters->dataName, field->value);
+                strcpy(nn->dataName, field->value);
                 
             } else if (strcmp(field->key, "data") == 0) {
-                strcpy(nn->parameters->data, field->value);
+                strcpy(nn->dataPath, field->value);
                 FOUND_DATA = 1;
                 
             } else if (strcmp(field->key, "topology") == 0) {
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->parameters->topology, &nn->network_num_layers, &len);
+                parseArgument(field->value, field->key, nn->dense->parameters->topology, &nn->network_num_layers, &len);
                 FOUND_TOPOLOGY = 1;
                 
             } else if (strcmp(field->key, "activations") == 0) {
@@ -291,62 +291,62 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 }
                 
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->parameters->activationFunctions, &nn->parameters->numberOfActivationFunctions, &len);
+                parseArgument(field->value, field->key, nn->activationFunctionsStr, &nn->num_activation_functions, &len);
                 
-                if (nn->parameters->numberOfActivationFunctions > 1 && nn->parameters->numberOfActivationFunctions < nn->network_num_layers-1) {
+                if (nn->num_activation_functions > 1 && nn->num_activation_functions < nn->network_num_layers-1) {
                     fatal(DEFAULT_CONSOLE_WRITER, "the number of activation functions in parameters is too low. Can't resolve how to use the provided activations. ");
                 }
-                if (nn->parameters->numberOfActivationFunctions > nn->network_num_layers-1) {
+                if (nn->num_activation_functions > nn->network_num_layers-1) {
                     fprintf(stdout, "%s: too many activation functions given to network. Will ignore the extra ones.\n", DEFAULT_CONSOLE_WRITER);
                 }
                 
-                if (nn->parameters->numberOfActivationFunctions == 1) {
-                    if (strcmp(nn->parameters->activationFunctions[0], "softmax") == 0) {
+                if (nn->num_activation_functions == 1) {
+                    if (strcmp(nn->activationFunctionsStr[0], "softmax") == 0) {
                         fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can only be used for the output units, not for the entire network.");
                     }
                     for (int i=0; i<nn->network_num_layers-1; i++) {
-                        if (strcmp(nn->parameters->activationFunctions[0], "sigmoid") == 0) {
+                        if (strcmp(nn->activationFunctionsStr[0], "sigmoid") == 0) {
                             nn->dense->activationFunctions[i] = sigmoid;
                             nn->dense->activationDerivatives[i] = sigmoidPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[0], "relu") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[0], "relu") == 0) {
                             nn->dense->activationFunctions[i] = relu;
                             nn->dense->activationDerivatives[i] = reluPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[0], "leakyrelu") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[0], "leakyrelu") == 0) {
                             nn->dense->activationFunctions[i] = leakyrelu;
                             nn->dense->activationDerivatives[i] = leakyreluPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[0], "elu") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[0], "elu") == 0) {
                             nn->dense->activationFunctions[i] = elu;
                             nn->dense->activationDerivatives[i] = eluPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[0], "tanh") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[0], "tanh") == 0) {
                             nn->dense->activationFunctions[i] = tan_h;
                             nn->dense->activationDerivatives[i] = tanhPrime;
-                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[0]);
+                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->activationFunctionsStr[0]);
                     }
                 } else {
                     for (int i=0; i<nn->network_num_layers-1; i++) {
-                        if (strcmp(nn->parameters->activationFunctions[i], "sigmoid") == 0) {
+                        if (strcmp(nn->activationFunctionsStr[i], "sigmoid") == 0) {
                             nn->dense->activationFunctions[i] = sigmoid;
                             nn->dense->activationDerivatives[i] = sigmoidPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[i], "relu") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[i], "relu") == 0) {
                             nn->dense->activationFunctions[i] = relu;
                             nn->dense->activationDerivatives[i] = reluPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[i], "leakyrelu") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[i], "leakyrelu") == 0) {
                             nn->dense->activationFunctions[i] = leakyrelu;
                             nn->dense->activationDerivatives[i] = leakyreluPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[i], "elu") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[i], "elu") == 0) {
                             nn->dense->activationFunctions[i] = elu;
                             nn->dense->activationDerivatives[i] = eluPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[i], "tanh") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[i], "tanh") == 0) {
                             nn->dense->activationFunctions[i] = tan_h;
                             nn->dense->activationDerivatives[i] = tanhPrime;
-                        } else if (strcmp(nn->parameters->activationFunctions[i], "softmax") == 0) {
+                        } else if (strcmp(nn->activationFunctionsStr[i], "softmax") == 0) {
                             // The sofmax function is only supported for the output units
                             if (i < nn->network_num_layers-2) {
                                 fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can't be used for the hiden units, only for the output units.");
                             }
                             nn->dense->activationFunctions[i] = softmax;
                             nn->dense->activationDerivatives[i] = NULL;
-                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->parameters->activationFunctions[i]);
+                        } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", nn->activationFunctionsStr[i]);
                     }
                 }
                 FOUND_ACTIVATIONS = 1;
@@ -354,7 +354,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
             } else if (strcmp(field->key, "split") == 0) {
                 unsigned int n;
                 unsigned int len = 2;
-                parseArgument(field->value,  field->key, nn->parameters->split, &n, &len);
+                parseArgument(field->value,  field->key, nn->dense->parameters->split, &n, &len);
                 if (n < 2) {
                     fatal(DEFAULT_CONSOLE_WRITER, " data splitting requires two values: one for training, one for testing/evaluation.");
                 }
@@ -362,23 +362,23 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 
             } else if (strcmp(field->key, "classification") == 0) {
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->parameters->classifications, &nn->parameters->numberOfClassifications, &len);
+                parseArgument(field->value, field->key, nn->dense->parameters->classifications, &nn->dense->parameters->numberOfClassifications, &len);
                 FOUND_CLASSIFICATION = 1;
                 
             } else if (strcmp(field->key, "epochs") == 0) {
-                nn->parameters->epochs = atoi(field->value);
+                nn->dense->parameters->epochs = atoi(field->value);
                 
             } else if (strcmp(field->key, "batch_size") == 0) {
-                nn->parameters->miniBatchSize = atoi(field->value);
+                nn->dense->parameters->miniBatchSize = atoi(field->value);
                 
             } else if (strcmp(field->key, "learning_rate") == 0) {
-                nn->parameters->eta = strtof(field->value, NULL);
+                nn->dense->parameters->eta = strtof(field->value, NULL);
                 
             } else if (strcmp(field->key, "l1_regularization") == 0) {
                 if (FOUND_TOPOLOGY == 0) {
                     fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
                 }
-                nn->parameters->lambda = strtof(field->value, NULL);
+                nn->dense->parameters->lambda = strtof(field->value, NULL);
                 for (int i=0; i<nn->network_num_layers-1; i++) {
                     nn->regularizer[i] = nn->l1_regularizer;
                     FOUND_REGULARIZATION = 1;
@@ -387,7 +387,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 if (FOUND_TOPOLOGY == 0) {
                     fatal(DEFAULT_CONSOLE_WRITER, "incorrect parameters definition order, the topology is not defined yet. ");
                 }
-                nn->parameters->lambda = strtof(field->value, NULL);
+                nn->dense->parameters->lambda = strtof(field->value, NULL);
                 for (int i=0; i<nn->network_num_layers-1; i++) {
                     nn->regularizer[i] = nn->l2_regularizer;
                     FOUND_REGULARIZATION = 1;
@@ -395,7 +395,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
             } else if (strcmp(field->key, "gradient_descent_optimizer") == 0) {
                 nn->dense->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
                 nn->dense->train->gradient_descent->learning_rate = strtof(field->value, NULL);
-                nn->parameters->eta = strtof(field->value, NULL);
+                nn->dense->parameters->eta = strtof(field->value, NULL);
                 nn->dense->train->gradient_descent->minimize = gradientDescentOptimizer;
                 FOUND_OPTIMIZER = 1;
                 
@@ -407,7 +407,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and the momentum coefficient should be given to the momentum optimizer.");
                 nn->dense->train->momentum->learning_rate = result[0];
                 nn->dense->train->momentum->momentum_coefficient = result[1];
-                nn->parameters->eta = result[0];
+                nn->dense->parameters->eta = result[0];
                 nn->dense->train->momentum->minimize = momentumOptimizer;
                 FOUND_OPTIMIZER = 1;
             
@@ -419,7 +419,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and a delta value should be given to the AdaGrad optimizer.");
                 nn->dense->train->ada_grad->learning_rate = result[0];
                 nn->dense->train->ada_grad->delta = result[1];
-                nn->parameters->eta = result[0];
+                nn->dense->parameters->eta = result[0];
                 nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->ada_grad->minimize = adamOptimizer;
@@ -434,7 +434,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->rms_prop->learning_rate = result[0];
                 nn->dense->train->rms_prop->decayRate = result[1];
                 nn->dense->train->rms_prop->delta = result[2];
-                nn->parameters->eta = result[0];
+                nn->dense->parameters->eta = result[0];
                 nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->rms_prop->minimize = rmsPropOptimizer;
@@ -451,7 +451,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->adam->decayRate1 = result[1];
                 nn->dense->train->adam->decayRate2 = result[2];
                 nn->dense->train->adam->delta = result[3];
-                nn->parameters->eta = result[0];
+                nn->dense->parameters->eta = result[0];
                 nn->dense->train->adam->weightsBiasedFirstMomentEstimate = NULL;
                 nn->dense->train->adam->weightsBiasedSecondMomentEstimate = NULL;
                 nn->dense->train->adam->biasesBiasedFirstMomentEstimate = NULL;

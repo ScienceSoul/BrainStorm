@@ -40,8 +40,10 @@ typedef struct dense_network {
     tensor * _Nullable batchCostWeightDeriv;
     tensor * _Nullable batchCostBiasDeriv;
     
+    dense_net_parameters * _Nullable parameters;
     Train * _Nullable train;
     
+    int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
     void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
@@ -50,17 +52,22 @@ typedef struct dense_network {
 typedef struct NeuralNetwork {
     
     data * _Nullable data;
-    float * _Nullable * _Nullable batch;
     networkConstructor * _Nullable constructor;
-    networkParameters * _Nullable parameters;
-    int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
-    
-    unsigned int network_num_layers; // Total number of layers in the network from input to output
-    unsigned int num_conv2d_layers;  // Number of 2D convolutional layers
-    int example_idx;
-    
     dense_network * _Nullable dense;
     MetalCompute * _Nullable gpu;
+    float * _Nullable * _Nullable batch;
+    
+    unsigned int network_num_layers;       // Total number of layers in the network from input to output
+    unsigned int num_conv2d_layers;        // Number of 2D convolutional layers
+    unsigned int num_activation_functions; // Number of activation functions used by the network
+    unsigned int num_channels;
+    int example_idx;
+    
+    bool is_dense_network;
+    bool is_conv2d_network;
+    
+    char dataPath[MAX_LONG_STRING_LENGTH], dataName[MAX_LONG_STRING_LENGTH];
+    char activationFunctionsStr[MAX_NUMBER_NETWORK_LAYERS][MAX_SHORT_STRING_LENGTH];
     
     void (* _Nullable genesis)(void * _Nonnull self);
     void (* _Nullable finale)(void * _Nonnull self);

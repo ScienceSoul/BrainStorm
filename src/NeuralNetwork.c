@@ -46,14 +46,12 @@ static void initNeuralData(void * _Nonnull self) {
 }
 
 //
-// Allocate memory for a neural network
+// Full-connected network allocation
 //
-NeuralNetwork * _Nonnull newNeuralNetwork(void) {
+static void dense_net_create(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-    *nn = (NeuralNetwork){.network_num_layers=0};
+    NeuralNetwork *nn = (NeuralNetwork *)self;
     
-    // A full-connected network
     nn->dense = (dense_network *)malloc(sizeof(dense_network));
     *(nn->dense) = (dense_network){.num_dense_layers=0, .weights=NULL, .weightsVelocity=NULL, .biases=NULL, .biasesVelocity=NULL, .activations=NULL, .affineTransformations=NULL, .costWeightDerivatives=NULL, .costBiasDerivatives=NULL, .batchCostWeightDeriv=NULL, .batchCostBiasDeriv=NULL};
     nn->dense->train = (Train *)malloc(sizeof(Train));
@@ -67,105 +65,53 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
         nn->dense->activationDerivatives[i] = NULL;
     }
     
-    nn->parameters = (networkParameters *)malloc(sizeof(networkParameters));
-    strcpy(nn->parameters->supported_parameters[0], "data_name");
-    strcpy(nn->parameters->supported_parameters[1], "data");
-    strcpy(nn->parameters->supported_parameters[2], "topology");
-    strcpy(nn->parameters->supported_parameters[3], "activations");
-    strcpy(nn->parameters->supported_parameters[4], "split");
-    strcpy(nn->parameters->supported_parameters[5], "classification");
-    strcpy(nn->parameters->supported_parameters[6], "epochs");
-    strcpy(nn->parameters->supported_parameters[7], "batch_size");
-    strcpy(nn->parameters->supported_parameters[8], "l1_regularization");
-    strcpy(nn->parameters->supported_parameters[9], "l2_regularization");
-    strcpy(nn->parameters->supported_parameters[10], "gradient_descent_optimizer");
-    strcpy(nn->parameters->supported_parameters[11], "momentum_optimizer");
-    strcpy(nn->parameters->supported_parameters[12], "adagrad_optimizer");
-    strcpy(nn->parameters->supported_parameters[13], "rmsprop_optimizer");
-    strcpy(nn->parameters->supported_parameters[14], "adam_optimizer");
+    nn->dense->parameters = (dense_net_parameters *)malloc(sizeof(dense_net_parameters));
+    strcpy(nn->dense->parameters->supported_parameters[0], "data_name");
+    strcpy(nn->dense->parameters->supported_parameters[1], "data");
+    strcpy(nn->dense->parameters->supported_parameters[2], "topology");
+    strcpy(nn->dense->parameters->supported_parameters[3], "activations");
+    strcpy(nn->dense->parameters->supported_parameters[4], "split");
+    strcpy(nn->dense->parameters->supported_parameters[5], "classification");
+    strcpy(nn->dense->parameters->supported_parameters[6], "epochs");
+    strcpy(nn->dense->parameters->supported_parameters[7], "batch_size");
+    strcpy(nn->dense->parameters->supported_parameters[8], "l1_regularization");
+    strcpy(nn->dense->parameters->supported_parameters[9], "l2_regularization");
+    strcpy(nn->dense->parameters->supported_parameters[10], "gradient_descent_optimizer");
+    strcpy(nn->dense->parameters->supported_parameters[11], "momentum_optimizer");
+    strcpy(nn->dense->parameters->supported_parameters[12], "adagrad_optimizer");
+    strcpy(nn->dense->parameters->supported_parameters[13], "rmsprop_optimizer");
+    strcpy(nn->dense->parameters->supported_parameters[14], "adam_optimizer");
     
-    bzero(nn->parameters->data, MAX_LONG_STRING_LENGTH);
-    strcpy(nn->parameters->dataName, "<empty>");
-    nn->parameters->epochs = 0;
-    nn->parameters->miniBatchSize = 0;
-    nn->parameters->eta = 0.0f;
-    nn->parameters->lambda = 0.0f;
-    nn->parameters->numberOfActivationFunctions = 0;
-    nn->parameters->numberOfClassifications = 0;
-    memset(nn->parameters->topology, 0, sizeof(nn->parameters->topology));
-    memset(nn->parameters->classifications, 0, sizeof(nn->parameters->classifications));
-    memset(nn->parameters->split, 0, sizeof(nn->parameters->split));
-    
-    memset(*nn->parameters->activationFunctions, 0, (MAX_NUMBER_NETWORK_LAYERS*128)*sizeof(char));
-    
-    nn->constructor = allocateConstructor();
-    
-    nn->load_params_from_input_file = loadParametersFromImputFile;
-    
-    nn->genesis = genesis;
-    nn->finale = finale;
-    nn->tensor = tensor_create;
-    nn->gpu_alloc = gpu_alloc;
-    
-    nn->l0_regularizer = l0_regularizer;
-    nn->l1_regularizer = l1_regularizer;
-    nn->l2_regularizer = l2_regularizer;
-    
-    // This function is only used when loading a network from a param file
-    nn->train_loop = trainLoop;
-    
-    nn->math_ops = mathOps;
-    
-    nn->eval_prediction = evalPrediction;
-    nn->eval_cost = evalCost;
-    
-    return nn;
+    nn->dense->parameters->epochs = 0;
+    nn->dense->parameters->miniBatchSize = 0;
+    nn->dense->parameters->eta = 0.0f;
+    nn->dense->parameters->lambda = 0.0f;
+    nn->dense->parameters->numberOfClassifications = 0;
+    memset(nn->dense->parameters->topology, 0, sizeof(nn->dense->parameters->topology));
+    memset(nn->dense->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
+    memset(nn->dense->parameters->split, 0, sizeof(nn->dense->parameters->split));
+    nn->dense->load_params_from_input_file = loadParametersFromImputFile;
 }
 
 //
-//  Create the network layers, i.e. allocates memory for the weight, bias, activation, z, dC/dx and dC/db data structures
+// Full-connected genesis
 //
-static void genesis(void * _Nonnull self) {
+static void dense_net_genesis(void * _Nonnull self) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
-    // If the network is constructed with the constructor API, check that all required parameters were defined
-    if (nn->constructor->networkConstruction) {
-        if (nn->network_num_layers == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology not defined. Use a constructor or define it in a parameter file.");
-        
-        if (nn->parameters->numberOfActivationFunctions == 0) {
-            for (int i=0; i<nn->network_num_layers-1; i++) {
-                nn->dense->activationFunctions[i] = sigmoid;
-                nn->dense->activationDerivatives[i] = sigmoidPrime;
-            }
-        }
-        
-        if (nn->parameters->split[0] == 0 || nn->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
-        
-        if (nn->parameters->numberOfClassifications == 0) fatal(DEFAULT_CONSOLE_WRITER, "classification not defined. Use a constructor or define it in a parameter file.");
-        
-        char testString[MAX_LONG_STRING_LENGTH];
-        bzero(testString, MAX_LONG_STRING_LENGTH);
-        if (strcmp(nn->parameters->data, testString) == 0) fatal(DEFAULT_CONSOLE_WRITER, "training data not defined. Use a constructor or define it in a parameter file.");
-    }
+    nn->dense->parameters->max_number_of_nodes_in_layer = max_array(nn->dense->parameters->topology, nn->network_num_layers);
     
-    fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
-    fprintf(stdout, "%s: full connected network with %d layers.\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
+    if (nn->dense->parameters->split[0] == 0 || nn->dense->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
     
-    nn->example_idx = 0;
-    nn->parameters->number_of_features = nn->parameters->topology[0];;
-    nn->parameters->max_number_of_nodes_in_layer = max_array(nn->parameters->topology, nn->network_num_layers);
-    
-    nn->data = (data *)malloc(sizeof(data));
-    nn->data->init = initNeuralData;
-    nn->data->load = loadData;
+    if (nn->dense->parameters->numberOfClassifications == 0) fatal(DEFAULT_CONSOLE_WRITER, "classification not defined. Use a constructor or define it in a parameter file.");
     
     if (nn->dense->weights == NULL) {
         tensor_dict dict;
         dict.rank = 2;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            dict.shape[l][0][0] = nn->parameters->topology[l+1];
-            dict.shape[l][1][0] = nn->parameters->topology[l];
+            dict.shape[l][0][0] = nn->dense->parameters->topology[l+1];
+            dict.shape[l][1][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = true;
@@ -204,7 +150,7 @@ static void genesis(void * _Nonnull self) {
         tensor_dict dict;
         dict.rank = 1;
         for (int l=1; l<nn->network_num_layers; l++) {
-            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+            dict.shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = true;
@@ -228,33 +174,33 @@ static void genesis(void * _Nonnull self) {
                 nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
             }
         }
-         if (nn->dense->train->adam != NULL) {
-             dict.init = false;
-             if (nn->dense->train->adam->biasesBiasedFirstMomentEstimate == NULL) {
-                 nn->dense->train->adam->biasesBiasedFirstMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
-             }
-             if (nn->dense->train->adam->biasesBiasedSecondMomentEstimate == NULL) {
-                 nn->dense->train->adam->biasesBiasedSecondMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
-             }
-         }
+        if (nn->dense->train->adam != NULL) {
+            dict.init = false;
+            if (nn->dense->train->adam->biasesBiasedFirstMomentEstimate == NULL) {
+                nn->dense->train->adam->biasesBiasedFirstMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+            }
+            if (nn->dense->train->adam->biasesBiasedSecondMomentEstimate == NULL) {
+                nn->dense->train->adam->biasesBiasedSecondMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+            }
+        }
     }
     
     if (nn->dense->activations == NULL) {
         tensor_dict dict;
         dict.rank = 1;
         for (int l=0; l<nn->network_num_layers; l++) {
-            dict.shape[l][0][0] = nn->parameters->topology[l];
+            dict.shape[l][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers;
         dict.init = false;
         nn->dense->activations = (tensor *)nn->tensor((void *)self, dict);
     }
-
+    
     if (nn->dense->affineTransformations == NULL) {
         tensor_dict dict;
         dict.rank = 1;
         for (int l=1; l<nn->network_num_layers; l++) {
-            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+            dict.shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = false;
@@ -265,8 +211,8 @@ static void genesis(void * _Nonnull self) {
         tensor_dict dict;
         dict.rank = 2;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            dict.shape[l][0][0] = nn->parameters->topology[l+1];
-            dict.shape[l][1][0] = nn->parameters->topology[l];
+            dict.shape[l][0][0] = nn->dense->parameters->topology[l+1];
+            dict.shape[l][1][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = false;
@@ -277,7 +223,7 @@ static void genesis(void * _Nonnull self) {
         tensor_dict dict;
         dict.rank = 1;
         for (int l=1; l<nn->network_num_layers; l++) {
-            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+            dict.shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = false;
@@ -288,8 +234,8 @@ static void genesis(void * _Nonnull self) {
         tensor_dict dict;
         dict.rank = 2;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            dict.shape[l][0][0] = nn->parameters->topology[l+1];
-            dict.shape[l][1][0] = nn->parameters->topology[l];
+            dict.shape[l][0][0] = nn->dense->parameters->topology[l+1];
+            dict.shape[l][1][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = false;
@@ -300,7 +246,7 @@ static void genesis(void * _Nonnull self) {
         tensor_dict dict;
         dict.rank = 1;
         for (int l=1; l<nn->network_num_layers; l++) {
-            dict.shape[l-1][0][0] = nn->parameters->topology[l];
+            dict.shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
         dict.init = false;
@@ -308,26 +254,10 @@ static void genesis(void * _Nonnull self) {
     }
 }
 
-//
-// Free-up all the memory used by the network
-//
-static void finale(void * _Nonnull self) {
+
+static void dense_net_finale(void * _Nonnull  self) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
-    
-    free_fmatrix(nn->data->training->set, 0, nn->data->training->m, 0, nn->data->training->n);
-    free_fmatrix(nn->data->test->set, 0, nn->data->test->m, 0, nn->data->test->n);
-    if (nn->data->validation->set != NULL) free_fmatrix(nn->data->validation->set, 0, nn->data->validation->m, 0, nn->data->validation->n);
-    nn->data->training->reader = NULL;
-    nn->data->test->reader = NULL;
-    free(nn->data->training);
-    free(nn->data->test);
-    free(nn->data->validation);
-    nn->data->init = NULL;
-    nn->data->load = NULL;
-    free(nn->data);
-    free(nn->parameters);
-    free(nn->constructor);
     
     if (nn->dense->weights != NULL) {
         free(nn->dense->weights->val);
@@ -420,6 +350,112 @@ static void finale(void * _Nonnull self) {
     }
     free(nn->dense->train);
     free(nn->dense);
+}
+
+//
+// Allocate memory for a neural network
+//
+NeuralNetwork * _Nonnull newNeuralNetwork(void) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+    *nn = (NeuralNetwork){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false};
+    
+    dense_net_create((void *)nn);
+    
+    nn->num_activation_functions = 0;
+    memset(*nn->activationFunctionsStr, 0, (MAX_NUMBER_NETWORK_LAYERS*128)*sizeof(char));
+    
+    bzero(nn->dataPath, MAX_LONG_STRING_LENGTH);
+    strcpy(nn->dataName, "<empty>");
+    
+    nn->constructor = allocateConstructor();
+    
+    nn->genesis = genesis;
+    nn->finale = finale;
+    nn->tensor = tensor_create;
+    nn->gpu_alloc = gpu_alloc;
+    
+    nn->l0_regularizer = l0_regularizer;
+    nn->l1_regularizer = l1_regularizer;
+    nn->l2_regularizer = l2_regularizer;
+    
+    // This function is only used when loading a network from a param file
+    nn->train_loop = trainLoop;
+    
+    nn->math_ops = mathOps;
+    
+    nn->eval_prediction = evalPrediction;
+    nn->eval_cost = evalCost;
+    
+    return nn;
+}
+
+//
+//  The network genesis
+//
+static void genesis(void * _Nonnull self) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    // If the network is constructed with the constructor API, check that all required parameters were defined
+    if (nn->constructor->networkConstruction) {
+        if (nn->network_num_layers == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology not defined. Use a constructor or define it in a parameter file.");
+        
+        if (nn->num_activation_functions == 0) {
+            for (int i=0; i<nn->network_num_layers-1; i++) {
+                nn->dense->activationFunctions[i] = sigmoid;
+                nn->dense->activationDerivatives[i] = sigmoidPrime;
+            }
+        }
+        
+        
+        char testString[MAX_LONG_STRING_LENGTH];
+        bzero(testString, MAX_LONG_STRING_LENGTH);
+        if (strcmp(nn->dataPath, testString) == 0) fatal(DEFAULT_CONSOLE_WRITER, "training data not defined. Use a constructor or define it in a parameter file.");
+    }
+    
+    fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
+    fprintf(stdout, "%s: full connected network with %d layers.\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
+    
+    nn->example_idx = 0;
+    
+    nn->data = (data *)malloc(sizeof(data));
+    nn->data->init = initNeuralData;
+    nn->data->load = loadData;
+    
+    if (nn->is_dense_network) {
+        dense_net_genesis(self);
+    } else if (nn->is_conv2d_network) {
+        
+    }
+}
+
+//
+// Free-up all the memory used by the network
+//
+static void finale(void * _Nonnull self) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)self;
+    
+    free_fmatrix(nn->data->training->set, 0, nn->data->training->m, 0, nn->data->training->n);
+    free_fmatrix(nn->data->test->set, 0, nn->data->test->m, 0, nn->data->test->n);
+    if (nn->data->validation->set != NULL) free_fmatrix(nn->data->validation->set, 0, nn->data->validation->m, 0, nn->data->validation->n);
+    nn->data->training->reader = NULL;
+    nn->data->test->reader = NULL;
+    free(nn->data->training);
+    free(nn->data->test);
+    free(nn->data->validation);
+    nn->data->init = NULL;
+    nn->data->load = NULL;
+    free(nn->data);
+    free(nn->dense->parameters);
+    free(nn->constructor);
+    
+    if (nn->is_dense_network) {
+        dense_net_finale(self);
+    } else if (nn->is_conv2d_network) {
+        
+    }
     
     if (nn->gpu != NULL) {
         nn->gpu->nullify();

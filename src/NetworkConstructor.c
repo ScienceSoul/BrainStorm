@@ -18,8 +18,10 @@ void set_feed(void * _Nonnull neural, unsigned int nbNeurons) {
     if (nn->network_num_layers != 0) {
         fatal(DEFAULT_CONSOLE_WRITER, "network topolgy error. The feeding layer must be created first.");
     }
-    nn->parameters->topology[nn->network_num_layers] = nbNeurons;
+    nn->dense->parameters->topology[nn->network_num_layers] = nbNeurons;
     nn->network_num_layers++;
+    
+    nn->num_channels = nbNeurons;
 }
 
 void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, layer_dict layer_dict, regularizer_dict * _Nullable regularizer) {
@@ -31,33 +33,33 @@ void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, layer_dict 
     
     if (layer_dict.activation == NULL) fatal(DEFAULT_CONSOLE_WRITER, "activation function is null in constructor.");
     
-    nn->parameters->topology[nn->network_num_layers] = nbNeurons;
+    nn->dense->parameters->topology[nn->network_num_layers] = nbNeurons;
     nn->network_num_layers++;;
     
     if (strcmp(layer_dict.activation, "sigmoid") == 0) {
-        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "sigmoid");
-        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = sigmoid;
-        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = sigmoidPrime;
+        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "sigmoid");
+        nn->dense->activationFunctions[nn->num_activation_functions] = sigmoid;
+        nn->dense->activationDerivatives[nn->num_activation_functions] = sigmoidPrime;
     } else if (strcmp(layer_dict.activation, "relu") == 0) {
-        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "relu");
-        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = relu;
-        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = reluPrime;
+        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "relu");
+        nn->dense->activationFunctions[nn->num_activation_functions] = relu;
+        nn->dense->activationDerivatives[nn->num_activation_functions] = reluPrime;
     } else if (strcmp(layer_dict.activation, "leakyrelu") == 0) {
-        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "leakyrelu");
-        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = leakyrelu;
-        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = leakyreluPrime;
+        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "leakyrelu");
+        nn->dense->activationFunctions[nn->num_activation_functions] = leakyrelu;
+        nn->dense->activationDerivatives[nn->num_activation_functions] = leakyreluPrime;
     } else if (strcmp(layer_dict.activation, "elu") == 0) {
-        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "elu");
-        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = elu;
-        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = eluPrime;
+        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "elu");
+        nn->dense->activationFunctions[nn->num_activation_functions] = elu;
+        nn->dense->activationDerivatives[nn->num_activation_functions] = eluPrime;
     } else if (strcmp(layer_dict.activation, "tanh") == 0) {
-        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "tanh");
-        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = tan_h;
-        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = tanhPrime;
+        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "tanh");
+        nn->dense->activationFunctions[nn->num_activation_functions] = tan_h;
+        nn->dense->activationDerivatives[nn->num_activation_functions] = tanhPrime;
     } else if (strcmp(layer_dict.activation, "softmax") == 0) {
-        strcpy(nn->parameters->activationFunctions[nn->parameters->numberOfActivationFunctions], "softmax");
-        nn->dense->activationFunctions[nn->parameters->numberOfActivationFunctions] = softmax;
-        nn->dense->activationDerivatives[nn->parameters->numberOfActivationFunctions] = NULL;
+        strcpy(nn->activationFunctionsStr[nn->num_activation_functions], "softmax");
+        nn->dense->activationFunctions[nn->num_activation_functions] = softmax;
+        nn->dense->activationDerivatives[nn->num_activation_functions] = NULL;
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", layer_dict.activation);
     }
@@ -72,18 +74,18 @@ void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, layer_dict 
     
     // Add the regularizer if given
     if (regularizer != NULL) {
-        nn->parameters->lambda = regularizer->regularization_factor;
-        nn->regularizer[nn->parameters->numberOfActivationFunctions] = regularizer->regularizer_func;
-    } else nn->regularizer[nn->parameters->numberOfActivationFunctions] = nn->l0_regularizer;
+        nn->dense->parameters->lambda = regularizer->regularization_factor;
+        nn->regularizer[nn->num_activation_functions] = regularizer->regularizer_func;
+    } else nn->regularizer[nn->num_activation_functions] = nn->l0_regularizer;
     
-    nn->parameters->numberOfActivationFunctions++;
+    nn->num_activation_functions++;
 }
 
 void set_split(void * _Nonnull neural, int n1, int n2) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    nn->parameters->split[0] = n1;
-    nn->parameters->split[1] = n2;
+    nn->dense->parameters->split[0] = n1;
+    nn->dense->parameters->split[1] = n2;
 }
 
 void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
@@ -91,22 +93,22 @@ void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     unsigned int len = (unsigned int)strlen(str);
     if (len >= MAX_LONG_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying string in constructor");
-    memcpy(nn->parameters->data, str, len*sizeof(char));
+    memcpy(nn->dataPath, str, len*sizeof(char));
 }
 
 void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     if (n >= MAX_NUMBER_NETWORK_LAYERS) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying vector in constructor");
-    memcpy(nn->parameters->classifications, vector, n*sizeof(int));
-    nn->parameters->numberOfClassifications = n;
+    memcpy(nn->dense->parameters->classifications, vector, n*sizeof(int));
+    nn->dense->parameters->numberOfClassifications = n;
 }
 
 void set_scalars(void * _Nonnull neural, scalar_dict scalars) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    nn->parameters->epochs = scalars.epochs;
-    nn->parameters->miniBatchSize = scalars.mini_batch_size;
+    nn->dense->parameters->epochs = scalars.epochs;
+    nn->dense->parameters->miniBatchSize = scalars.mini_batch_size;
 }
 
 void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
@@ -117,21 +119,21 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
     if (strcmp(optimizer_dict.optimizer, "gradient descent") == 0) {
         nn->dense->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
         nn->dense->train->gradient_descent->learning_rate = optimizer_dict.learning_rate;
-        nn->parameters->eta = optimizer_dict.learning_rate;
+        nn->dense->parameters->eta = optimizer_dict.learning_rate;
         nn->dense->train->gradient_descent->minimize = gradientDescentOptimizer;
         optimizer = (void *)nn->dense->train->gradient_descent;
     } else if (strcmp(optimizer_dict.optimizer, "momentum") == 0) {
         nn->dense->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
         nn->dense->train->momentum->learning_rate = optimizer_dict.learning_rate;
         nn->dense->train->momentum->momentum_coefficient = optimizer_dict.momentum;
-        nn->parameters->eta = optimizer_dict.learning_rate;
+        nn->dense->parameters->eta = optimizer_dict.learning_rate;
         nn->dense->train->momentum->minimize = momentumOptimizer;
         optimizer = (void *)nn->dense->train->momentum;
     } else if (strcmp(optimizer_dict.optimizer, "adagrad") == 0) {
         nn->dense->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
         nn->dense->train->ada_grad->learning_rate = optimizer_dict.learning_rate;
         nn->dense->train->ada_grad->delta = optimizer_dict.delta;
-        nn->parameters->eta = optimizer_dict.learning_rate;;
+        nn->dense->parameters->eta = optimizer_dict.learning_rate;;
         nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
         nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
         nn->dense->train->ada_grad->minimize = adamOptimizer;
@@ -141,7 +143,7 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
         nn->dense->train->rms_prop->learning_rate = optimizer_dict.learning_rate;
         nn->dense->train->rms_prop->decayRate = optimizer_dict.decay_rate1;
         nn->dense->train->rms_prop->delta = optimizer_dict.delta;
-        nn->parameters->eta = optimizer_dict.learning_rate;
+        nn->dense->parameters->eta = optimizer_dict.learning_rate;
         nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
         nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
         nn->dense->train->rms_prop->minimize = rmsPropOptimizer;
@@ -153,7 +155,7 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
         nn->dense->train->adam->decayRate1 = optimizer_dict.decay_rate1;
         nn->dense->train->adam->decayRate2 = optimizer_dict.decay_rate2;
         nn->dense->train->adam->delta = optimizer_dict.delta;
-        nn->parameters->eta = optimizer_dict.step_size;
+        nn->dense->parameters->eta = optimizer_dict.step_size;
         nn->dense->train->adam->weightsBiasedFirstMomentEstimate = NULL;
         nn->dense->train->adam->weightsBiasedSecondMomentEstimate = NULL;
         nn->dense->train->adam->biasesBiasedFirstMomentEstimate = NULL;

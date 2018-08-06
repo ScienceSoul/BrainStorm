@@ -27,11 +27,11 @@ float l1_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
         sgn = 0.0;
     }
     return nn->dense->weights->val[stride+((i*n)+j)] -
-    ((nn->parameters->eta*nn->parameters->lambda)/(float)nn->data->training->m)*sgn;
+    ((nn->dense->parameters->eta*nn->dense->parameters->lambda)/(float)nn->data->training->m)*sgn;
 }
 
 float l2_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    return (1.0f-((nn->parameters->eta*nn->parameters->lambda)/(float)nn->data->training->m))*nn->dense->weights->val[stride+((i*n)+j)];
+    return (1.0f-((nn->dense->parameters->eta*nn->dense->parameters->lambda)/(float)nn->data->training->m))*nn->dense->weights->val[stride+((i*n)+j)];
 }

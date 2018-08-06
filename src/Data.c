@@ -64,14 +64,14 @@ void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const cha
     raw_training = nn->data->training->reader(trainFile, &len1, &len2);
     shuffle(raw_training, len1, len2);
     
-    nn->data->training->set = createTrainigData(raw_training, 0, nn->parameters->split[0], &nn->data->training->m, &nn->data->training->n, nn->parameters->classifications, nn->parameters->numberOfClassifications, nn->parameters->topology, nn->network_num_layers);
+    nn->data->training->set = createTrainigData(raw_training, 0, nn->dense->parameters->split[0], &nn->data->training->m, &nn->data->training->n, nn->dense->parameters->classifications, nn->dense->parameters->numberOfClassifications, nn->dense->parameters->topology, nn->network_num_layers);
     
     if (testData) {
          fprintf(stdout, "%s: load test data set in <%s>...\n", DEFAULT_CONSOLE_WRITER, dataSetName);
         nn->data->test->set = nn->data->test->reader(testFile, &nn->data->test->m, &nn->data->test->n);
-        nn->data->validation->set = getData(raw_training, len1, len2, nn->parameters->split[0], nn->parameters->split[1], &nn->data->validation->m, &nn->data->validation->n);
+        nn->data->validation->set = getData(raw_training, len1, len2, nn->dense->parameters->split[0], nn->dense->parameters->split[1], &nn->data->validation->m, &nn->data->validation->n);
     } else {
-        nn->data->test->set = getData(raw_training, len1, len2, nn->parameters->split[0], nn->parameters->split[1], &nn->data->test->m, &nn->data->test->n);
+        nn->data->test->set = getData(raw_training, len1, len2, nn->dense->parameters->split[0], nn->dense->parameters->split[1], &nn->data->test->m, &nn->data->test->n);
     }
     fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
 }
