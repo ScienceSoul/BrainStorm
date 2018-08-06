@@ -90,7 +90,7 @@ typedef struct NeuralNetwork {
     
 } NeuralNetwork;
 
-NeuralNetwork * _Nonnull newNeuralNetwork(void);
+NeuralNetwork * _Nonnull new_dense_net(void);
 
 #endif /* NeuralNetwork_h */
 

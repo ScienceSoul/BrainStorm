@@ -48,7 +48,7 @@ static void initNeuralData(void * _Nonnull self) {
 //
 // Full-connected network allocation
 //
-static void dense_net_create(void * _Nonnull self) {
+static void create_dense_net(void * _Nonnull self) {
     
     NeuralNetwork *nn = (NeuralNetwork *)self;
     
@@ -352,15 +352,9 @@ static void dense_net_finale(void * _Nonnull  self) {
     free(nn->dense);
 }
 
-//
-// Allocate memory for a neural network
-//
-NeuralNetwork * _Nonnull newNeuralNetwork(void) {
-    
-    NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-    *nn = (NeuralNetwork){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false};
-    
-    dense_net_create((void *)nn);
+void new_network_common(void * _Nonnull neural) {
+ 
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
     
     nn->num_activation_functions = 0;
     memset(*nn->activationFunctionsStr, 0, (MAX_NUMBER_NETWORK_LAYERS*128)*sizeof(char));
@@ -379,13 +373,26 @@ NeuralNetwork * _Nonnull newNeuralNetwork(void) {
     nn->l1_regularizer = l1_regularizer;
     nn->l2_regularizer = l2_regularizer;
     
-    // This function is only used when loading a network from a param file
-    nn->train_loop = trainLoop;
-    
     nn->math_ops = mathOps;
     
     nn->eval_prediction = evalPrediction;
     nn->eval_cost = evalCost;
+}
+
+//
+// Root allocation routines of a dense (fully-connected) or convolutional neural network
+//
+NeuralNetwork * _Nonnull new_dense_net(void) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+    *nn = (NeuralNetwork){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false};
+    
+    create_dense_net((void *)nn);
+    new_network_common((void *)nn);
+    
+    // This function is only used when loading a network from a param file
+    // This mode is only available for a dense netwotk
+    nn->train_loop = trainLoop;
     
     return nn;
 }
