@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		014B235321195CFF008E46AC /* DenseNet.c in Sources */ = {isa = PBXBuildFile; fileRef = 014B235221195CFF008E46AC /* DenseNet.c */; };
+		014B235421195CFF008E46AC /* DenseNet.c in Sources */ = {isa = PBXBuildFile; fileRef = 014B235221195CFF008E46AC /* DenseNet.c */; };
+		014B2357211960E8008E46AC /* Conv2DNet.c in Sources */ = {isa = PBXBuildFile; fileRef = 014B2356211960E8008E46AC /* Conv2DNet.c */; };
+		014B2358211960E8008E46AC /* Conv2DNet.c in Sources */ = {isa = PBXBuildFile; fileRef = 014B2356211960E8008E46AC /* Conv2DNet.c */; };
+		014B2359211C3236008E46AC /* NetworkOps.h in Headers */ = {isa = PBXBuildFile; fileRef = 016175A820FF105C00FC40FF /* NetworkOps.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0161752120EDDE4600FC40FF /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161752020EDDE4600FC40FF /* Metal.framework */; };
 		0161752320EDDE4C00FC40FF /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161752220EDDE4C00FC40FF /* Accelerate.framework */; };
 		0161752820EDDFD800FC40FF /* MetalKernels.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0161752720EDDFD800FC40FF /* MetalKernels.metal */; };
@@ -66,6 +71,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		014B235121195CCA008E46AC /* DenseNet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DenseNet.h; sourceTree = "<group>"; };
+		014B235221195CFF008E46AC /* DenseNet.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DenseNet.c; sourceTree = "<group>"; };
+		014B2355211960C0008E46AC /* Conv2DNet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Conv2DNet.h; sourceTree = "<group>"; };
+		014B2356211960E8008E46AC /* Conv2DNet.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Conv2DNet.c; sourceTree = "<group>"; };
 		0161751820EDDDF500FC40FF /* libBrainStorm.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libBrainStorm.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0161752020EDDE4600FC40FF /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		0161752220EDDE4C00FC40FF /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -167,7 +176,9 @@
 			isa = PBXGroup;
 			children = (
 				0161756120EDE9E800FC40FF /* BrainStorm.h */,
+				014B2355211960C0008E46AC /* Conv2DNet.h */,
 				0161752D20EDE03000FC40FF /* Data.h */,
+				014B235121195CCA008E46AC /* DenseNet.h */,
 				0161752E20EDE03000FC40FF /* Memory.h */,
 				0161752F20EDE03000FC40FF /* MetalCompute.h */,
 				0161758E20EF401B00FC40FF /* NetworkConstructor.h */,
@@ -188,7 +199,9 @@
 		0161753320EDE03800FC40FF /* src */ = {
 			isa = PBXGroup;
 			children = (
+				014B2356211960E8008E46AC /* Conv2DNet.c */,
 				0161753520EDE04F00FC40FF /* Data.c */,
+				014B235221195CFF008E46AC /* DenseNet.c */,
 				0161753B20EDE05000FC40FF /* Memory.c */,
 				0161753920EDE05000FC40FF /* MetalCompute.m */,
 				0161758F20EF443E00FC40FF /* NetworkConstructor.c */,
@@ -217,6 +230,7 @@
 				0161754620EDE45400FC40FF /* Memory.h in Headers */,
 				0161754720EDE45400FC40FF /* MetalCompute.h in Headers */,
 				0161759B20F70E4F00FC40FF /* NetworkConstructor.h in Headers */,
+				014B2359211C3236008E46AC /* NetworkOps.h in Headers */,
 				0161759C20F70E4F00FC40FF /* NetworkParams.h in Headers */,
 				0161754820EDE45400FC40FF /* NetworkUtils.h in Headers */,
 				0161754920EDE45400FC40FF /* NeuralNetwork.h in Headers */,
@@ -364,6 +378,8 @@
 				0161759920F70E1600FC40FF /* Regularization.c in Sources */,
 				0161753F20EDE05000FC40FF /* NeuralNetwork.c in Sources */,
 				016175A420F73DDB00FC40FF /* Optimizers.c in Sources */,
+				014B2357211960E8008E46AC /* Conv2DNet.c in Sources */,
+				014B235321195CFF008E46AC /* DenseNet.c in Sources */,
 				0161753D20EDE05000FC40FF /* Data.c in Sources */,
 				0161753C20EDE05000FC40FF /* TimeProfile.c in Sources */,
 				0161753E20EDE05000FC40FF /* Parsing.c in Sources */,
@@ -384,9 +400,11 @@
 				0161757420EEEE2400FC40FF /* MetalCompute.m in Sources */,
 				0161757520EEEE2400FC40FF /* NetworkUtils.c in Sources */,
 				0161757620EEEE2400FC40FF /* NeuralNetwork.c in Sources */,
+				014B2358211960E8008E46AC /* Conv2DNet.c in Sources */,
 				016175A520F73DDB00FC40FF /* Optimizers.c in Sources */,
 				0161757720EEEE2400FC40FF /* Parsing.c in Sources */,
 				0161759A20F70E1600FC40FF /* Regularization.c in Sources */,
+				014B235421195CFF008E46AC /* DenseNet.c in Sources */,
 				0161757820EEEE2400FC40FF /* TimeProfile.c in Sources */,
 				0161757920EEEE2400FC40FF /* Utils.c in Sources */,
 			);

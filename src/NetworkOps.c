@@ -417,6 +417,17 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
     return cost;
 }
 
+void maxPool(void) {
+    
+}
+void l2Pool(void) {
+    
+}
+void averagePool(void) {
+    
+}
+
+
 void trainLoop(void * _Nonnull  neural) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;

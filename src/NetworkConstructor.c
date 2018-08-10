@@ -10,7 +10,55 @@
 #include <stdlib.h>
 #include "NeuralNetwork.h"
 
-void set_feed(void * _Nonnull neural, unsigned int nbNeurons) {
+static void set_activation_function(activation_functions activationFunctionsRef[MAX_NUMBER_NETWORK_LAYERS],
+                    float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n),
+                    float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z),
+                    layer_dict layer_dict, unsigned int idx) {
+    
+    if (layer_dict.activation == SIGMOID) {
+        activationFunctionsRef[idx] = SIGMOID;
+        activationFunctions[idx] = sigmoid;
+        activationDerivatives[idx] = sigmoidPrime;
+    } else if (layer_dict.activation == RELU) {
+        activationFunctionsRef[idx] = RELU;
+        activationFunctions[idx] = relu;
+        activationDerivatives[idx] = reluPrime;
+    } else if (layer_dict.activation == LEAKY_RELU) {
+        activationFunctionsRef[idx] = LEAKY_RELU;
+        activationFunctions[idx] = leakyrelu;
+        activationDerivatives[idx] = leakyreluPrime;
+    } else if (layer_dict.activation == ELU) {
+        activationFunctionsRef[idx] = ELU;
+        activationFunctions[idx] = elu;
+        activationDerivatives[idx] = eluPrime;
+    } else if (layer_dict.activation == TANH) {
+        activationFunctionsRef[idx] = TANH;
+        activationFunctions[idx] = tan_h;
+        activationDerivatives[idx] = tanhPrime;
+    } else if (layer_dict.activation == SOFTMAX) {
+        activationFunctionsRef[idx] = SOFTMAX;
+        activationFunctions[idx] = softmax;
+        activationDerivatives[idx] = NULL;
+    } else {
+        fprintf(stdout, "%s: activation function not given, default to sigmoid.\n", DEFAULT_CONSOLE_WRITER);
+        activationFunctionsRef[idx] = SIGMOID;
+        activationFunctions[idx] = sigmoid;
+        activationDerivatives[idx] = sigmoidPrime;
+    }
+}
+
+static void set_kernel_initializer(void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset),
+                                   layer_dict layer_dict, unsigned int idx) {
+    
+    if (layer_dict.kernel_initializer == NULL) {
+        fprintf(stdout, "%s: no initializer given to layer, default to standard nornmal distribution.\n", DEFAULT_CONSOLE_WRITER);
+        kernelInitializers[idx] = standard_normal_initializer;
+    } else {
+        kernelInitializers[idx] = layer_dict.kernel_initializer;
+    }
+}
+
+void set_feed(void * _Nonnull neural, unsigned int shape[_Nonnull 3], unsigned int dimension, unsigned int * _Nullable num_channels) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
@@ -18,60 +66,64 @@ void set_feed(void * _Nonnull neural, unsigned int nbNeurons) {
     if (nn->network_num_layers != 0) {
         fatal(DEFAULT_CONSOLE_WRITER, "network topolgy error. The feeding layer must be created first.");
     }
-    nn->dense->parameters->topology[nn->network_num_layers] = nbNeurons;
-    nn->network_num_layers++;
     
-    nn->num_channels = nbNeurons;
+    if (dimension == 1) {
+        if (nn->dense == NULL) {
+            fatal(DEFAULT_CONSOLE_WRITER, "feeding dimension equal to 1 must be used with a fully connected netwotk.");
+        }
+        nn->dense->parameters->topology[nn->network_num_layers] = shape[0];
+        nn->num_channels = shape[0];
+    } else if (dimension == 2 || dimension == 3) {
+        if (num_channels == NULL) {
+            fatal(DEFAULT_CONSOLE_WRITER, "the nunber of channels must be provided for feeding dimension higher than 2.");
+        }
+        if (dimension == 2) {
+            if (nn->conv2d == NULL) {
+                fatal(DEFAULT_CONSOLE_WRITER, "feeding dimension >=2 must be used with a convolutional netwotk.");
+            }
+            nn->conv2d->parameters->topology[nn->network_num_layers][0] = FEED;
+            nn->conv2d->parameters->topology[nn->network_num_layers][1] = 1;
+            nn->conv2d->parameters->topology[nn->network_num_layers][2] = shape[0];
+            nn->conv2d->parameters->topology[nn->network_num_layers][3] = shape[1];
+            nn->num_channels = shape[0] * shape[1] * (*num_channels);
+        } else {
+            //TODO: needs implementation
+            fatal(DEFAULT_CONSOLE_WRITER, "3D convolution is not supported yet.");
+            //nn->num_channels = shape[0] * shape[1] * shape[2] * (*num_channels);
+        }
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "imput dimension in network feeding not supported. Must be 1, 2 or 3.");
+    }
+    nn->network_num_layers++;
 }
 
-void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, layer_dict layer_dict, regularizer_dict * _Nullable regularizer) {
+void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regularizer) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
     
-    nn->dense->parameters->topology[nn->network_num_layers] = nbNeurons;
-    nn->network_num_layers++;;
-    
-    if (layer_dict.activation == SIGMOID) {
-        nn->activationFunctionsRef[nn->num_activation_functions] = SIGMOID;
-        nn->dense->activationFunctions[nn->num_activation_functions] = sigmoid;
-        nn->dense->activationDerivatives[nn->num_activation_functions] = sigmoidPrime;
-    } else if (layer_dict.activation == RELU) {
-        nn->activationFunctionsRef[nn->num_activation_functions] = RELU;
-        nn->dense->activationFunctions[nn->num_activation_functions] = relu;
-        nn->dense->activationDerivatives[nn->num_activation_functions] = reluPrime;
-    } else if (layer_dict.activation == LEAKY_RELU) {
-        nn->activationFunctionsRef[nn->num_activation_functions] = LEAKY_RELU;
-        nn->dense->activationFunctions[nn->num_activation_functions] = leakyrelu;
-        nn->dense->activationDerivatives[nn->num_activation_functions] = leakyreluPrime;
-    } else if (layer_dict.activation == ELU) {
-        nn->activationFunctionsRef[nn->num_activation_functions] = ELU;
-        nn->dense->activationFunctions[nn->num_activation_functions] = elu;
-        nn->dense->activationDerivatives[nn->num_activation_functions] = eluPrime;
-    } else if (layer_dict.activation == TANH) {
-        nn->activationFunctionsRef[nn->num_activation_functions] = TANH;
-        nn->dense->activationFunctions[nn->num_activation_functions] = tan_h;
-        nn->dense->activationDerivatives[nn->num_activation_functions] = tanhPrime;
-    } else if (layer_dict.activation == SOFTMAX) {
-        nn->activationFunctionsRef[nn->num_activation_functions] = SOFTMAX;
-        nn->dense->activationFunctions[nn->num_activation_functions] = softmax;
-        nn->dense->activationDerivatives[nn->num_activation_functions] = NULL;
-    } else {
-        fprintf(stdout, "%s: activation fucntion for layer %d not given, default to sigmoid.\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
-        nn->activationFunctionsRef[nn->num_activation_functions] = SIGMOID;
-        nn->dense->activationFunctions[nn->num_activation_functions] = sigmoid;
-        nn->dense->activationDerivatives[nn->num_activation_functions] = sigmoidPrime;
+    if (nn->is_dense_network) {
+        nn->dense->parameters->topology[nn->network_num_layers] = layer_dict.num_neurons;
+        
+        // The activation function for this layer
+        set_activation_function(nn->activationFunctionsRef, nn->dense->activationFunctions, nn->dense->activationDerivatives, layer_dict, nn->num_activation_functions);
+        
+        // The kernel initializer for this layer
+        set_kernel_initializer(nn->dense->kernelInitializers, layer_dict, nn->dense->num_dense_layers);
+        nn->dense->num_dense_layers++;
+      
+    } else if (nn->is_conv2d_network) {
+        nn->conv2d->parameters->topology[nn->network_num_layers][0] = FULLY_CONNECTED;
+        nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.num_neurons;
+        
+        set_activation_function(nn->activationFunctionsRef, nn->conv2d->activationFunctions, nn->conv2d->activationDerivatives, layer_dict, nn->num_activation_functions);
+        
+        set_kernel_initializer(nn->conv2d->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
+        nn->conv2d->num_dense_layers++;
     }
-    
-    if (layer_dict.kernel_initializer == NULL) {
-        fprintf(stdout, "%s: no initializer given to layer, default to standard nornmal distribution.\n", DEFAULT_CONSOLE_WRITER);
-        nn->dense->kernelInitializers[nn->dense->num_dense_layers] = standard_normal_initializer;
-    } else {
-        nn->dense->kernelInitializers[nn->dense->num_dense_layers] = layer_dict.kernel_initializer;
-    }
-    nn->dense->num_dense_layers++;
+    nn->network_num_layers++;
     
     // Add the regularizer if given
     if (regularizer != NULL) {
@@ -82,11 +134,141 @@ void set_layer_dense(void * _Nonnull neural, unsigned int nbNeurons, layer_dict 
     nn->num_activation_functions++;
 }
 
+void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regulaizer) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
+        fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
+    
+    // Compute the size of each feature map using the kernel sizes, the strides and
+    // whether padding is used
+    if (layer_dict.padding == NO_PADDING) {
+        int pos = 0;
+        int map_size_x = 1; // First neuron in map layer (horizontal)
+        int map_size_y = 1; // First neuron in map layer (vertical)
+
+        // The input dimensions are defined by the previous layer
+        int input_size_x = nn->conv2d->parameters->topology[nn->network_num_layers-1][2];
+        int input_size_y = nn->conv2d->parameters->topology[nn->network_num_layers-1][3];
+        
+        // Horizontal
+        while (1) {
+            pos += layer_dict.strides[0];
+            if ((pos+layer_dict.kernel_size[0]) > input_size_x) {
+                break;
+            } else map_size_x++;
+        }
+        
+        // Vertical
+        pos = 0;
+        while (1) {
+            pos += layer_dict.strides[1];
+            if ((pos+layer_dict.kernel_size[1]) > input_size_y) {
+                break;
+            } else map_size_y++;
+        }
+        
+        nn->conv2d->parameters->topology[nn->network_num_layers][0] = CONVOLUTION;
+        nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.filters;
+        nn->conv2d->parameters->topology[nn->network_num_layers][2] = map_size_x;
+        nn->conv2d->parameters->topology[nn->network_num_layers][3] = map_size_y;
+        nn->conv2d->parameters->topology[nn->network_num_layers][4] = layer_dict.kernel_size[0];
+        nn->conv2d->parameters->topology[nn->network_num_layers][5] = layer_dict.kernel_size[1];
+        nn->network_num_layers++;
+        
+    } else if (layer_dict.padding == ZERO_PADDING) {
+        fatal(DEFAULT_CONSOLE_WRITER, "zero padding is not implemented yet.");
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "unrecognized paddding option.");
+    }
+    
+    // The kernel initializer for this layer
+    set_kernel_initializer(nn->conv2d->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
+    nn->conv2d->num_conv2d_layers++;
+    
+    // The activation function for this layer
+    set_activation_function(nn->activationFunctionsRef, nn->conv2d->activationFunctions, nn->conv2d->activationDerivatives, layer_dict, nn->num_activation_functions);
+    
+    // Add the regularizer if given
+    if (regulaizer != NULL) {
+        nn->conv2d->parameters->lambda = regulaizer->regularization_factor;
+        nn->regularizer[nn->num_activation_functions] = regulaizer->regularizer_func;
+    } else nn->regularizer[nn->num_activation_functions] = nn->l0_regularizer;
+    
+    nn->num_activation_functions++;
+}
+
+void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
+    
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
+    fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
+    
+    if (layer_dict.padding == NO_PADDING) {
+        int pos = 0;
+        int pool_size_x = 1; // First neuron in pool layer (horizontal)
+        int pool_size_y = 1; // First neuron in pool layer (vertical)
+        
+        // The input dimensions are defined by the previous layer
+        int input_size_x = nn->conv2d->parameters->topology[nn->network_num_layers-1][2];
+        int input_size_y = nn->conv2d->parameters->topology[nn->network_num_layers-1][3];
+        
+        // Horizontal
+        while (1) {
+            pos = pos + (layer_dict.strides[0]+layer_dict.kernel_size[0]-1);
+            if ((pos+layer_dict.kernel_size[0]) > input_size_x) {
+                break;
+            } else pool_size_x++;
+        }
+        
+        // Vertical
+        pos = 0;
+        while (1) {
+            pos = pos + (layer_dict.strides[1]+layer_dict.kernel_size[1]-1);
+            if ((pos+layer_dict.kernel_size[1]) > input_size_y) {
+                break;
+            } else pool_size_y++;
+        }
+        
+        nn->conv2d->parameters->topology[nn->network_num_layers][0] = POOLING;
+        nn->conv2d->parameters->topology[nn->network_num_layers][1] = nn->conv2d->parameters->topology[nn->network_num_layers-1][1];
+        nn->conv2d->parameters->topology[nn->network_num_layers][2] = pool_size_x;
+        nn->conv2d->parameters->topology[nn->network_num_layers][3] = pool_size_y;
+        nn->conv2d->parameters->topology[nn->network_num_layers][4] = layer_dict.kernel_size[0];
+        nn->conv2d->parameters->topology[nn->network_num_layers][5] = layer_dict.kernel_size[1];
+        nn->network_num_layers++;
+        
+    } else if (layer_dict.padding == ZERO_PADDING) {
+        fatal(DEFAULT_CONSOLE_WRITER, "zero padding is not implemented yet.");
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "unrecognized paddding option.");
+    }
+    
+    // The pooling operation
+    if (layer_dict.pooling_op == MAX_POOLING) {
+        nn->conv2d->poolingOps[nn->conv2d->num_pooling_layers] = nn->max_pool;
+    } else if (layer_dict.pooling_op == L2_POOLING) {
+        nn->conv2d->poolingOps[nn->conv2d->num_pooling_layers] = nn->l2_pool;
+    } else if (layer_dict.pooling_op == AVERAGE_POOLING) {
+        nn->conv2d->poolingOps[nn->conv2d->num_pooling_layers] = nn->average_pool;
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "unrecognized pooling operation.");
+    }
+}
+
 void set_split(void * _Nonnull neural, int n1, int n2) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    nn->dense->parameters->split[0] = n1;
-    nn->dense->parameters->split[1] = n2;
+    
+    if (nn->is_dense_network) {
+        nn->dense->parameters->split[0] = n1;
+        nn->dense->parameters->split[1] = n2;
+    } else if (nn->is_conv2d_network) {
+        nn->conv2d->parameters->split[0] = n1;
+        nn->conv2d->parameters->split[1] = n2;
+    }
 }
 
 void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
@@ -101,9 +283,15 @@ void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     if (n >= MAX_NUMBER_NETWORK_LAYERS) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying vector in constructor");
-    memcpy(nn->dense->parameters->classifications, vector, n*sizeof(int));
-    nn->dense->parameters->numberOfClassifications = n;
+    if (nn->is_dense_network) {
+        memcpy(nn->dense->parameters->classifications, vector, n*sizeof(int));
+        nn->dense->parameters->numberOfClassifications = n;
+    } else if (nn->is_conv2d_network) {
+        memcpy(nn->conv2d->parameters->classifications, vector, n*sizeof(int));
+        nn->conv2d->parameters->numberOfClassifications = n;
+    }
 }
+
 
 void set_scalars(void * _Nonnull neural, scalar_dict scalars) {
     
@@ -135,8 +323,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
         nn->dense->train->ada_grad->learning_rate = optimizer_dict.learning_rate;
         nn->dense->train->ada_grad->delta = optimizer_dict.delta;
         nn->dense->parameters->eta = optimizer_dict.learning_rate;;
-        nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
-        nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = NULL;
         nn->dense->train->ada_grad->minimize = adamOptimizer;
         optimizer = (void *)nn->dense->train->ada_grad;
     } else if (strcmp(optimizer_dict.optimizer, "rmsprop") == 0) {
@@ -145,8 +333,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
         nn->dense->train->rms_prop->decayRate = optimizer_dict.decay_rate1;
         nn->dense->train->rms_prop->delta = optimizer_dict.delta;
         nn->dense->parameters->eta = optimizer_dict.learning_rate;
-        nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
-        nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = NULL;
+        nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = NULL;
         nn->dense->train->rms_prop->minimize = rmsPropOptimizer;
         optimizer = (void *)nn->dense->train->rms_prop;
     } else if (strcmp(optimizer_dict.optimizer, "adam") == 0) {
@@ -157,10 +345,10 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
         nn->dense->train->adam->decayRate2 = optimizer_dict.decay_rate2;
         nn->dense->train->adam->delta = optimizer_dict.delta;
         nn->dense->parameters->eta = optimizer_dict.step_size;
-        nn->dense->train->adam->weightsBiasedFirstMomentEstimate = NULL;
-        nn->dense->train->adam->weightsBiasedSecondMomentEstimate = NULL;
-        nn->dense->train->adam->biasesBiasedFirstMomentEstimate = NULL;
-        nn->dense->train->adam->biasesBiasedSecondMomentEstimate = NULL;
+        nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate = NULL;
+        nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate = NULL;
+        nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
+        nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
         nn->dense->train->adam->minimize = adamOptimizer;
         optimizer = (void *)nn->dense->train->adam;
     } else {
@@ -176,9 +364,13 @@ networkConstructor * _Nonnull allocateConstructor(void) {
     constructor->networkConstruction = false;
     constructor->feed = set_feed;
     constructor->layer_dense = set_layer_dense;
+    constructor->layer_conv2d = set_layer_conv2d;
+    constructor->layer_pool = set_layer_pool;
+    
     constructor->split = set_split;
     constructor->training_data = set_training_data;
     constructor->classification = set_classification;
+    
     constructor->scalars = set_scalars;
     constructor->optimizer = set_optimizer;
     return constructor;

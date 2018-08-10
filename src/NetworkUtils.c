@@ -100,7 +100,7 @@ void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l
     tensor *tensor_object = (tensor *)kernel;
     
     if (tensor_object->rank == 1 || tensor_object->rank == 3 || tensor_object->rank == 5) {
-        fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only available for 2D and 4D tensors (aka fully-connected and convolution layers).");
+        fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only available for 2D and 4D tensors (aka fully connected and convolution layers).");
     }
     
     // The last two dimensions define the right most increments
@@ -415,8 +415,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->ada_grad->learning_rate = result[0];
                 nn->dense->train->ada_grad->delta = result[1];
                 nn->dense->parameters->eta = result[0];
-                nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->ada_grad->minimize = adamOptimizer;
                 FOUND_OPTIMIZER = 1;
             
@@ -430,8 +430,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->rms_prop->decayRate = result[1];
                 nn->dense->train->rms_prop->delta = result[2];
                 nn->dense->parameters->eta = result[0];
-                nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->rms_prop->minimize = rmsPropOptimizer;
                 FOUND_OPTIMIZER = 1;
             
@@ -447,10 +447,10 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->adam->decayRate2 = result[2];
                 nn->dense->train->adam->delta = result[3];
                 nn->dense->parameters->eta = result[0];
-                nn->dense->train->adam->weightsBiasedFirstMomentEstimate = NULL;
-                nn->dense->train->adam->weightsBiasedSecondMomentEstimate = NULL;
-                nn->dense->train->adam->biasesBiasedFirstMomentEstimate = NULL;
-                nn->dense->train->adam->biasesBiasedSecondMomentEstimate = NULL;
+                nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate = NULL;
+                nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate = NULL;
+                nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
+                nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
                 nn->dense->train->adam->minimize = adamOptimizer;
                 FOUND_OPTIMIZER = 1;
             }

@@ -11,6 +11,26 @@
 
 #include "NetworkUtils.h"
 
+typedef struct dense {
+    tensor * _Nullable costWeightDerivativeSquaredAccumulated;
+    tensor * _Nullable costBiasDerivativeSquaredAccumulated;
+    
+    tensor * _Nullable weightsBiasedFirstMomentEstimate;
+    tensor * _Nullable weightsBiasedSecondMomentEstimate;
+    tensor * _Nullable biasesBiasedFirstMomentEstimate;
+    tensor * _Nullable biasesBiasedSecondMomentEstimate;
+} dense;
+
+typedef struct conv2d {
+    tensor * _Nullable costWeightDerivativeSquaredAccumulated;
+    tensor * _Nullable costBiasDerivativeSquaredAccumulated;
+    
+    tensor * _Nullable weightsBiasedFirstMomentEstimate;
+    tensor * _Nullable weightsBiasedSecondMomentEstimate;
+    tensor * _Nullable biasesBiasedFirstMomentEstimate;
+    tensor * _Nullable biasesBiasedSecondMomentEstimate;
+} conv2d;
+
 typedef struct GradientDescentOptimizer {
     float learning_rate;
     void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
@@ -25,8 +45,8 @@ typedef struct MomentumOptimizer {
 typedef struct AdaGradOptimizer {
     float learning_rate;
     float delta;
-    tensor * _Nullable costWeightDerivativeSquaredAccumulated;
-    tensor * _Nullable costBiasDerivativeSquaredAccumulated;
+    dense * _Nullable dense;
+    conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } AdaGradOptimizer;
 
@@ -34,8 +54,8 @@ typedef struct RMSPropOptimizer {
     float learning_rate;
     float delta;
     float decayRate;
-    tensor * _Nullable costWeightDerivativeSquaredAccumulated;
-    tensor * _Nullable costBiasDerivativeSquaredAccumulated;
+    dense * _Nullable dense;
+    conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } RMSPropOptimizer;
 
@@ -45,10 +65,8 @@ typedef struct AdamOptimizer {
     float delta;
     float decayRate1;
     float decayRate2;
-    tensor * _Nullable weightsBiasedFirstMomentEstimate;
-    tensor * _Nullable weightsBiasedSecondMomentEstimate;
-    tensor * _Nullable biasesBiasedFirstMomentEstimate;
-    tensor * _Nullable biasesBiasedSecondMomentEstimate;
+    dense * _Nullable dense;
+    conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
 } AdamOptimizer;
 

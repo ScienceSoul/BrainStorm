@@ -151,12 +151,14 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)] = nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)] + ( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
+                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)] = nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)] +
+                ( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
             }
         }
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                coeff[i][j] = -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)])) ) * ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)] );
+                coeff[i][j] = -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)])) ) *
+                ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)] );
             }
         }
         
@@ -177,10 +179,12 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
         float coeff[n];
         
         for (int i=0; i<n; i++) {
-            nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated->val[stride+i] = nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated->val[stride+i] + ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
+            nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[stride+i] = nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[stride+i] +
+            ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
         }
         for (int i=0; i<n; i++) {
-            coeff[i] = -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->costBiasDerivativeSquaredAccumulated->val[stride+i])) ) * ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
+            coeff[i] = -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[stride+i])) ) *
+            ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
         }
         
         for (int i=0; i<n; i++) {
@@ -210,13 +214,14 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)] = (nn->dense->train->rms_prop->decayRate*nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)])
-                + (1.0f-nn->dense->train->rms_prop->decayRate)*( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
+                nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)] = (nn->dense->train->rms_prop->decayRate*nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)]) +
+                (1.0f-nn->dense->train->rms_prop->decayRate)*( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
             }
         }
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                coeff[i][j] = -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)])) ) * ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)] );
+                coeff[i][j] = -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[stride+((i*n)+j)])) ) *
+                ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)] );
             }
         }
 
@@ -238,11 +243,12 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
         float coeff[n];
         
         for (int i=0; i<n; i++) {
-            nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated->val[stride+i] = (nn->dense->train->rms_prop->decayRate*nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated->val[stride+i])
-            + (1.0-nn->dense->train->rms_prop->decayRate)*( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
+            nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[stride+i] = (nn->dense->train->rms_prop->decayRate*nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[stride+i]) +
+            (1.0-nn->dense->train->rms_prop->decayRate)*( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
         }
         for (int i=0; i<n; i++) {
-            coeff[i] = -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->costBiasDerivativeSquaredAccumulated->val[stride+i])) ) * ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
+            coeff[i] = -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[stride+i])) ) *
+            ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
         }
         
         for (int i=0; i<n; i++) {
@@ -276,14 +282,16 @@ void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_bat
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 // Update biased first moment estimate
-                nn->dense->train->adam->weightsBiasedFirstMomentEstimate->val[stride+((i*n)+j)] = (nn->dense->train->adam->decayRate1*nn->dense->train->adam->weightsBiasedFirstMomentEstimate->val[stride+((i*n)+j)]) + (1.0f-nn->dense->train->adam->decayRate1)*( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
+                nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate->val[stride+((i*n)+j)] = (nn->dense->train->adam->decayRate1*nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate->val[stride+((i*n)+j)]) +
+                (1.0f-nn->dense->train->adam->decayRate1)*( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
                 // Update biased second moment estimate
-                nn->dense->train->adam->weightsBiasedSecondMomentEstimate->val[stride+((i*n)+j)] = (nn->dense->train->adam->decayRate2*nn->dense->train->adam->weightsBiasedSecondMomentEstimate->val[stride+((i*n)+j)]) + (1.0f-nn->dense->train->adam->decayRate2)*( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
+                nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate->val[stride+((i*n)+j)] = (nn->dense->train->adam->decayRate2*nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate->val[stride+((i*n)+j)]) +
+                (1.0f-nn->dense->train->adam->decayRate2)*( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)]) );
                 
                 // Correct bias in first moment
-                s_hat[i][j] = nn->dense->train->adam->weightsBiasedFirstMomentEstimate->val[stride+((i*n)+j)] / (1.0f - powf(nn->dense->train->adam->decayRate1, (float)nn->dense->train->adam->time));
+                s_hat[i][j] = nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate->val[stride+((i*n)+j)] / (1.0f - powf(nn->dense->train->adam->decayRate1, (float)nn->dense->train->adam->time));
                 // Correct bias in second moment
-                r_hat[i][j] = nn->dense->train->adam->weightsBiasedSecondMomentEstimate->val[stride+((i*n)+j)] / (1.0f - powf(nn->dense->train->adam->decayRate2, (float)nn->dense->train->adam->time));
+                r_hat[i][j] = nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate->val[stride+((i*n)+j)] / (1.0f - powf(nn->dense->train->adam->decayRate2, (float)nn->dense->train->adam->time));
             }
         }
         for (int i=0; i<m; i++) {
@@ -312,14 +320,16 @@ void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_bat
         float r_hat[n];
         for (int i=0; i<n; i++) {
             // Update biased first moment estimate
-            nn->dense->train->adam->biasesBiasedFirstMomentEstimate->val[stride+i] = (nn->dense->train->adam->decayRate1*nn->dense->train->adam->biasesBiasedFirstMomentEstimate->val[stride+i]) + (1.0-nn->dense->train->adam->decayRate1)*( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
+            nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate->val[stride+i] = (nn->dense->train->adam->decayRate1*nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate->val[stride+i]) +
+            (1.0-nn->dense->train->adam->decayRate1)*( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
             // Update biased second moment estimate
-            nn->dense->train->adam->biasesBiasedSecondMomentEstimate->val[stride+i] = (nn->dense->train->adam->decayRate2*nn->dense->train->adam->biasesBiasedSecondMomentEstimate->val[stride+i]) + (1.0-nn->dense->train->adam->decayRate2)*( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
+            nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate->val[stride+i] = (nn->dense->train->adam->decayRate2*nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate->val[stride+i]) +
+            (1.0-nn->dense->train->adam->decayRate2)*( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i]) );
             
             // Correct bias in first moment
-            s_hat[i] = nn->dense->train->adam->biasesBiasedFirstMomentEstimate->val[stride+i] / (1.0f - powf(nn->dense->train->adam->decayRate1, (float)nn->dense->train->adam->time));
+            s_hat[i] = nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate->val[stride+i] / (1.0f - powf(nn->dense->train->adam->decayRate1, (float)nn->dense->train->adam->time));
             // Correct bias in second moment
-            r_hat[i] = nn->dense->train->adam->biasesBiasedSecondMomentEstimate->val[stride+i] / (1.0f - powf(nn->dense->train->adam->decayRate2, (float)nn->dense->train->adam->time));
+            r_hat[i] = nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate->val[stride+i] / (1.0f - powf(nn->dense->train->adam->decayRate2, (float)nn->dense->train->adam->time));
         }
         for (int i=0; i<n; i++) {
             coeff[i] = -nn->dense->train->adam->stepSize*( s_hat[i] / (sqrtf(r_hat[i]+nn->dense->train->adam->delta)) );

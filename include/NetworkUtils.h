@@ -13,13 +13,31 @@
 #include "Utils.h"
 
 typedef enum activation_functions {
-    SIGMOID=1,     // Logistic sigmoid
-    RELU,          // Rectified linear unit
-    LEAKY_RELU,    // Leaky ReLU
-    ELU,           // Exponential linear unit
-    TANH,          // Hyperbolic tangent
-    SOFTMAX        // Softmax
+    SIGMOID=1,            // Logistic sigmoid
+    RELU,                 // Rectified linear unit
+    LEAKY_RELU,           // Leaky ReLU
+    ELU,                  // Exponential linear unit
+    TANH,                 // Hyperbolic tangent
+    SOFTMAX               // Softmax
 } activation_functions;
+
+typedef enum convlution_layer_types {
+    FEED=1,
+    CONVOLUTION,
+    POOLING,
+    FULLY_CONNECTED,
+} convlution_layers_type;
+
+typedef enum conv2d_padding {
+    NO_PADDING=1,
+    ZERO_PADDING
+} conv2d_padding;
+
+typedef enum pooling_ops {
+    MAX_POOLING=1,
+    L2_POOLING,
+    AVERAGE_POOLING
+} pooling_ops;
 
 typedef struct tensor {
     float * _Nullable val;

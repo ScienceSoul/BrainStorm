@@ -49,16 +49,54 @@ typedef struct dense_network {
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
 } dense_network;
 
+typedef struct conv2d_network {
+    unsigned int num_conv2d_layers;
+    unsigned int num_dense_layers;
+    unsigned int num_pooling_layers;
+    
+    tensor * _Nullable conv_weights;
+    tensor * _Nullable conv_weightsVelocity;
+    tensor * _Nullable conv_biases;
+    tensor * _Nullable conv_biasesVelocity;
+    tensor * _Nullable conv_activations;
+    tensor * _Nullable conv_affineTransformations;
+    tensor * _Nullable conv_costWeightDerivatives;
+    tensor * _Nullable conv_costBiasDerivatives;
+    tensor * _Nullable conv_batchCostWeightDeriv;
+    tensor * _Nullable conv_batchCostBiasDeriv;
+    
+    tensor * _Nullable dense_weights;
+    tensor * _Nullable dense_weightsVelocity;
+    tensor * _Nullable dense_biases;
+    tensor * _Nullable dense_biasesVelocity;
+    tensor * _Nullable dense_activations;
+    tensor * _Nullable dense_affineTransformations;
+    tensor * _Nullable dense_costWeightDerivatives;
+    tensor * _Nullable dense_costBiasDerivatives;
+    tensor * _Nullable dense_batchCostWeightDeriv;
+    tensor * _Nullable dense_batchCostBiasDeriv;
+    
+    conv2d_net_parameters * _Nullable parameters;
+    Train * _Nullable train;
+    
+    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset);
+    float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
+    float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
+    void (* _Nonnull poolingOps[MAX_NUMBER_NETWORK_LAYERS])(void);
+} conv2d_network;
+
 typedef struct NeuralNetwork {
     
     data * _Nullable data;
     networkConstructor * _Nullable constructor;
+    
     dense_network * _Nullable dense;
+    conv2d_network * _Nullable conv2d;
+    
     MetalCompute * _Nullable gpu;
     float * _Nullable * _Nullable batch;
     
     unsigned int network_num_layers;       // Total number of layers in the network from input to output
-    unsigned int num_conv2d_layers;        // Number of 2D convolutional layers
     unsigned int num_activation_functions; // Number of activation functions used by the network
     unsigned int num_channels;
     int example_idx;
@@ -85,13 +123,19 @@ typedef struct NeuralNetwork {
     // Function pointer to math ops
     float (* _Nullable math_ops)(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
     
-    // Function pointer to prediction evaluator
+    // Function pointers to prediction evaluator
     void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
     float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
+    
+    // Function pointers to pooling methods
+    void (* _Nullable max_pool)(void);
+    void (* _Nullable l2_pool)(void);
+    void (* _Nullable average_pool)(void);
     
 } NeuralNetwork;
 
 NeuralNetwork * _Nonnull new_dense_net(void);
+NeuralNetwork * _Nonnull new_conv2d_net(void);
 
 #endif /* NeuralNetwork_h */
 
