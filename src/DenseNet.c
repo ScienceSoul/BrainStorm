@@ -215,17 +215,6 @@ void dense_net_finale(void * _Nonnull  self) {
         free(nn->dense->weights->val);
         free(nn->dense->weights);
     }
-    if (nn->dense->train->momentum != NULL) {
-        if (nn->dense->weightsVelocity != NULL) {
-            free(nn->dense->weightsVelocity->val);
-            free(nn->dense->weightsVelocity);
-        }
-        if (nn->dense->biasesVelocity != NULL) {
-            free(nn->dense->biasesVelocity->val);
-            free(nn->dense->biasesVelocity);
-        }
-        free(nn->dense->train->momentum);
-    }
     if (nn->dense->biases != NULL) {
         free(nn->dense->biases->val);
         free(nn->dense->biases);
@@ -254,8 +243,25 @@ void dense_net_finale(void * _Nonnull  self) {
         free(nn->dense->batchCostBiasDeriv->val);
         free(nn->dense->batchCostBiasDeriv);
     }
+    
+    // ------------------------------------------------------------------------
+    // ------- Free up the optimizer
+    // ------------------------------------------------------------------------
+    
     if (nn->dense->train->gradient_descent != NULL) {
         free(nn->dense->train->gradient_descent);
+    }
+    
+    if (nn->dense->train->momentum != NULL) {
+        if (nn->dense->weightsVelocity != NULL) {
+            free(nn->dense->weightsVelocity->val);
+            free(nn->dense->weightsVelocity);
+        }
+        if (nn->dense->biasesVelocity != NULL) {
+            free(nn->dense->biasesVelocity->val);
+            free(nn->dense->biasesVelocity);
+        }
+        free(nn->dense->train->momentum);
     }
     
     if (nn->dense->train->ada_grad != NULL) {

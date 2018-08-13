@@ -40,6 +40,12 @@ void create_conv2d_net(void * _Nonnull self) {
         .dense_batchCostBiasDeriv=NULL
     };
     
+    nn->conv2d->train = (Train *)malloc(sizeof(Train));
+    *(nn->conv2d->train) = (Train){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
+    nn->conv2d->train->next_batch = nextBatch;
+    nn->conv2d->train->batch_range = batchRange;
+    nn->conv2d->train->progression = progression;
+    
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
         nn->conv2d->activationFunctions[i] = NULL;
         nn->conv2d->activationDerivatives[i] = NULL;
@@ -48,6 +54,8 @@ void create_conv2d_net(void * _Nonnull self) {
     }
     
     nn->conv2d->parameters = (conv2d_net_parameters *)malloc(sizeof(conv2d_net_parameters));
+    nn->conv2d->parameters->eta = 0.0f;
+    nn->conv2d->parameters->lambda = 0.0f;
     nn->conv2d->parameters->numberOfClassifications = 0;
     memset(nn->conv2d->parameters->topology, 0, sizeof(nn->dense->parameters->topology));
     memset(nn->conv2d->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
@@ -383,17 +391,6 @@ void conv2d_net_finale(void * _Nonnull self) {
         free(nn->conv2d->conv_weights->val);
         free(nn->conv2d->conv_weights);
     }
-    if (nn->conv2d->train->momentum != NULL) {
-        if (nn->conv2d->conv_weightsVelocity != NULL) {
-            free(nn->conv2d->conv_weightsVelocity->val);
-            free(nn->conv2d->conv_weightsVelocity);
-        }
-        if (nn->conv2d->conv_biasesVelocity != NULL) {
-            free(nn->conv2d->conv_biasesVelocity->val);
-            free(nn->conv2d->conv_biasesVelocity);
-        }
-        free(nn->conv2d->train->momentum);
-    }
     
     if (nn->conv2d->conv_biases != NULL) {
         free(nn->conv2d->conv_biases->val);
@@ -430,24 +427,146 @@ void conv2d_net_finale(void * _Nonnull self) {
         free(nn->conv2d->conv_batchCostBiasDeriv);
     }
     
+    // ------------------------------------------------------------------------
+    // ------- Free up the fully connected layers
+    // ------------------------------------------------------------------------
+    
+    if (nn->conv2d->dense_weights != NULL) {
+        free(nn->conv2d->dense_weights->val);
+        free(nn->conv2d->dense_weights);
+    }
+    if (nn->conv2d->dense_biases != NULL) {
+        free(nn->conv2d->dense_biases->val);
+        free(nn->conv2d->dense_biases);
+    }
+    if (nn->conv2d->dense_activations != NULL) {
+        free(nn->conv2d->dense_activations->val);
+        free(nn->conv2d->dense_activations);
+    }
+    if (nn->conv2d->dense_affineTransformations != NULL) {
+        free(nn->conv2d->dense_affineTransformations->val);
+        free(nn->conv2d->dense_affineTransformations);
+    }
+    if (nn->conv2d->dense_costWeightDerivatives != NULL) {
+        free(nn->conv2d->dense_costWeightDerivatives->val);
+        free(nn->conv2d->dense_costWeightDerivatives);
+    }
+    if (nn->conv2d->dense_costBiasDerivatives != NULL) {
+        free(nn->conv2d->dense_costBiasDerivatives->val);
+        free(nn->conv2d->dense_costBiasDerivatives);
+    }
+    if (nn->conv2d->dense_batchCostWeightDeriv != NULL) {
+        free(nn->conv2d->dense_batchCostWeightDeriv->val);
+        free(nn->conv2d->dense_batchCostWeightDeriv);
+    }
+    if (nn->conv2d->dense_batchCostBiasDeriv != NULL) {
+        free(nn->conv2d->dense_batchCostBiasDeriv->val);
+        free(nn->conv2d->dense_batchCostBiasDeriv);
+    }
+    
+    // ------------------------------------------------------------------------
+    // ------- Free up the optimizer
+    // ------------------------------------------------------------------------
+    
     if (nn->conv2d->train->gradient_descent != NULL) {
         free(nn->conv2d->train->gradient_descent);
     }
     
-    // Continue here....
+    if (nn->conv2d->train->momentum != NULL) {
+        if (nn->conv2d->conv_weightsVelocity != NULL) {
+            free(nn->conv2d->conv_weightsVelocity->val);
+            free(nn->conv2d->conv_weightsVelocity);
+        }
+        if (nn->conv2d->conv_biasesVelocity != NULL) {
+            free(nn->conv2d->conv_biasesVelocity->val);
+            free(nn->conv2d->conv_biasesVelocity);
+        }
+        if (nn->conv2d->dense_weightsVelocity != NULL) {
+            free(nn->conv2d->dense_weightsVelocity->val);
+            free(nn->conv2d->dense_weightsVelocity);
+        }
+        if (nn->conv2d->dense_biasesVelocity != NULL) {
+            free(nn->conv2d->dense_biasesVelocity->val);
+            free(nn->conv2d->dense_biasesVelocity);
+        }
+        free(nn->conv2d->train->momentum);
+    }
     
+    if (nn->conv2d->train->ada_grad != NULL) {
+        if (nn->conv2d->train->ada_grad->conv2d->costWeightDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->ada_grad->conv2d->costWeightDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->ada_grad->conv2d->costWeightDerivativeSquaredAccumulated);
+        }
+        if (nn->conv2d->train->ada_grad->conv2d->costBiasDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->ada_grad->conv2d->costBiasDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->ada_grad->conv2d->costBiasDerivativeSquaredAccumulated);
+        }
+        if (nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated);
+        }
+        if (nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated);
+        }
+        free(nn->conv2d->train->ada_grad);
+    }
     
+    if (nn->conv2d->train->rms_prop != NULL) {
+        if (nn->conv2d->train->rms_prop->conv2d->costWeightDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->rms_prop->conv2d->costWeightDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->rms_prop->conv2d->costWeightDerivativeSquaredAccumulated);
+        }
+        if (nn->conv2d->train->rms_prop->conv2d->costBiasDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->rms_prop->conv2d->costBiasDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->rms_prop->conv2d->costBiasDerivativeSquaredAccumulated);
+        }
+        if (nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated);
+        }
+        if (nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated != NULL) {
+            free(nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val);
+            free(nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated);
+        }
+    }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    if (nn->conv2d->train->adam != NULL) {
+        if (nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate->val);
+            free(nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate);
+        }
+        if (nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate->val);
+            free(nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate);
+        }
+        if (nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate->val);
+            free(nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate);
+        }
+        if (nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate->val);
+            free(nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate);
+        }
+        
+        if (nn->conv2d->train->adam->dense->weightsBiasedFirstMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->dense->weightsBiasedFirstMomentEstimate->val);
+            free(nn->conv2d->train->adam->dense->weightsBiasedFirstMomentEstimate);
+        }
+        if (nn->conv2d->train->adam->dense->weightsBiasedSecondMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->dense->weightsBiasedSecondMomentEstimate->val);
+            free(nn->conv2d->train->adam->dense->weightsBiasedSecondMomentEstimate);
+        }
+        if (nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate->val);
+            free(nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate);
+        }
+        if (nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate != NULL) {
+            free(nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate->val);
+            free(nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate);
+        }
+        free(nn->conv2d->train->adam);
+    }
+    free(nn->conv2d->train);
+    free(nn->conv2d);
 }

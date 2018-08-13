@@ -9,9 +9,16 @@
 #include <stdio.h>
 #include "Optimizers.h"
 #include "NeuralNetwork.h"
-#include "NetworkOps.h"
+#include "DenseNetOps.h"
 
-void init(void *neural) {
+void (* _Nullable ptr_init_func)(void * _Nonnull neural) = NULL;
+void (* _Nullable ptr_gradient_descent_update_func)(void * _Nonnull  neural, unsigned int batch_size) = NULL;
+void (* _Nullable ptr_momentum_update_func)(void * _Nonnull  neural, unsigned int batch_size) = NULL;
+void (* _Nullable ptr_ada_grad_update_func)(void * _Nonnull  neural, unsigned int batch_size) = NULL;
+void (* _Nullable ptr_rms_prop_update_func)(void * _Nonnull  neural, unsigned int batch_size) = NULL;
+void (* _Nullable ptr_adam_update_func)(void * _Nonnull neural, unsigned int batch_size) = NULL;
+
+void init_in_dense_net(void * _Nonnull neural) {
 
     NeuralNetwork *nn = (NeuralNetwork *)neural;
     
@@ -38,15 +45,9 @@ void init(void *neural) {
     memset(nn->dense->batchCostBiasDeriv->val, 0.0f, tensor_length*sizeof(float));
 }
 
-void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void grad_descent_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    
-    nn->batch = mini_batch;
-    
-    init((void *)nn);
-    
-    miniBatchLoop((void *)nn, batch_size);
     
     // Update weights
     unsigned int stride = 0;
@@ -57,7 +58,7 @@ void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnul
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 nn->dense->weights->val[stride+((i*n)+j)] = nn->regularizer[l]((void *)nn, i, j, n, stride) -
-                     (nn->dense->train->gradient_descent->learning_rate/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)];
+                (nn->dense->train->gradient_descent->learning_rate/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)];
             }
         }
         stride = stride + (m * n);
@@ -73,17 +74,12 @@ void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnul
         }
         stride = stride + n;
     }
+    
 }
 
-void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void momentum_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    
-    nn->batch = mini_batch;
-    
-    init((void *)nn);
-    
-    miniBatchLoop((void *)nn, batch_size);
     
     // Update weights
     unsigned int stride = 0;
@@ -92,7 +88,6 @@ void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini
         unsigned int n = nn->dense->weights->shape[l][1][0];
         
         float coeff[m][n];
-        
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 coeff[i][j] = (nn->dense->train->momentum->learning_rate/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)];
@@ -102,9 +97,9 @@ void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 nn->dense->weightsVelocity->val[stride+((i*n)+j)] = nn->dense->train->momentum->momentum_coefficient *
-                                                 nn->dense->weightsVelocity->val[stride+((i*n)+j)] - coeff[i][j];
+                nn->dense->weightsVelocity->val[stride+((i*n)+j)] - coeff[i][j];
                 nn->dense->weights->val[stride+((i*n)+j)] = nn->regularizer[l]((void *)nn, i, j, n, stride) +
-                                                nn->dense->weightsVelocity->val[stride+((i*n)+j)];
+                nn->dense->weightsVelocity->val[stride+((i*n)+j)];
             }
         }
         stride = stride + (m * n);
@@ -115,31 +110,23 @@ void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini
     for (int l=0; l<nn->network_num_layers-1; l++) {
         unsigned int n = nn->dense->biases->shape[l][0][0];
         
-        // Adpative learning rate
         float coeff[n];
-        
         for (int i=0; i<n; i++) {
             coeff[i] = (nn->dense->train->momentum->learning_rate/(float)batch_size)*nn->dense->costBiasDerivatives->val[stride+i];
         }
         
         for (int i=0; i<n; i++) {
             nn->dense->biasesVelocity->val[stride+i] = nn->dense->train->momentum->momentum_coefficient *
-                                                nn->dense->biasesVelocity->val[stride+i] - coeff[i];
+            nn->dense->biasesVelocity->val[stride+i] - coeff[i];
             nn->dense->biases->val[stride+i] = nn->dense->biases->val[stride+i] + nn->dense->biasesVelocity->val[stride+i];
         }
         stride = stride + n;
     }
 }
 
-void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
- 
+void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
+    
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    
-    nn->batch = mini_batch;
-    
-    init((void *)nn);
-    
-    miniBatchLoop((void *)nn, batch_size);
     
     // Update weights
     unsigned int stride = 0;
@@ -165,7 +152,7 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 nn->dense->weights->val[stride+((i*n)+j)] = nn->regularizer[l]((void *)nn, i, j, n, stride) +
-                                                coeff[i][j];
+                coeff[i][j];
             }
         }
         stride = stride + (m * n);
@@ -175,7 +162,7 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     stride = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
         unsigned int n = nn->dense->biases->shape[l][0][0];
-
+        
         float coeff[n];
         
         for (int i=0; i<n; i++) {
@@ -194,15 +181,9 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     }
 }
 
-void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    
-    nn->batch = mini_batch;
-    
-    init((void *)nn);
-    
-    miniBatchLoop((void *)nn, batch_size);
     
     // Update weights
     unsigned int stride = 0;
@@ -224,11 +205,11 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
                 ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[stride+((i*n)+j)] );
             }
         }
-
+        
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 nn->dense->weights->val[stride+((i*n)+j)] = nn->regularizer[l]((void *)nn, i, j, n, stride) +
-                                                coeff[i][j];
+                coeff[i][j];
             }
         }
         stride = stride + (m * n);
@@ -258,15 +239,9 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     }
 }
 
-void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void adam_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
     
     NeuralNetwork *nn = (NeuralNetwork *)neural;
-    
-    nn->batch = mini_batch;
-    
-    init((void *)nn);
-    
-    miniBatchLoop((void *)nn, batch_size);
     
     // Update weights
     unsigned int stride = 0;
@@ -303,7 +278,7 @@ void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_bat
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 nn->dense->weights->val[stride+((i*n)+j)] = nn->regularizer[l]((void *)nn, i, j, n, stride) +
-                                                coeff[i][j];
+                coeff[i][j];
             }
         }
         stride = stride + (m * n);
@@ -340,4 +315,145 @@ void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_bat
         }
         stride = stride + n;
     }
+}
+
+
+void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+    
+    static bool  firstTime = true;
+    static ptr_inference_func inference = NULL;
+    static ptr_backpropag_func backpropagation = NULL;
+    static ptr_batch_accumul_func batch_accumulation = NULL;
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (firstTime) {
+        if (nn->is_dense_network) {
+            ptr_init_func = init_in_dense_net;
+            ptr_gradient_descent_update_func = grad_descent_update_in_dense_net;
+            inference = inference_in_dense_net;
+            backpropagation = backpropag_in_dense_net;
+            batch_accumulation = batch_accumulation_in_dense_net;
+        } else if (nn->is_conv2d_network) {
+            //TODO:
+        }
+        firstTime = false;
+    }
+    
+    nn->batch = mini_batch;
+    
+    ptr_init_func((void *)nn);
+    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    ptr_gradient_descent_update_func((void *)nn, batch_size);
+}
+
+void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+    
+    static bool firstTime = true;
+    static ptr_inference_func inference = NULL;
+    static ptr_backpropag_func backpropagation = NULL;
+    static ptr_batch_accumul_func batch_accumulation = NULL;
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (firstTime) {
+        if (nn->is_dense_network) {
+            ptr_init_func = init_in_dense_net;
+            ptr_momentum_update_func = momentum_update_in_dense_net;
+            inference = inference_in_dense_net;
+            backpropagation = backpropag_in_dense_net;
+            batch_accumulation = batch_accumulation_in_dense_net;
+        } else if (nn->is_conv2d_network) {
+            //TODO:
+        }
+        firstTime = false;
+    }
+    
+    nn->batch = mini_batch;
+    
+    ptr_init_func((void *)nn);
+    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    ptr_momentum_update_func((void *)nn, batch_size);
+}
+
+void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+ 
+    static bool firstTime = true;
+    static ptr_inference_func inference = NULL;
+    static ptr_backpropag_func backpropagation = NULL;
+    static ptr_batch_accumul_func batch_accumulation = NULL;
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (firstTime) {
+        if (nn->is_dense_network) {
+            ptr_init_func = init_in_dense_net;
+            ptr_ada_grad_update_func = ada_grad_update_in_dense_net;
+            inference = inference_in_dense_net;
+            backpropagation = backpropag_in_dense_net;
+            batch_accumulation = batch_accumulation_in_dense_net;
+        } else if (nn->is_conv2d_network) {
+            //TODO:
+        }
+        firstTime = false;
+    }
+    
+    nn->batch = mini_batch;
+    
+    ptr_init_func((void *)nn);
+    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    ptr_ada_grad_update_func((void *)neural, batch_size);
+}
+
+void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+    
+    static bool firstTime = true;
+    static ptr_inference_func inference = NULL;
+    static ptr_backpropag_func backpropagation = NULL;
+    static ptr_batch_accumul_func batch_accumulation = NULL;
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (firstTime) {
+        if (nn->is_dense_network) {
+            ptr_init_func = init_in_dense_net;
+            ptr_rms_prop_update_func = rms_prop_update_in_dense_net;
+            inference = inference_in_dense_net;
+            backpropagation = backpropag_in_dense_net;
+            batch_accumulation = batch_accumulation_in_dense_net;
+        } else if (nn->is_conv2d_network) {
+            //TODO:
+        }
+        firstTime = false;
+    }
+    
+    nn->batch = mini_batch;
+    
+    ptr_init_func((void *)nn);
+    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    ptr_rms_prop_update_func((void *)nn, batch_size);
+}
+
+void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+    
+    static bool firstTime = true;
+    static ptr_inference_func inference = NULL;
+    static ptr_backpropag_func backpropagation = NULL;
+    static ptr_batch_accumul_func batch_accumulation = NULL;
+    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    
+    if (firstTime) {
+        if (nn->is_dense_network) {
+            ptr_init_func = init_in_dense_net;
+            ptr_adam_update_func = adam_update_in_dense_net;
+            inference = inference_in_dense_net;
+            backpropagation = backpropag_in_dense_net;
+            batch_accumulation = batch_accumulation_in_dense_net;
+        } else if (nn->is_conv2d_network) {
+            //TODO:
+        }
+        firstTime = false;
+    }
+    
+    nn->batch = mini_batch;
+    
+    ptr_init_func((void *)nn);
+    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    ptr_adam_update_func((void *)nn, batch_size);
 }

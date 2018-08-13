@@ -23,11 +23,13 @@ static void initNeuralData(void * _Nonnull self) {
     
     nn->data->training = (training *)malloc(sizeof(training));
     nn->data->training->set = NULL;
+    nn->data->training->reader = NULL;
     nn->data->training->m = 0;
     nn->data->training->n = 0;
     
     nn->data->test = (test *)malloc(sizeof(test));
     nn->data->test->set = NULL;
+    nn->data->test->reader = NULL;
     nn->data->test->m = 0;
     nn->data->test->n = 0;
     
@@ -134,7 +136,7 @@ static void genesis(void * _Nonnull self) {
     if (nn->is_dense_network) {
         dense_net_genesis(self);
     } else if (nn->is_conv2d_network) {
-        
+        conv2d_net_genesis(self);
     }
 }
 
@@ -148,13 +150,9 @@ static void finale(void * _Nonnull self) {
     free_fmatrix(nn->data->training->set, 0, nn->data->training->m, 0, nn->data->training->n);
     free_fmatrix(nn->data->test->set, 0, nn->data->test->m, 0, nn->data->test->n);
     if (nn->data->validation->set != NULL) free_fmatrix(nn->data->validation->set, 0, nn->data->validation->m, 0, nn->data->validation->n);
-    nn->data->training->reader = NULL;
-    nn->data->test->reader = NULL;
     free(nn->data->training);
     free(nn->data->test);
     free(nn->data->validation);
-    nn->data->init = NULL;
-    nn->data->load = NULL;
     free(nn->data);
     free(nn->dense->parameters);
     free(nn->constructor);
@@ -162,7 +160,7 @@ static void finale(void * _Nonnull self) {
     if (nn->is_dense_network) {
         dense_net_finale(self);
     } else if (nn->is_conv2d_network) {
-        
+        conv2d_net_finale(self);
     }
     
     if (nn->gpu != NULL) {

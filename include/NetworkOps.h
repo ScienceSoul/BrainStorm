@@ -15,10 +15,13 @@ typedef struct progress_dict {
     
 } progress_dict;
 
-void feedforward(void * _Nonnull self);
-void backpropagation(void * _Nonnull self);
-void batchAccumulation(void * _Nonnull self);
-void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size);
+typedef void (* _Nullable ptr_inference_func)(void * _Nonnull self);
+typedef void (* _Nullable ptr_backpropag_func)(void * _Nonnull self,
+                                       void (* _Nullable ptr_inference_func)(void * _Nonnull self));
+typedef void (* _Nullable ptr_batch_accumul_func)(void * _Nonnull self);
+
+void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
+                   ptr_inference_func inference, ptr_backpropag_func backpropagation, ptr_batch_accumul_func batch_accumulation);
 
 void nextBatch(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, unsigned int batchSize);
 int batchRange(void * _Nonnull neural, unsigned int batchSize);
