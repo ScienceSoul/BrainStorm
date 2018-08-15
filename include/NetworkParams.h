@@ -29,9 +29,9 @@ typedef struct conv2d_net_parameters {
     // the second dimension indicates in this order: the layer type (OUTPUT, CONVOLUTION, POOLING or OUTPUT),
     // the nunber of feature maps for this layer, the horiaontal dimension of the map, the vertical dimension
     // of the map, the horizontal dimension of the convolution kernel (or pooling), the vertical dimension of the
-    // convolution kenel (or pooling). In case of a dense layer, the second dimension of tolopogy only contains
-    //  the number of neurons in the layer
-    int topology[MAX_NUMBER_NETWORK_LAYERS][6];
+    // convolution kenel (or pooling), the horizontal stride, the vertical stride.
+    // In case of a dense layer, the second dimension of topology has only one entry, i.e., the number of neurons in the layer
+    int topology[MAX_NUMBER_NETWORK_LAYERS][8];
     
     int split[2], classifications[MAX_NUMBER_NETWORK_LAYERS];;
 } conv2d_net_parameters;

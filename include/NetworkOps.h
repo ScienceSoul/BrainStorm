@@ -33,10 +33,6 @@ float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
 void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
 float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
 
-void maxPool(void);
-void l2Pool(void);
-void averagePool(void);
-
 // Only used when loading a network from a param file
 void trainLoop(void * _Nonnull  neural);
 

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "NeuralNetwork.h"
+#include "Conv2DNetOps.h"
 
 static void set_activation_function(activation_functions activationFunctionsRef[MAX_NUMBER_NETWORK_LAYERS],
                     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n),
@@ -132,6 +133,12 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
     } else nn->regularizer[nn->num_activation_functions] = nn->l0_regularizer;
     
     nn->num_activation_functions++;
+    
+    // Set this layer to fully connected operation if convolutional network
+    if (nn->is_conv2d_network) {
+        nn->conv2d->layersOps[nn->conv2d->num_ops] = full_connected_ops;
+        nn->conv2d->num_ops++;
+    }
 }
 
 void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regulaizer) {
@@ -175,6 +182,8 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
         nn->conv2d->parameters->topology[nn->network_num_layers][3] = map_size_y;
         nn->conv2d->parameters->topology[nn->network_num_layers][4] = layer_dict.kernel_size[0];
         nn->conv2d->parameters->topology[nn->network_num_layers][5] = layer_dict.kernel_size[1];
+        nn->conv2d->parameters->topology[nn->network_num_layers][6] = layer_dict.strides[0];
+        nn->conv2d->parameters->topology[nn->network_num_layers][7] = layer_dict.strides[1];
         nn->network_num_layers++;
         
     } else if (layer_dict.padding == ZERO_PADDING) {
@@ -197,6 +206,10 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
     } else nn->regularizer[nn->num_activation_functions] = nn->l0_regularizer;
     
     nn->num_activation_functions++;
+    
+    // Set this layer to a convolution operation
+    nn->conv2d->layersOps[nn->conv2d->num_ops] = convolution_ops;
+    nn->conv2d->num_ops++;
 }
 
 void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
@@ -238,6 +251,8 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
         nn->conv2d->parameters->topology[nn->network_num_layers][3] = pool_size_y;
         nn->conv2d->parameters->topology[nn->network_num_layers][4] = layer_dict.kernel_size[0];
         nn->conv2d->parameters->topology[nn->network_num_layers][5] = layer_dict.kernel_size[1];
+        nn->conv2d->parameters->topology[nn->network_num_layers][6] = layer_dict.strides[0];
+        nn->conv2d->parameters->topology[nn->network_num_layers][7] = layer_dict.strides[1];
         nn->network_num_layers++;
         
     } else if (layer_dict.padding == ZERO_PADDING) {
@@ -246,16 +261,18 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized paddding option.");
     }
     
-    // The pooling operation
+    // Set this layer to a pooling operation
     if (layer_dict.pooling_op == MAX_POOLING) {
-        nn->conv2d->poolingOps[nn->conv2d->num_pooling_layers] = nn->max_pool;
+        nn->conv2d->layersOps[nn->conv2d->num_ops] = max_pool;
     } else if (layer_dict.pooling_op == L2_POOLING) {
-        nn->conv2d->poolingOps[nn->conv2d->num_pooling_layers] = nn->l2_pool;
+        nn->conv2d->layersOps[nn->conv2d->num_ops] = l2_pool;
     } else if (layer_dict.pooling_op == AVERAGE_POOLING) {
-        nn->conv2d->poolingOps[nn->conv2d->num_pooling_layers] = nn->average_pool;
+        nn->conv2d->layersOps[nn->conv2d->num_ops] = average_pool;
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized pooling operation.");
     }
+    nn->conv2d->num_ops++;
+    nn->conv2d->num_pooling_layers++;
 }
 
 void set_split(void * _Nonnull neural, int n1, int n2) {

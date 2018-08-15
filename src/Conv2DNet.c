@@ -18,6 +18,7 @@ void create_conv2d_net(void * _Nonnull self) {
     
     nn->conv2d = (conv2d_network *)malloc(sizeof(conv2d_network));
     *(nn->conv2d) = (conv2d_network){.num_conv2d_layers=0, .num_dense_layers=0, .num_pooling_layers=0,
+        .num_ops=0,
         .conv_weights=NULL,
         .conv_weightsVelocity=NULL,
         .conv_biases=NULL,
@@ -50,7 +51,7 @@ void create_conv2d_net(void * _Nonnull self) {
         nn->conv2d->activationFunctions[i] = NULL;
         nn->conv2d->activationDerivatives[i] = NULL;
         nn->conv2d->kernelInitializers[i] = NULL;
-        nn->conv2d->poolingOps[i] = NULL;
+        nn->conv2d->layersOps[i] = NULL;
     }
     
     nn->conv2d->parameters = (conv2d_net_parameters *)malloc(sizeof(conv2d_net_parameters));
@@ -78,15 +79,23 @@ void conv2d_net_genesis(void * _Nonnull self) {
     // ------------------------------------------------------------------------
     
     if (nn->conv2d->conv_weights == NULL) {
+        // Tensors for shared weights for the layer l are stored as
+        // Shape[fn-1,fn,fh,fw], where
+        // fn-1: is the number of feature maps at the layer l-1.
+        //       1 if previous layer is the input layer
+        // fn: is the number of feature maps at the layer l
+        // fh: is the height of the receptive field
+        // fw: is the width of the receptive field
+        
         tensor_dict dict;
         dict.rank = 4;
         int idx = 0;
         for (int l=1; l<nn->network_num_layers; l++) {
             if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
-                dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l][4];
-                dict.shape[idx][1][0] = nn->conv2d->parameters->topology[l][5];
-                dict.shape[idx][2][0] = nn->conv2d->parameters->topology[l-1][1];
-                dict.shape[idx][3][0] = nn->conv2d->parameters->topology[l][1];
+                dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+                dict.shape[idx][1][0] = nn->conv2d->parameters->topology[l][1];
+                dict.shape[idx][2][0] = nn->conv2d->parameters->topology[l][4];
+                dict.shape[idx][3][0] = nn->conv2d->parameters->topology[l][5];
                 idx++;
             }
         }
@@ -138,6 +147,10 @@ void conv2d_net_genesis(void * _Nonnull self) {
     }
     
     if (nn->conv2d->conv_biases == NULL) {
+        // Tensors for shared biases for the layer l are stored as
+        // Shape[fn] where:
+        // fn: is the number of feature maps at the layer l
+        
         tensor_dict dict;
         dict.rank = 1;
         int idx = 0;
@@ -194,6 +207,12 @@ void conv2d_net_genesis(void * _Nonnull self) {
     }
     
     if (nn->conv2d->conv_activations == NULL) {
+        // Tensors for activations (and affine transformations) for the layer l
+        // are stored as Shape[fn,fh,fw], where
+        // fn: is the number of feature maps at the layer l
+        // fh: is the height of the feature map
+        // fw: is the width of the feature map
+        
         tensor_dict dict;
         dict.rank = 3;
         int idx = 0;
@@ -374,6 +393,10 @@ void conv2d_net_genesis(void * _Nonnull self) {
         if (nn->conv2d->dense_affineTransformations == NULL)
             nn->conv2d->dense_affineTransformations = (tensor *)nn->tensor((void *)nn, dict);
     }
+    
+    // ------------------------------------------------------------------------
+    // ------- Assign the layer operations
+    // ------------------------------------------------------------------------
 }
 
 //

@@ -63,10 +63,6 @@ static void new_network_common(void * _Nonnull neural) {
     
     nn->eval_prediction = evalPrediction;
     nn->eval_cost = evalCost;
-    
-    nn->max_pool = maxPool;
-    nn->l2_pool = l2Pool;
-    nn->average_pool = averagePool;
 }
 
 //
