@@ -162,7 +162,7 @@ void max_pool(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullab
             }
         }
         stride_a = stride_a + (col_order_a * row_order_a);
-        stride_a_compute = stride_a_compute + (kh * kw);
+        stride_a_compute = stride_a_compute + (fh * fw);
     }
 }
 
@@ -217,7 +217,7 @@ void l2_pool(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullabl
             }
         }
         stride_a = stride_a + (col_order_a * row_order_a);
-        stride_a_compute = stride_a_compute + (kh * kw);
+        stride_a_compute = stride_a_compute + (fh * fw);
     }
 }
 
@@ -273,7 +273,7 @@ void average_pool(void * _Nonnull neural, unsigned int layer, unsigned int * _Nu
             }
         }
         stride_a = stride_a + (col_order_a * row_order_a);
-        stride_a_compute = stride_a_compute + (kh * kw);
+        stride_a_compute = stride_a_compute + (fh * fw);
     }
 }
 
