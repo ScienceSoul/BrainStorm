@@ -393,10 +393,6 @@ void conv2d_net_genesis(void * _Nonnull self) {
         if (nn->conv2d->dense_affineTransformations == NULL)
             nn->conv2d->dense_affineTransformations = (tensor *)nn->tensor((void *)nn, dict);
     }
-    
-    // ------------------------------------------------------------------------
-    // ------- Assign the layer operations
-    // ------------------------------------------------------------------------
 }
 
 //

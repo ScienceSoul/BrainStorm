@@ -205,7 +205,7 @@ void dense_net_genesis(void * _Nonnull self) {
 }
 
 //
-// Full-connected netwotk destruction
+// Full-connected network destruction
 //
 void dense_net_finale(void * _Nonnull  self) {
     

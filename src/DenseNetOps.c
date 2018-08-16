@@ -33,8 +33,8 @@ void inference_in_dense_net(void * _Nonnull neural) {
 #ifdef __APPLE__
         vDSP_vadd(buffer, 1, nn->dense->biases->val+stride2, 1, nn->dense->affineTransformations->val+stride2, 1, nn->dense->biases->shape[l][0][0]);
 #else
-        for (int i=0; i<nn->biasesDimensions[l].n; i++) {
-            nn->dense_affineTransformations->val[stride2+i] = buffer[i] + nn->biases[stride2+i];
+        for (int i=0; i<nn->dense->biases->shape[l][0][0]; i++) {
+            nn->dense->affineTransformations->val[stride2+i] = buffer[i] + nn->dense->biases->val[stride2+i];
         }
 #endif
         float *vec = NULL;
