@@ -53,7 +53,8 @@ typedef struct conv2d_network {
     unsigned int num_conv2d_layers;
     unsigned int num_dense_layers;
     unsigned int num_pooling_layers;
-    unsigned int num_ops;
+    unsigned int num_infer_ops;
+    unsigned int num_backpropag_ops;
     
     tensor * _Nullable conv_weights;
     tensor * _Nullable conv_weightsVelocity;
@@ -77,16 +78,20 @@ typedef struct conv2d_network {
     tensor * _Nullable dense_batchCostWeightDeriv;
     tensor * _Nullable dense_batchCostBiasDeriv;
     
+    float * _Nullable propag_delta;
+    float * _Nullable propag_upsampling;
+    
     conv2d_net_parameters * _Nullable parameters;
     Train * _Nullable train;
     
     void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
-    void (* _Nonnull layersOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance);
+    void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance);
+    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance);
 } conv2d_network;
 
-typedef struct NeuralNetwork {
+typedef struct BrainStormNet {
     
     data * _Nullable data;
     networkConstructor * _Nullable constructor;
@@ -128,10 +133,10 @@ typedef struct NeuralNetwork {
     void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
     float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
     
-} NeuralNetwork;
+} BrainStormNet;
 
-NeuralNetwork * _Nonnull new_dense_net(void);
-NeuralNetwork * _Nonnull new_conv2d_net(void);
+BrainStormNet * _Nonnull new_dense_net(void);
+BrainStormNet * _Nonnull new_conv2d_net(void);
 
 #endif /* NeuralNetwork_h */
 

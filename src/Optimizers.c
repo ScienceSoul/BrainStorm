@@ -20,7 +20,7 @@ void (* _Nullable ptr_adam_update_func)(void * _Nonnull neural, unsigned int bat
 
 void init_in_dense_net(void * _Nonnull neural) {
 
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     int tensor_length = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
@@ -47,7 +47,7 @@ void init_in_dense_net(void * _Nonnull neural) {
 
 void grad_descent_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Update weights
     unsigned int stride = 0;
@@ -79,7 +79,7 @@ void grad_descent_update_in_dense_net(void * _Nullable neural, unsigned int batc
 
 void momentum_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Update weights
     unsigned int stride = 0;
@@ -126,7 +126,7 @@ void momentum_update_in_dense_net(void * _Nullable neural, unsigned int batch_si
 
 void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Update weights
     unsigned int stride = 0;
@@ -183,7 +183,7 @@ void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int batch_si
 
 void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Update weights
     unsigned int stride = 0;
@@ -241,7 +241,7 @@ void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int batch_siz
 
 void adam_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Update weights
     unsigned int stride = 0;
@@ -324,7 +324,7 @@ void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnul
     static ptr_inference_func inference = NULL;
     static ptr_backpropag_func backpropagation = NULL;
     static ptr_batch_accumul_func batch_accumulation = NULL;
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (firstTime) {
         if (nn->is_dense_network) {
@@ -352,7 +352,7 @@ void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini
     static ptr_inference_func inference = NULL;
     static ptr_backpropag_func backpropagation = NULL;
     static ptr_batch_accumul_func batch_accumulation = NULL;
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (firstTime) {
         if (nn->is_dense_network) {
@@ -380,7 +380,7 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     static ptr_inference_func inference = NULL;
     static ptr_backpropag_func backpropagation = NULL;
     static ptr_batch_accumul_func batch_accumulation = NULL;
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (firstTime) {
         if (nn->is_dense_network) {
@@ -408,7 +408,7 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     static ptr_inference_func inference = NULL;
     static ptr_backpropag_func backpropagation = NULL;
     static ptr_batch_accumul_func batch_accumulation = NULL;
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (firstTime) {
         if (nn->is_dense_network) {
@@ -436,7 +436,7 @@ void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_bat
     static ptr_inference_func inference = NULL;
     static ptr_backpropag_func backpropagation = NULL;
     static ptr_batch_accumul_func batch_accumulation = NULL;
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (firstTime) {
         if (nn->is_dense_network) {

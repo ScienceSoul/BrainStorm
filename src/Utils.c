@@ -349,6 +349,64 @@ float randn(float mu, float sigma) {
     return (mu + sigma * (float) X1);
 }
 
+int __attribute__((overloadable)) max(int x, int y) {
+    
+    return (x > y) ? x : y;
+}
+
+int __attribute__((overloadable)) max(int x, int y, int z) {
+    
+    int m = (x > y) ? x : y;
+    return (z > m) ? z : m;
+}
+
+int __attribute__((overloadable)) max(int w, int x, int y, int z) {
+    
+    int m = (w > x) ? w : x;
+    int n = (y > m) ? y : m;
+    return (z > n) ? z : n;
+}
+
+float __attribute__((overloadable)) max(float x, float y) {
+    
+    return (x > y) ? x : y;
+}
+
+float __attribute__((overloadable)) max(float x, float y, float z) {
+    
+    float m = (x > y) ? x : y;
+    return (z > m) ? z : m;
+}
+
+int __attribute__((overloadable)) min(int x, int y) {
+    
+    return (x < y) ? x : y;
+}
+
+int __attribute__((overloadable)) min(int x, int y, int z) {
+    
+    int m = (x < y) ? x : y;
+    return (z < m) ? z : m;
+}
+
+int __attribute__((overloadable)) min(int w, int x, int y, int z) {
+    
+    int m = (w < x) ? w : x;
+    int n = (y < m) ? y : m;
+    return (z < n) ? z : n;
+}
+
+float __attribute__((overloadable)) min(float x, float y) {
+    
+    return (x < y) ? x : y;
+}
+
+float __attribute__((overloadable)) min(float x, float y, float z) {
+    
+    float m = (x < y) ? x : y;
+    return (z < m) ? z : m;
+}
+
 int __attribute__((overloadable)) min_array(int * _Nonnull a, unsigned int num_elements) {
     
     int min = INT_MAX;

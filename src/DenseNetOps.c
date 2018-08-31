@@ -17,7 +17,7 @@
 
 void inference_in_dense_net(void * _Nonnull neural) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     unsigned int stride1 = 0;
     unsigned int stride2 = 0;
@@ -59,7 +59,7 @@ void inference_in_dense_net(void * _Nonnull neural) {
 void backpropag_in_dense_net(void * _Nonnull neural,
                              void (* _Nullable ptr_inference_func)(void * _Nonnull self)) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Activations at the input layer
     for (int i=0; i<nn->num_channels; i++) {
@@ -84,8 +84,8 @@ void backpropag_in_dense_net(void * _Nonnull neural,
         stride3 = stride3 + nn->dense->affineTransformations->shape[l][0][0];
     }
     
-    float delta[nn->dense->parameters->max_number_of_nodes_in_layer];
-    float buffer[nn->dense->parameters->max_number_of_nodes_in_layer];
+    float delta[nn->dense->parameters->max_number_nodes_in_layer];
+    float buffer[nn->dense->parameters->max_number_nodes_in_layer];
     memset(delta, 0.0f, sizeof(delta));
     memset(buffer, 0.0f, sizeof(buffer));
     
@@ -161,7 +161,7 @@ void batch_accumulation_in_dense_net(void * _Nonnull neural) {
     
     // Accumulate dcdw and dc/db
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     unsigned stride1 = 0;
     unsigned stride2 = 0;

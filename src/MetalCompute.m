@@ -114,7 +114,7 @@ void nullify(void) {
 void allocate_buffers(void * _Nonnull network) {
     if (!allocation) {
         
-        NeuralNetwork *nn = (NeuralNetwork *)network;
+        BrainStormNet *nn = (BrainStormNet *)network;
         parameters_container *params = (parameters_container *)malloc(sizeof(parameters_container));
         
         unsigned int entriesTableSize = nn->data->test->m * nn->num_channels;
@@ -213,7 +213,7 @@ void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     MTLSize threadgroupsPerGrid;
     MTLSize threadsPerThreadgroup;
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     unsigned int weightsTableSize = 0;
     unsigned int biasesTableSize = 0;

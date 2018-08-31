@@ -14,7 +14,7 @@
 //
 void create_dense_net(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     nn->dense = (dense_network *)malloc(sizeof(dense_network));
     *(nn->dense) = (dense_network){.num_dense_layers=0,
@@ -74,9 +74,9 @@ void create_dense_net(void * _Nonnull self) {
 //
 void dense_net_genesis(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
-    nn->dense->parameters->max_number_of_nodes_in_layer = max_array(nn->dense->parameters->topology, nn->network_num_layers);
+    nn->dense->parameters->max_number_nodes_in_layer = max_array(nn->dense->parameters->topology, nn->network_num_layers);
     
     if (nn->dense->parameters->split[0] == 0 || nn->dense->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
     
@@ -209,7 +209,7 @@ void dense_net_genesis(void * _Nonnull self) {
 //
 void dense_net_finale(void * _Nonnull  self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     if (nn->dense->weights != NULL) {
         free(nn->dense->weights->val);

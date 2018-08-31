@@ -19,7 +19,7 @@ void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
                    ptr_inference_func inference, ptr_backpropag_func backpropagation,
                    ptr_batch_accumul_func batch_accumulation) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
 #ifdef VERBOSE
     double rt = realtime();
@@ -42,7 +42,7 @@ void nextBatch(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, 
     static int delta = 0;
     static int count = 1;
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     memcpy(*placeholder, *nn->data->training->set+delta, (batchSize*(int)nn->data->training->n)*sizeof(float));
     if (count == (int)ceil((int)nn->data->training->m/batchSize)) {
@@ -56,13 +56,13 @@ void nextBatch(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, 
 
 int batchRange(void * _Nonnull neural, unsigned int batchSize) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     return (int)ceil((int)nn->data->training->m/batchSize);
 }
 
 void progression(void * _Nonnull neural, progress_dict progress_dict) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     int train_size = (int)nn->data->training->m/progress_dict.batch_size;
     int step = train_size / (100/progress_dict.percent);
@@ -106,7 +106,7 @@ float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
 
 static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     ptr_inference_func inference = NULL;
     if (nn->is_dense_network) {
@@ -138,7 +138,7 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
     static bool test_check = false;
     static bool validation_check = false;
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     float **data = NULL;
     unsigned int data_size = 0;
@@ -188,7 +188,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
     static bool test_check = false;
     static bool validation_check = false;
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     ptr_inference_func inference = NULL;
     if (nn->is_dense_network) {
@@ -269,7 +269,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
 
 void trainLoop(void * _Nonnull  neural) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     float **miniBatch = floatmatrix(0, nn->dense->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
     float out_test[nn->data->test->m];

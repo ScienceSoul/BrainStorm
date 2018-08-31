@@ -58,7 +58,7 @@ void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const cha
     unsigned int len1=0, len2=0;
     float **raw_training = NULL;
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     fprintf(stdout, "%s: load the <%s> training data set...\n", DEFAULT_CONSOLE_WRITER, dataSetName);
     raw_training = nn->data->training->reader(trainFile, &len1, &len2);

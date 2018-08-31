@@ -77,7 +77,7 @@ void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull kernel,
 float standardDeviation(void * _Nonnull neural, int l, int n_inputs, int n_outputs) {
     
     float standard_deviation = 0.0f;
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (nn->activationFunctionsRef[l] == SIGMOID) {
         standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
@@ -96,7 +96,7 @@ float standardDeviation(void * _Nonnull neural, int l, int n_inputs, int n_outpu
 
 void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     tensor *tensor_object = (tensor *)kernel;
     
     if (tensor_object->rank == 1 || tensor_object->rank == 3 || tensor_object->rank == 5) {
@@ -155,7 +155,7 @@ void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     tensor *tensor_object = (tensor *)malloc(sizeof(tensor));
     memset(*tensor_object->shape, 1, (MAX_NUMBER_NETWORK_LAYERS*MAX_TENSOR_RANK*1));
@@ -226,7 +226,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
         fatal(DEFAULT_CONSOLE_WRITER, "problem finding any parameter definition.");
     }
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     short FOUND_DATA           = 0;
     short FOUND_TOPOLOGY       = 0;

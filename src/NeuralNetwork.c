@@ -19,7 +19,7 @@ static void gpu_alloc(void * _Nonnull self);
 
 static void initNeuralData(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     nn->data->training = (training *)malloc(sizeof(training));
     nn->data->training->set = NULL;
@@ -41,7 +41,7 @@ static void initNeuralData(void * _Nonnull self) {
 
 static void new_network_common(void * _Nonnull neural) {
  
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     nn->num_activation_functions = 0;
     
@@ -68,10 +68,10 @@ static void new_network_common(void * _Nonnull neural) {
 //
 // Root allocation routine of a dense (fully connected) neural network
 //
-NeuralNetwork * _Nonnull new_dense_net(void) {
+BrainStormNet * _Nonnull new_dense_net(void) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-    *nn = (NeuralNetwork){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false};
+    BrainStormNet *nn = (BrainStormNet *)malloc(sizeof(BrainStormNet));
+    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false};
     
     create_dense_net((void *)nn);
     new_network_common((void *)nn);
@@ -86,10 +86,10 @@ NeuralNetwork * _Nonnull new_dense_net(void) {
 //
 // Root allocation routine of a convolutional neural network
 //
-NeuralNetwork * _Nonnull new_conv2d_net(void) {
+BrainStormNet * _Nonnull new_conv2d_net(void) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-    *nn = (NeuralNetwork){.network_num_layers=0, .is_dense_network=false, .is_conv2d_network=true};
+    BrainStormNet *nn = (BrainStormNet *)malloc(sizeof(BrainStormNet));
+    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=false, .is_conv2d_network=true};
     
     create_conv2d_net((void *)nn);
     new_network_common((void *)nn);
@@ -101,7 +101,7 @@ NeuralNetwork * _Nonnull new_conv2d_net(void) {
 //
 static void genesis(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     // If the network is constructed with the constructor API, check that all required parameters were defined
     if (nn->constructor->networkConstruction) {
@@ -141,7 +141,7 @@ static void genesis(void * _Nonnull self) {
 //
 static void finale(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     free_fmatrix(nn->data->training->set, 0, nn->data->training->m, 0, nn->data->training->n);
     free_fmatrix(nn->data->test->set, 0, nn->data->test->m, 0, nn->data->test->n);
@@ -167,7 +167,7 @@ static void finale(void * _Nonnull self) {
 
 static void gpu_alloc(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     nn->gpu = metalCompute();
 }

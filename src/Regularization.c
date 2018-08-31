@@ -11,13 +11,13 @@
 #include "NeuralNetwork.h"
 
 float l0_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     return nn->dense->weights->val[stride+((i*n)+j)];
 }
 
 float l1_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     float sgn;
     if (nn->dense->weights->val[stride+((i*n)+j)] > 0) {
         sgn = 1.0f;
@@ -32,6 +32,6 @@ float l1_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
 
 float l2_regularizer(void * _Nonnull neural, int i, int j, int n, int stride) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     return (1.0f-((nn->dense->parameters->eta*nn->dense->parameters->lambda)/(float)nn->data->training->m))*nn->dense->weights->val[stride+((i*n)+j)];
 }

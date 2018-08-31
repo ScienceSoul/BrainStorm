@@ -29,8 +29,8 @@ typedef enum convlution_layer_types {
 } convlution_layers_type;
 
 typedef enum conv2d_padding {
-    NO_PADDING=1,
-    ZERO_PADDING
+    VALID=1,
+    SAME
 } conv2d_padding;
 
 typedef enum pooling_ops {

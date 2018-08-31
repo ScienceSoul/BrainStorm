@@ -61,7 +61,7 @@ static void set_kernel_initializer(void (* _Nonnull kernelInitializers[MAX_NUMBE
 
 void set_feed(void * _Nonnull neural, unsigned int shape[_Nonnull 3], unsigned int dimension, unsigned int * _Nullable num_channels) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     nn->constructor->networkConstruction = true;
     if (nn->network_num_layers != 0) {
@@ -76,7 +76,7 @@ void set_feed(void * _Nonnull neural, unsigned int shape[_Nonnull 3], unsigned i
         nn->num_channels = shape[0];
     } else if (dimension == 2 || dimension == 3) {
         if (num_channels == NULL) {
-            fatal(DEFAULT_CONSOLE_WRITER, "the nunber of channels must be provided for feeding dimension higher than 2.");
+            fatal(DEFAULT_CONSOLE_WRITER, "the nunber of channels must be provided for feeding dimensions higher than 2.");
         }
         if (dimension == 2) {
             if (nn->conv2d == NULL) {
@@ -100,7 +100,7 @@ void set_feed(void * _Nonnull neural, unsigned int shape[_Nonnull 3], unsigned i
 
 void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regularizer) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
@@ -123,6 +123,10 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
         
         set_kernel_initializer(nn->conv2d->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
         nn->conv2d->num_dense_layers++;
+        
+        // Store the maximum number of nodes in the fully connected layers
+        nn->conv2d->parameters->max_number_nodes_in_dense_layer =
+                max((int)nn->conv2d->parameters->max_number_nodes_in_dense_layer, (int)layer_dict.num_neurons);
     }
     nn->network_num_layers++;
     
@@ -134,47 +138,35 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
     
     nn->num_activation_functions++;
     
-    // Set this layer to fully connected operation if convolutional network
+    // If convolutional network, set this layer to fully connected inference operation
+    // and to a fully connected backpropagation operation
     if (nn->is_conv2d_network) {
-        nn->conv2d->layersOps[nn->conv2d->num_ops] = full_connected_ops;
-        nn->conv2d->num_ops++;
+        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = infer_full_connected_op;
+        nn->conv2d->num_infer_ops++;
+        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_full_connected_op;
+        nn->conv2d->num_backpropag_ops++;
     }
 }
 
 void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regulaizer) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
     
     // Compute the size of each feature map using the kernel sizes, the strides and
     // whether padding is used
-    if (layer_dict.padding == NO_PADDING) {
-        int pos = 0;
-        int map_size_x = 1; // First neuron in map layer (horizontal)
-        int map_size_y = 1; // First neuron in map layer (vertical)
+    if (layer_dict.padding == VALID) {
 
-        // The input dimensions are defined by the previous layer
+        // The dimensions of the layer on which convolution is applied
+        // Typically given by previous layer
         int input_size_x = nn->conv2d->parameters->topology[nn->network_num_layers-1][2];
         int input_size_y = nn->conv2d->parameters->topology[nn->network_num_layers-1][3];
         
-        // Horizontal
-        while (1) {
-            pos += layer_dict.strides[0];
-            if ((pos+layer_dict.kernel_size[0]) > input_size_x) {
-                break;
-            } else map_size_x++;
-        }
-        
-        // Vertical
-        pos = 0;
-        while (1) {
-            pos += layer_dict.strides[1];
-            if ((pos+layer_dict.kernel_size[1]) > input_size_y) {
-                break;
-            } else map_size_y++;
-        }
+        // Horizontal and vertical size of the map after convolution
+        int map_size_x = floorf((input_size_x-layer_dict.kernel_size[0])/layer_dict.strides[0]) + 1;
+        int map_size_y = floorf((input_size_y-layer_dict.kernel_size[1])/layer_dict.strides[1]) + 1;
         
         nn->conv2d->parameters->topology[nn->network_num_layers][0] = CONVOLUTION;
         nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.filters;
@@ -186,7 +178,7 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
         nn->conv2d->parameters->topology[nn->network_num_layers][7] = layer_dict.strides[1];
         nn->network_num_layers++;
         
-    } else if (layer_dict.padding == ZERO_PADDING) {
+    } else if (layer_dict.padding == SAME) {
         fatal(DEFAULT_CONSOLE_WRITER, "zero padding is not implemented yet.");
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized paddding option.");
@@ -207,43 +199,30 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
     
     nn->num_activation_functions++;
     
-    // Set this layer to a convolution operation
-    nn->conv2d->layersOps[nn->conv2d->num_ops] = convolution_ops;
-    nn->conv2d->num_ops++;
+    // Set this layer to a convolutional inference operation and
+    // to convolutional backpropagation operation
+    nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = infer_convolution_op;
+    nn->conv2d->num_infer_ops++;
+    nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_convolution_op;
+    nn->conv2d->num_backpropag_ops++;
 }
 
 void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
     fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
     
-    if (layer_dict.padding == NO_PADDING) {
-        int pos = 0;
-        int pool_size_x = 1; // First neuron in pool layer (horizontal)
-        int pool_size_y = 1; // First neuron in pool layer (vertical)
-        
-        // The input dimensions are defined by the previous layer
+    if (layer_dict.padding == VALID) {
+        // The dimensions of the layer on which pooling is applied
+        // Typically given by previous layer
         int input_size_x = nn->conv2d->parameters->topology[nn->network_num_layers-1][2];
         int input_size_y = nn->conv2d->parameters->topology[nn->network_num_layers-1][3];
         
-        // Horizontal
-        while (1) {
-            pos = pos + (layer_dict.strides[0]+layer_dict.kernel_size[0]-1);
-            if ((pos+layer_dict.kernel_size[0]) > input_size_x) {
-                break;
-            } else pool_size_x++;
-        }
-        
-        // Vertical
-        pos = 0;
-        while (1) {
-            pos = pos + (layer_dict.strides[1]+layer_dict.kernel_size[1]-1);
-            if ((pos+layer_dict.kernel_size[1]) > input_size_y) {
-                break;
-            } else pool_size_y++;
-        }
+        // Horizontal and vertical size of the map after pooling
+        int pool_size_x = floorf((input_size_x-layer_dict.kernel_size[0])/layer_dict.strides[0]) + 1;
+        int pool_size_y = floorf((input_size_y-layer_dict.kernel_size[1])/layer_dict.strides[1]) + 1;
         
         nn->conv2d->parameters->topology[nn->network_num_layers][0] = POOLING;
         nn->conv2d->parameters->topology[nn->network_num_layers][1] = nn->conv2d->parameters->topology[nn->network_num_layers-1][1];
@@ -255,29 +234,34 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
         nn->conv2d->parameters->topology[nn->network_num_layers][7] = layer_dict.strides[1];
         nn->network_num_layers++;
         
-    } else if (layer_dict.padding == ZERO_PADDING) {
+    } else if (layer_dict.padding == SAME) {
         fatal(DEFAULT_CONSOLE_WRITER, "zero padding is not implemented yet.");
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized paddding option.");
     }
     
-    // Set this layer to a pooling operation
+    // Set this layer to a pooling inference operation and
+    // to pooling backpropagation operation
     if (layer_dict.pooling_op == MAX_POOLING) {
-        nn->conv2d->layersOps[nn->conv2d->num_ops] = max_pool;
+        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = max_pooling_op;
+        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_max_pooling_op;
     } else if (layer_dict.pooling_op == L2_POOLING) {
-        nn->conv2d->layersOps[nn->conv2d->num_ops] = l2_pool;
+        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = l2_pooling_op;
+        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_l2_pooling_op;
     } else if (layer_dict.pooling_op == AVERAGE_POOLING) {
-        nn->conv2d->layersOps[nn->conv2d->num_ops] = average_pool;
+        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = average_pooling_op;
+        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_average_pooling_op;
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized pooling operation.");
     }
-    nn->conv2d->num_ops++;
+    nn->conv2d->num_infer_ops++;
+    nn->conv2d->num_backpropag_ops++;
     nn->conv2d->num_pooling_layers++;
 }
 
 void set_split(void * _Nonnull neural, int n1, int n2) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (nn->is_dense_network) {
         nn->dense->parameters->split[0] = n1;
@@ -290,7 +274,7 @@ void set_split(void * _Nonnull neural, int n1, int n2) {
 
 void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     unsigned int len = (unsigned int)strlen(str);
     if (len >= MAX_LONG_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying string in constructor");
     memcpy(nn->dataPath, str, len*sizeof(char));
@@ -298,7 +282,7 @@ void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
 
 void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     if (n >= MAX_NUMBER_NETWORK_LAYERS) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying vector in constructor");
     if (nn->is_dense_network) {
         memcpy(nn->dense->parameters->classifications, vector, n*sizeof(int));
@@ -312,14 +296,14 @@ void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
 
 void set_scalars(void * _Nonnull neural, scalar_dict scalars) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     nn->dense->parameters->epochs = scalars.epochs;
     nn->dense->parameters->miniBatchSize = scalars.mini_batch_size;
 }
 
 void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)neural;
+    BrainStormNet *nn = (BrainStormNet *)neural;
     void * optimizer = NULL;
     
     if (strcmp(optimizer_dict.optimizer, "gradient descent") == 0) {

@@ -14,11 +14,12 @@
 //
 void create_conv2d_net(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     nn->conv2d = (conv2d_network *)malloc(sizeof(conv2d_network));
     *(nn->conv2d) = (conv2d_network){.num_conv2d_layers=0, .num_dense_layers=0, .num_pooling_layers=0,
-        .num_ops=0,
+        .num_infer_ops=0,
+        .num_backpropag_ops=0,
         .conv_weights=NULL,
         .conv_weightsVelocity=NULL,
         .conv_biases=NULL,
@@ -38,7 +39,8 @@ void create_conv2d_net(void * _Nonnull self) {
         .dense_costWeightDerivatives=NULL,
         .dense_costBiasDerivatives=NULL,
         .dense_batchCostWeightDeriv=NULL,
-        .dense_batchCostBiasDeriv=NULL
+        .dense_batchCostBiasDeriv=NULL,
+        .propag_delta = NULL
     };
     
     nn->conv2d->train = (Train *)malloc(sizeof(Train));
@@ -51,13 +53,16 @@ void create_conv2d_net(void * _Nonnull self) {
         nn->conv2d->activationFunctions[i] = NULL;
         nn->conv2d->activationDerivatives[i] = NULL;
         nn->conv2d->kernelInitializers[i] = NULL;
-        nn->conv2d->layersOps[i] = NULL;
+        nn->conv2d->inferenceOps[i] = NULL;
+        nn->conv2d->backpropagOps[i] = NULL;
     }
     
     nn->conv2d->parameters = (conv2d_net_parameters *)malloc(sizeof(conv2d_net_parameters));
     nn->conv2d->parameters->eta = 0.0f;
     nn->conv2d->parameters->lambda = 0.0f;
     nn->conv2d->parameters->numberOfClassifications = 0;
+    nn->conv2d->parameters->max_number_nodes_in_dense_layer = 0;
+    nn->conv2d->parameters->max_propag_delta_entries = 0;
     memset(nn->conv2d->parameters->topology, 0, sizeof(nn->dense->parameters->topology));
     memset(nn->conv2d->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
     memset(nn->conv2d->parameters->split, 0, sizeof(nn->dense->parameters->split));
@@ -68,7 +73,7 @@ void create_conv2d_net(void * _Nonnull self) {
 //
 void conv2d_net_genesis(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     if (nn->conv2d->parameters->split[0] == 0 || nn->conv2d->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
     
@@ -393,6 +398,31 @@ void conv2d_net_genesis(void * _Nonnull self) {
         if (nn->conv2d->dense_affineTransformations == NULL)
             nn->conv2d->dense_affineTransformations = (tensor *)nn->tensor((void *)nn, dict);
     }
+    
+    // This array is used to store the delta at layer l+1 during backpropagation
+    // Allocate enough space for it
+    for (int l=1; l<nn->network_num_layers; l++) {
+        int size = 0;
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION || nn->conv2d->parameters->topology[l][0] == POOLING) {
+            size = nn->conv2d->parameters->topology[l][1] * nn->conv2d->parameters->topology[l][2] *
+                   nn->conv2d->parameters->topology[l][3];
+        } else {
+            size = nn->conv2d->parameters->topology[l][1];
+        }
+        nn->conv2d->parameters->max_propag_delta_entries = max((int)nn->conv2d->parameters->max_propag_delta_entries, size);
+    }
+    nn->conv2d->propag_delta = (float *)malloc(nn->conv2d->parameters->max_propag_delta_entries*sizeof(float));
+    
+    // This array is used to store the upsampled deltas from the pooling layers
+    int size = 0;
+    for (int l=1; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            size = max(size, (nn->conv2d->parameters->topology[l][1] * nn->conv2d->parameters->topology[l][2] *
+                                 nn->conv2d->parameters->topology[l][3]));
+        }
+    }
+    nn->conv2d->propag_upsampling = (float *)malloc(size*sizeof(float));
+    memset(nn->conv2d->propag_upsampling, 0.0f, size*sizeof(float));
 }
 
 //
@@ -400,7 +430,7 @@ void conv2d_net_genesis(void * _Nonnull self) {
 //
 void conv2d_net_finale(void * _Nonnull self) {
     
-    NeuralNetwork *nn = (NeuralNetwork *)self;
+    BrainStormNet *nn = (BrainStormNet *)self;
     
     // ------------------------------------------------------------------------
     // ------- Free up the convolutuon layers
@@ -586,6 +616,8 @@ void conv2d_net_finale(void * _Nonnull self) {
         }
         free(nn->conv2d->train->adam);
     }
+    free(nn->conv2d->propag_delta);
+    free(nn->conv2d->propag_upsampling);
     free(nn->conv2d->train);
     free(nn->conv2d);
 }
