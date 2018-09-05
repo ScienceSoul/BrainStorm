@@ -567,14 +567,7 @@ static void backpropag_pooling_after_fully_connected(void * _Nonnull neural, uns
 static void backpropag_pooling_after_convolution(void * _Nonnull neural, unsigned int layer) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
-    
-    // The flipping matrix
-    float flip_mat[nn->conv2d->parameters->topology[layer+1][4]][nn->conv2d->parameters->topology[layer+1][5]];
-    memset(*flip_mat, 0.0f, (nn->conv2d->parameters->topology[layer+1][4]*nn->conv2d->parameters->topology[layer+1][5])*sizeof(float));
-    for (int i=0; i<nn->conv2d->parameters->topology[layer+1][4]; i++) {
-        flip_mat[i][nn->conv2d->parameters->topology[layer+1][4]-i-1] = 1.0f;
-    }
-    
+        
     unsigned int p = nn->conv2d->parameters->topology[layer][1];
     unsigned int q = nn->conv2d->parameters->topology[layer+1][1];
     

@@ -148,7 +148,7 @@ void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////// Tensor allocation //////////////////////////////////////////
 //      This routine allocates a 1D, 2D, 3D, 4D or 5D tensor with the possibility to linearize several
-//      tensors on a single data allocation (usufull for allocating accross network layers).
+//      tensors on a single data allocation (usefull for allocating accross network layers).
 //      Xavier-He initialization is only possible for 2D and 4D tensors.
 //      The tensor shape, rank and the flattening length are given inside the tensor_dict structure.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

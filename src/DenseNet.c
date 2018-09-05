@@ -306,7 +306,7 @@ void dense_net_finale(void * _Nonnull  self) {
         }
         free(nn->dense->train->adam);
     }
-    free(nn->dense->train);
-    free(nn->dense);
+    if (nn->dense->train != NULL) free(nn->dense->train);
+    if (nn->dense != NULL) free(nn->dense);
 }
 

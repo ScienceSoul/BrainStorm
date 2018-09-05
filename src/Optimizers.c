@@ -317,6 +317,19 @@ void adam_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
     }
 }
 
+void grad_descent_update_in_conv_net(void * _Nullable neural, unsigned int batch_size) {
+    
+    BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    //......
+    
+    
+    // -------------------------------------
+    // Update also the convolution matrices
+    // -------------------------------------
+    nn->flip_kernels((void *)nn);
+    nn->conv_mat_update((void *)nn);
+}
 
 void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
     

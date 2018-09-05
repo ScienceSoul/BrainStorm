@@ -40,7 +40,11 @@ void create_conv2d_net(void * _Nonnull self) {
         .dense_costBiasDerivatives=NULL,
         .dense_batchCostWeightDeriv=NULL,
         .dense_batchCostBiasDeriv=NULL,
-        .propag_delta = NULL
+        .flip_matrices=NULL,
+        .flipped_weights=NULL,
+        .conv_matrices=NULL,
+        .propag_delta = NULL,
+        .propag_upsampling=NULL
     };
     
     nn->conv2d->train = (Train *)malloc(sizeof(Train));
@@ -423,6 +427,76 @@ void conv2d_net_genesis(void * _Nonnull self) {
     }
     nn->conv2d->propag_upsampling = (float *)malloc(size*sizeof(float));
     memset(nn->conv2d->propag_upsampling, 0.0f, size*sizeof(float));
+    
+    // The current implementation of the convolution operations makes use of a Matrix-Vector
+    // multiplication. For that purpose, a sparse matrix for each rotated convolution kernel at
+    // each convolution layer is created. The following allocates memory for these matrices.
+    tensor_dict dict;
+    dict.rank = 4;
+    int idx = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+            dict.shape[idx][1][0] = nn->conv2d->parameters->topology[l][1];
+            dict.shape[idx][2][0] = (nn->conv2d->parameters->topology[l][2]*nn->conv2d->parameters->topology[l][3]);
+            dict.shape[idx][3][0] = (nn->conv2d->parameters->topology[l-1][2]*nn->conv2d->parameters->topology[l-1][3]);
+            idx++;
+        }
+    }
+    dict.flattening_length = nn->conv2d->num_conv2d_layers;
+    dict.init = false;
+    nn->conv2d->conv_matrices = (tensor *)nn->tensor((void *)nn, dict);
+    
+    // Create the matrices used to flip the kernels (weights)
+    dict.rank = 2;
+    idx = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l][4];
+            dict.shape[idx][1][0] = nn->conv2d->parameters->topology[l][5];
+            idx++;
+        }
+    }
+    dict.flattening_length = nn->conv2d->num_conv2d_layers;
+    dict.init = false;
+    nn->conv2d->flip_matrices = (tensor *)nn->tensor((void *)nn, dict);
+    
+    int offset = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            
+            int kh = nn->conv2d->parameters->topology[l][4];
+            int kw = nn->conv2d->parameters->topology[l][5];
+            float flip_mat[kh][kw];
+            memset(*flip_mat, 0.0f, (kh*kw)*sizeof(float));
+            for (int i=0; i<kh; i++) {
+                flip_mat[i][kw-i-1] = 1.0f;
+            }
+            
+            for (int i=0; i<kh; i++) {
+                for (int j=0; j<kw; j++) {
+                    nn->conv2d->flip_matrices->val[offset+((i*kw)+j)] = flip_mat[i][j];
+                }
+            }
+            offset = offset + (kh * kw);
+        }
+    }
+    
+    // Allocation to store the flipped kernels (weights)
+    dict.rank = 4;
+    idx = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+            dict.shape[idx][1][0] = nn->conv2d->parameters->topology[l][1];
+            dict.shape[idx][2][0] = nn->conv2d->parameters->topology[l][4];
+            dict.shape[idx][3][0] = nn->conv2d->parameters->topology[l][5];
+            idx++;
+        }
+    }
+    dict.flattening_length = nn->conv2d->num_conv2d_layers;
+    dict.init = false;
+    nn->conv2d->flipped_weights = (tensor *)nn->tensor((void *)nn, dict);
 }
 
 //
@@ -616,8 +690,11 @@ void conv2d_net_finale(void * _Nonnull self) {
         }
         free(nn->conv2d->train->adam);
     }
-    free(nn->conv2d->propag_delta);
-    free(nn->conv2d->propag_upsampling);
-    free(nn->conv2d->train);
-    free(nn->conv2d);
+    if (nn->conv2d->flip_matrices != NULL) free(nn->conv2d->flip_matrices);
+    if (nn->conv2d->flipped_weights != NULL) free(nn->conv2d->flipped_weights);
+    if (nn->conv2d->conv_matrices != NULL) free(nn->conv2d->conv_matrices);
+    if (nn->conv2d->propag_delta != NULL) free(nn->conv2d->propag_delta);
+    if (nn->conv2d->propag_upsampling != NULL) free(nn->conv2d->propag_upsampling);
+    if (nn->conv2d->train != NULL) free(nn->conv2d->train);
+    if (nn->conv2d != NULL) free(nn->conv2d);
 }
