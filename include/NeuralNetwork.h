@@ -91,8 +91,8 @@ typedef struct conv2d_network {
     void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
-    void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance);
-    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance);
+    void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
+    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2);
 } conv2d_network;
 
 typedef struct BrainStormNet {
@@ -137,8 +137,11 @@ typedef struct BrainStormNet {
     void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
     float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
     
-    // Function pointer to flipping routine
+    // Function pointer to kernels (weights) flipping routine
     void (* _Nullable flip_kernels)(void * _Nonnull self);
+    
+    // Function pointer to deltas (errors) flipping routine
+    void (* _Nullable flip_deltas)(void * _Nonnull self, unsigned int q, unsigned int fh, unsigned int fw);
     
     // Function pointer to routine for convolution matrices update
     void (* _Nullable conv_mat_update)(void * _Nonnull self);

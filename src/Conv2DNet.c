@@ -234,7 +234,7 @@ void conv2d_net_genesis(void * _Nonnull self) {
                 idx++;
             }
         }
-         // Activations defined at entry layer, convolution layers and pooling layers
+         // Activations defined at feeding layer, convolution layers and pooling layers
         dict.flattening_length = nn->conv2d->num_conv2d_layers + nn->conv2d->num_pooling_layers + 1;
         dict.init = false;
         nn->conv2d->conv_activations = (tensor *)nn->tensor((void *)nn, dict);
@@ -254,7 +254,7 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         // Affine transformations defined at convolution layers and pooling layers
-        dict.flattening_length = nn->conv2d->num_conv2d_layers + nn->conv2d->num_pooling_layers;
+        dict.flattening_length = nn->conv2d->num_conv2d_layers;
         dict.init = false;
         nn->conv2d->conv_affineTransformations = (tensor *)nn->tensor((void *)nn, dict);
     }

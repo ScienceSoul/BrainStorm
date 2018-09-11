@@ -15,10 +15,12 @@
 #include "NeuralNetwork.h"
 #include "Conv2DNetOps.h"
 
+static unsigned int offset_m;
 static unsigned int offset_w;
 static unsigned int offset_a;
 static unsigned int offset_a_compute;
 static unsigned int offset_b;
+static unsigned int offset_z;
 
 static unsigned int offset_a_connected;
 static unsigned int offset_a_connected_compute;
@@ -30,27 +32,24 @@ static unsigned int offset_dcdb_connected;
 
 static unsigned int activ_idx;
 
-void infer_convolution_op(void * _Nonnull  neural, unsigned int layer, unsigned int * _Nullable advance) {
+void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int * _Nullable advance) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    unsigned int p = nn->conv2d->parameters->topology[layer-1][1];
-    unsigned int q = nn->conv2d->parameters->topology[layer][1];
+    unsigned int p = nn->conv2d->parameters->topology[op-1][1];
+    unsigned int q = nn->conv2d->parameters->topology[op][1];
     
-    unsigned int fh = nn->conv2d->parameters->topology[layer][2];
-    unsigned int fw = nn->conv2d->parameters->topology[layer][3];
-    unsigned int kh = nn->conv2d->parameters->topology[layer][4];
-    unsigned int kw = nn->conv2d->parameters->topology[layer][5];
-    unsigned int sh = nn->conv2d->parameters->topology[layer][6];
-    unsigned int sw = nn->conv2d->parameters->topology[layer][7];
+    unsigned int fh = nn->conv2d->parameters->topology[op][2];
+    unsigned int fw = nn->conv2d->parameters->topology[op][3];
     
     static unsigned int local_idx = 0;
-    if (advance > 0) {
+    
+    if (*advance > 0) {
         int step = 1;
-        for (int i=0; i<nn->conv2d->conv_weights->rank; i++) {
-            step = step * nn->conv2d->conv_weights->shape[*advance-1][i][0];
+        for (int i=0; i<nn->conv2d->conv_matrices->rank; i++) {
+            step = step * nn->conv2d->conv_matrices->shape[local_idx-1][i][0];
         }
-        offset_w = offset_w + step;
+        offset_m = offset_m + step;
         
         step = 1;
         for (int i=0; i<nn->conv2d->conv_activations->rank; i++) {
@@ -60,15 +59,22 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int layer, unsigned 
         
         step = 1;
         for (int i=0; i<nn->conv2d->conv_biases->rank; i++) {
-            step = step * nn->conv2d->conv_biases->shape[*advance-1][i][0];
+            step = step * nn->conv2d->conv_biases->shape[local_idx-1][i][0];
         }
         offset_b = offset_b + step;
         
+        step = 1;
+        for (int i=0; i<nn->conv2d->conv_affineTransformations->rank; i++) {
+            step = step * nn->conv2d->conv_affineTransformations->shape[local_idx-1][i][0];
+        }
+        offset_z = offset_z + step;
+        
     } else {
-        offset_w = 0;
+        offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
         offset_b = 0;
+        offset_z = 0;
     }
     
     // Offset to activations at current convolution layer
@@ -78,61 +84,104 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int layer, unsigned 
     }
     offset_a_compute = offset_a_compute + step;
     
-    int row_order_a = nn->conv2d->conv_activations->shape[*advance][2][0];
-    int col_order_a = nn->conv2d->conv_activations->shape[*advance][1][0];
-    int row_order_a_compute = nn->conv2d->parameters->topology[layer][3];
+    int rows_a = nn->conv2d->conv_activations->shape[*advance][1][0];
+    int cols_a = nn->conv2d->conv_activations->shape[*advance][2][0];
     
-    int row_order_w = nn->conv2d->conv_weights->shape[local_idx][3][0];
-    int col_order_w = nn->conv2d->conv_weights->shape[local_idx][2][0];
+    //int row_order_w = nn->conv2d->conv_weights->shape[local_idx][3][0];
+    //int col_order_w = nn->conv2d->conv_weights->shape[local_idx][2][0];
     
-    int stride2_w = 0;
+    int rows_m = nn->conv2d->conv_matrices->shape[local_idx][2][0];
+    int cols_m = nn->conv2d->conv_matrices->shape[local_idx][3][0];
+    
+    float vector[fh*fw];
+    
+    int stride2_m = 0;
     int stride_a_compute = 0;
-    for (int k=0; k<q; k++) {// Loop over all feature maps at current layer
+    int stride_z = 0;
+    for (int k=0; k<q; k++) { // Loop over all feature maps at current layer
+        int stride_a = 0;
+        int stride1_m = 0;
+        memset(vector, 0.0f, sizeof(vector));
+        for (int l=0; l<p; l++) { // Loop over all feature maps in previous layer
+            
+            cblas_sgemv(CblasRowMajor, CblasNoTrans, rows_m, cols_m, 1.0f, nn->conv2d->conv_matrices->val+offset_m+stride1_m+stride2_m, cols_m, nn->conv2d->conv_activations->val+offset_a+stride_a, 1, 1.0f, vector, 1);
+            
+            stride1_m = stride1_m + (nn->conv2d->conv_matrices->shape[local_idx][1][0] * cols_m * rows_m);
+            stride_a = stride_a + (rows_a * cols_a);
+        }
+        
+#ifdef __APPLE__
+        vDSP_vsadd(vector, 1, nn->conv2d->conv_biases->val
+                   +offset_b+k, nn->conv2d->conv_affineTransformations->val+offset_z+stride_z, 1, (fh*fw));
+#else
         for (int i=0; i<fh; i++) {
             for (int j=0; j<fw; j++) {
-                float sum = 0.0f;
-                int stride_a = 0;
-                int stride1_w = 0;
-                for (int l=0; l<p; l++) { // Loop over all feature maps in previous layer
-                    for (int u=0; u<kh; u++) {
-                        for (int v=0; v<kw; v++) {
-                            sum = sum +
-                            (nn->conv2d->conv_activations->val[offset_a+(stride_a+(((i*sh+u)*row_order_a)+(j*sw+v)))] * nn->conv2d->conv_weights->val[offset_w+(stride1_w+(stride2_w+((u*row_order_w)+v)))] + nn->conv2d->conv_biases->val[offset_b+k]);
-                        }
-                    }
-                    stride1_w = stride1_w + (nn->conv2d->conv_weights->shape[l][1][0] * col_order_w * row_order_w);
-                    stride_a = stride_a + (row_order_a * col_order_a);
-                }
-                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*row_order_a_compute)+j))] = nn->conv2d->activationFunctions[local_idx](sum, NULL, NULL);
+                nn->conv2d->conv_affineTransformations->val[offset_z+(stride_z+(i*fw+j))] = vector[i*fw+j] + nn->conv2d->conv_biases=>val[offset_b+k];
             }
         }
-        stride2_w = stride2_w + (col_order_w * row_order_w);
+#endif
+        
+        for (int i=0; i<fh; i++) {
+            for (int j=0; j<fw; j++) {
+                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*fw)+j))] =
+                nn->conv2d->activationFunctions[local_idx](vector[i*fw+j], NULL, NULL);
+            }
+        }
+        
+        stride2_m = stride2_m + (rows_m * cols_m);
         stride_a_compute = stride_a_compute + (fh * fw);
+        stride_z = stride_z + (fh * fw);
     }
+    
     local_idx++;
+    
+//    int stride2_w = 0;
+//    int stride_a_compute = 0;
+//    for (int k=0; k<q; k++) {// Loop over all feature maps at current layer
+//        for (int i=0; i<fh; i++) {
+//            for (int j=0; j<fw; j++) {
+//                float sum = 0.0f;
+//                int stride_a = 0;
+//                int stride1_w = 0;
+//                for (int l=0; l<p; l++) { // Loop over all feature maps in previous layer
+//                    for (int u=0; u<kh; u++) {
+//                        for (int v=0; v<kw; v++) {
+//                            sum = sum +
+//                            (nn->conv2d->conv_activations->val[offset_a+(stride_a+(((i*sh+u)*row_order_a)+(j*sw+v)))] * nn->conv2d->conv_weights->val[offset_w+(stride1_w+(stride2_w+((u*row_order_w)+v)))] + nn->conv2d->conv_biases->val[offset_b+k]);
+//                        }
+//                    }
+//                    stride1_w = stride1_w + (nn->conv2d->conv_weights->shape[local_idx][1][0] * col_order_w * row_order_w);
+//                    stride_a = stride_a + (row_order_a * col_order_a);
+//                }
+//                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*row_order_a_compute)+j))] = nn->conv2d->activationFunctions[local_idx](sum, NULL, NULL);
+//            }
+//        }
+//        stride2_w = stride2_w + (col_order_w * row_order_w);
+//        stride_a_compute = stride_a_compute + (fh * fw);
+//    }
 }
 
-void max_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+void max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    unsigned int q = nn->conv2d->parameters->topology[layer][1];
+    unsigned int q = nn->conv2d->parameters->topology[op][1];
     
-    unsigned int fh = nn->conv2d->parameters->topology[layer][2];
-    unsigned int fw = nn->conv2d->parameters->topology[layer][3];
-    unsigned int kh = nn->conv2d->parameters->topology[layer][4];
-    unsigned int kw = nn->conv2d->parameters->topology[layer][5];
-    unsigned int sh = nn->conv2d->parameters->topology[layer][6];
-    unsigned int sw = nn->conv2d->parameters->topology[layer][7];
+    unsigned int fh = nn->conv2d->parameters->topology[op][2];
+    unsigned int fw = nn->conv2d->parameters->topology[op][3];
+    unsigned int kh = nn->conv2d->parameters->topology[op][4];
+    unsigned int kw = nn->conv2d->parameters->topology[op][5];
+    unsigned int sh = nn->conv2d->parameters->topology[op][6];
+    unsigned int sw = nn->conv2d->parameters->topology[op][7];
     
-    if (advance > 0) {
+    if (*advance > 0) {
         int step = 1;
         for (int i=0; i<nn->conv2d->conv_activations->rank; i++) {
             step = step * nn->conv2d->conv_activations->shape[*advance-1][i][0];
         }
         offset_a = offset_a + step;
     } else {
-        offset_w = 0;
+        offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
         offset_b = 0;
@@ -147,7 +196,7 @@ void max_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _
     
     int row_order_a = nn->conv2d->conv_activations->shape[*advance][2][0];
     int col_order_a = nn->conv2d->conv_activations->shape[*advance][1][0];
-    int row_order_a_compute = nn->conv2d->parameters->topology[layer][3];
+    int row_order_a_compute = nn->conv2d->parameters->topology[op][3];
     
     int stride_a_compute = 0;
     int stride_a = 0;
@@ -170,27 +219,27 @@ void max_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _
     }
 }
 
-void l2_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+void l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    unsigned int q = nn->conv2d->parameters->topology[layer][1];
+    unsigned int q = nn->conv2d->parameters->topology[op][1];
     
-    unsigned int fh = nn->conv2d->parameters->topology[layer][2];
-    unsigned int fw = nn->conv2d->parameters->topology[layer][3];
-    unsigned int kh = nn->conv2d->parameters->topology[layer][4];
-    unsigned int kw = nn->conv2d->parameters->topology[layer][5];
-    unsigned int sh = nn->conv2d->parameters->topology[layer][6];
-    unsigned int sw = nn->conv2d->parameters->topology[layer][7];
+    unsigned int fh = nn->conv2d->parameters->topology[op][2];
+    unsigned int fw = nn->conv2d->parameters->topology[op][3];
+    unsigned int kh = nn->conv2d->parameters->topology[op][4];
+    unsigned int kw = nn->conv2d->parameters->topology[op][5];
+    unsigned int sh = nn->conv2d->parameters->topology[op][6];
+    unsigned int sw = nn->conv2d->parameters->topology[op][7];
     
-    if (advance > 0) {
+    if (*advance > 0) {
         int step = 1;
         for (int i=0; i<nn->conv2d->conv_activations->rank; i++) {
             step = step * nn->conv2d->conv_activations->shape[*advance-1][i][0];
         }
         offset_a = offset_a + step;
     } else {
-        offset_w = 0;
+        offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
         offset_b = 0;
@@ -204,7 +253,7 @@ void l2_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _N
     
     int row_order_a = nn->conv2d->conv_activations->shape[*advance][2][0];
     int col_order_a = nn->conv2d->conv_activations->shape[*advance][1][0];
-    int row_order_a_compute = nn->conv2d->parameters->topology[layer][3];
+    int row_order_a_compute = nn->conv2d->parameters->topology[op][3];
     
     int stride_a_compute = 0;
     int stride_a = 0;
@@ -225,27 +274,27 @@ void l2_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _N
     }
 }
 
-void average_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+void average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    unsigned int q = nn->conv2d->parameters->topology[layer][1];
+    unsigned int q = nn->conv2d->parameters->topology[op][1];
     
-    unsigned int fh = nn->conv2d->parameters->topology[layer][2];
-    unsigned int fw = nn->conv2d->parameters->topology[layer][3];
-    unsigned int kh = nn->conv2d->parameters->topology[layer][4];
-    unsigned int kw = nn->conv2d->parameters->topology[layer][5];
-    unsigned int sh = nn->conv2d->parameters->topology[layer][6];
-    unsigned int sw = nn->conv2d->parameters->topology[layer][7];
+    unsigned int fh = nn->conv2d->parameters->topology[op][2];
+    unsigned int fw = nn->conv2d->parameters->topology[op][3];
+    unsigned int kh = nn->conv2d->parameters->topology[op][4];
+    unsigned int kw = nn->conv2d->parameters->topology[op][5];
+    unsigned int sh = nn->conv2d->parameters->topology[op][6];
+    unsigned int sw = nn->conv2d->parameters->topology[op][7];
     
-    if (advance > 0) {
+    if (*advance > 0) {
         int step = 1;
         for (int i=0; i<nn->conv2d->conv_activations->rank; i++) {
             step = step * nn->conv2d->conv_activations->shape[*advance-1][i][0];
         }
         offset_a = offset_a + step;
     } else {
-        offset_w = 0;
+        offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
         offset_b = 0;
@@ -259,7 +308,7 @@ void average_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int
     
     int row_order_a = nn->conv2d->conv_activations->shape[*advance][2][0];
     int col_order_a = nn->conv2d->conv_activations->shape[*advance][1][0];
-    int row_order_a_compute = nn->conv2d->parameters->topology[layer][3];
+    int row_order_a_compute = nn->conv2d->parameters->topology[op][3];
     
     int stride_a_compute = 0;
     int stride_a = 0;
@@ -281,7 +330,7 @@ void average_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int
     }
 }
 
-void infer_full_connected_op(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+void infer_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance) {
     
     static bool advance_connected_a;
     static bool advance_connected_compute;
@@ -291,9 +340,9 @@ void infer_full_connected_op(void * _Nonnull neural, unsigned int layer, unsigne
     tensor *ptr_activations = NULL;
     unsigned int *ptr_offset = NULL;
     
-    if (advance > 0) {
-        if (nn->conv2d->parameters->topology[layer-1][0] == POOLING ||
-            nn->conv2d->parameters->topology[layer-1][0] == CONVOLUTION) {
+    if (*advance > 0) {
+        if (nn->conv2d->parameters->topology[op-1][0] == POOLING ||
+            nn->conv2d->parameters->topology[op-1][0] == CONVOLUTION) {
             int step = 1;
             for (int i=0; i<nn->conv2d->conv_activations->rank; i++) {
                 step = step * nn->conv2d->conv_activations->shape[*advance-1][i][0];
@@ -372,11 +421,9 @@ void inference_in_conv2d_net(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    unsigned int ops_idx = 0;
     unsigned int advance = 0;
     for (int l=1; l<=nn->conv2d->num_infer_ops; l++) {
-        nn->conv2d->inferenceOps[ops_idx]((void *)nn, l, &advance);
-        ops_idx++;
+        nn->conv2d->inferenceOps[l-1]((void *)nn, l, &advance);
         advance++;
     }
 }
@@ -385,7 +432,7 @@ void inference_in_conv2d_net(void * _Nonnull neural) {
 // This routine does the backward propagation on the fully connected layers
 // similarly to the routine used for a fully connected network.
 //
-void backpropag_full_connected_op(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
     
     static unsigned int local_idx;
     
@@ -394,8 +441,8 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int layer, un
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    if (advance > 0) {
-        if (nn->conv2d->parameters->topology[layer-1][0] == FULLY_CONNECTED) {
+    if (advance1 > 0) {
+        if (nn->conv2d->parameters->topology[op-1][0] == FULLY_CONNECTED) {
             offset_a_connected = offset_a_connected - nn->conv2d->dense_activations->shape[local_idx-2][0][0];
             ptr_activations = nn->conv2d->dense_activations;
             ptr_offset = &offset_a_connected;
@@ -420,7 +467,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int layer, un
         local_idx--;
         
     } else {
-        if (nn->conv2d->parameters->topology[layer-1][0] == FULLY_CONNECTED) {
+        if (nn->conv2d->parameters->topology[op-1][0] == FULLY_CONNECTED) {
             // Stride to activations, affine transformations and dc_db at last layer
             // of fully connected part
             offset_a_connected = 0;
@@ -478,7 +525,8 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int layer, un
         }
     }
     
-    if (layer == nn->network_num_layers - 1) { // Last network layer
+    if (op == nn->network_num_layers - 1) { // Last network layer
+        
         // Compute delta
         int k = (int)nn->num_channels;
         for (int i=0; i<nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]; i++) {
@@ -486,7 +534,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int layer, un
             k++;
         }
         
-        if (nn->conv2d->parameters->topology[layer-1][0] == FULLY_CONNECTED) {
+        if (nn->conv2d->parameters->topology[op-1][0] == FULLY_CONNECTED) {
             offset_a_connected = offset_a_connected - nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-2][0][0];
             ptr_offset = &offset_a_connected;
         }
@@ -501,6 +549,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int layer, un
             nn->conv2d->dense_batchCostBiasDeriv->val[offset_dcdb_connected+i] = nn->conv2d->propag_delta[i];
         }
     } else { // Otherwise the layers up the fully connected part
+        
         float buffer[nn->conv2d->parameters->max_number_nodes_in_dense_layer];
         memset(buffer, 0.0f, sizeof(buffer));
         
@@ -531,8 +580,166 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int layer, un
     activ_idx--;
 }
 
-void backpropag_convolution_op(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+//
+// This routine computes the dela_{l} at the current convolution layer and updates
+// the derivatives of the cost function with respect to the convolution weights and biases
+//
+void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
     
+    BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    unsigned int p = nn->conv2d->parameters->topology[op-1][1];
+    unsigned int q = nn->conv2d->parameters->topology[op][1];
+    
+    unsigned int fh = nn->conv2d->parameters->topology[op][2];
+    unsigned int fw = nn->conv2d->parameters->topology[op][3];
+    unsigned int fh_p = nn->conv2d->parameters->topology[op-1][2];
+    unsigned int fw_p = nn->conv2d->parameters->topology[op-1][3];
+    unsigned int kh = nn->conv2d->parameters->topology[op][4];
+    unsigned int kw = nn->conv2d->parameters->topology[op][5];
+    unsigned int sh = nn->conv2d->parameters->topology[op][6];
+    unsigned int sw = nn->conv2d->parameters->topology[op][7];
+    
+    int offset_z = 0;
+    for (int l=0; l<*advance2; l++) {
+        int step = 1;
+        for (int i=0; i<nn->conv2d->conv_affineTransformations->rank; i++) {
+            step = step * nn->conv2d->conv_affineTransformations->shape[l][i][0];
+        }
+        offset_z = offset_z + step;
+    }
+    
+    // The term delta_{l}
+    if (nn->conv2d->parameters->topology[op+1][0] == POOLING) {
+        // We get the term delta^{l+1}*rot{k^{l+1}} or transpose(w^{l+1}) x delta^{l+1}
+        // from a pooling layer
+        int stride = 0;
+        for (int k=0; k<q; k++) {
+            for (int i=0; i<fh; i++) {
+                for (int j=0; j<fw; j++) {
+                    nn->conv2d->propag_upsampling[stride+(i*fw+j)] = nn->conv2d->propag_upsampling[stride+(i*fw+j)] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+(i*fw+j))]);
+                }
+            }
+            stride = stride + (fh * fw);
+        }
+        
+    } else if (nn->conv2d->parameters->topology[op+1][0] == CONVOLUTION) {
+        // We get delta_{l+1} and compute here delta^{l+1}*rot{k^{l+1}}
+        unsigned int offset_m = 0;
+        for (int l=0; l<=*advance2; l++) {
+            int step = 1;
+            for (int i=0; i<nn->conv2d->conv_matrices->rank; i++) {
+                step = step * nn->conv2d->conv_matrices->shape[l][i][0];
+            }
+            offset_m = offset_m + step;
+        }
+        
+        float vector[fh*fw];
+        unsigned int p = nn->conv2d->parameters->topology[op][1];
+        unsigned int q = nn->conv2d->parameters->topology[op+1][1];
+        int rows_m = nn->conv2d->conv_matrices->shape[*advance2+1][2][0];
+        int cols_m = nn->conv2d->conv_matrices->shape[*advance2+1][3][0];
+        int rows_d = nn->conv2d->parameters->topology[op+1][2];
+        int cols_d = nn->conv2d->parameters->topology[op+1][3];
+        
+        int stride1_m = 0;
+        int stride_s = 0;
+        for (int k=0; k<p; k++) {
+            int stride_d = 0;
+            int stride2_m = 0;
+            memset(vector, 0.0f, sizeof(vector));
+            for (int l=0; l<q; l++) {
+                cblas_sgemv(CblasRowMajor, CblasTrans, rows_m, cols_m, 1.0f, nn->conv2d->conv_matrices->val+offset_m+stride1_m+stride2_m, cols_m, nn->conv2d->propag_upsampling+stride_d, 1, 1.0, vector, 1);
+                stride2_m = stride2_m + (rows_m * cols_m);
+                stride_d = stride_d + (rows_d * cols_d);
+            }
+            memcpy(nn->conv2d->propag_delta+stride_s, vector, (fh*fw)*sizeof(float));
+            stride1_m = stride1_m + (nn->conv2d->conv_matrices->shape[*advance2+1][1][0] * rows_m * cols_m);
+            stride_s = stride_s + (fh * fw);
+        }
+        
+        int stride = 0;
+        for (int k=0; k<p; k++) {
+            for (int i=0; i<fh; i++) {
+                for (int j=0; j<fw; j++) {
+                    nn->conv2d->propag_upsampling[stride+(i*fw+j)] = nn->conv2d->propag_delta[stride+(i*fw+j)] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+(i*fw+j))]);
+                }
+            }
+            stride = stride + (fh * fw);
+        }
+    }
+    
+    // Flip the deltas (errors)
+    nn->flip_deltas((void *)nn, q, fh, fw);
+    
+    // Offset to activations at previous layer
+    int offset_a = 0;
+    for (int l=0; l<op-1; l++) {
+        int step = 1;
+        for (int i=0; i<nn->conv2d->conv_activations->rank; i++) {
+            step = step * nn->conv2d->conv_activations->shape[l][i][0];
+        }
+        offset_a = offset_a + step;
+    }
+    
+    // Offset to dC/dw
+    int offset_w = 0;
+    for (int l=0; l<*advance2; l++) {
+        int step = 1;
+        for (int i=0; i<nn->conv2d->conv_batchCostWeightDeriv->rank; i++) {
+            step = step * nn->conv2d->conv_batchCostWeightDeriv->shape[l][i][0];
+        }
+        offset_w = offset_w + step;
+    }
+    
+    // Offset to dC_db
+    int offset_b = 0;
+    for (int l=0; l<*advance2; l++) {
+        int step = 1;
+        for (int i=0; i<nn->conv2d->conv_batchCostBiasDeriv->rank; i++) {
+            step = step * nn->conv2d->conv_batchCostBiasDeriv->shape[l][i][0];
+        }
+        offset_b = offset_b + step;
+    }
+    
+    // We update the dC/dw by computing the convolution operation.
+    // TODO: Try to replace the convolution with the more efficient Matrix-Vector
+    // multiplication operation
+    
+    int stride_a = 0;
+    int stride1_m = 0;
+    for (int k=0; k<p; k++) {
+        int stride = 0;
+        int stride2_m = 0;
+        for (int l=0; l<q; l++) {
+            for (int u=0; u<kh; u++) {
+                for (int v=0; v<kw; v++) {
+                    float sum_w = 0.0f;
+                    for (int i=0; i<fh; i++) {
+                        for (int j=0; j<fw; j++) {
+                            sum_w = sum_w + nn->conv2d->propag_delta[stride+(i*fw+j)] * nn->conv2d->conv_activations->val[offset_a+(stride_a+((i*sh+u)*fw_p+(j*sw+v)))];
+                        }
+                    }
+                    nn->conv2d->conv_batchCostWeightDeriv->val[offset_w+(stride1_m+(stride2_m+(u*kw+v)))] = sum_w;
+                }
+            }
+            float sum_b = 0.0f;
+            for (int i=0; i<fh; i++) {
+                for (int j=0; j<fw; j++) {
+                    sum_b = sum_b + nn->conv2d->propag_upsampling[stride+(i*fw+j)];
+                }
+            }
+            nn->conv2d->conv_batchCostBiasDeriv->val[offset_b+l] = sum_b;
+            
+            stride = stride + (fh * fw);
+            stride2_m = stride2_m + (kh * kw);
+        }
+        stride_a = stride_a + (fh_p * fw_p);
+        stride1_m = stride1_m + (q * kh * kw);
+    }
+    
+    (*advance2)--;
+    activ_idx--;
 }
 
 //
@@ -559,119 +766,128 @@ static void backpropag_pooling_after_fully_connected(void * _Nonnull neural, uns
 
 //
 // This routine is called by the backpropagation pooling op when the pooling layer follows a convolution
-// layer going the network upward.
+// layer crossing the network upward.
 // It computes the term delta^{l+1}*rot{k^{l+1}}, where * is the convolution operation, delta^{l+1} and
 // k{l+1} are the error (stored in the propag_upsampling array) and the weights of the convolution layer which
 // follows the pooling layer downward.
 //
-static void backpropag_pooling_after_convolution(void * _Nonnull neural, unsigned int layer) {
+static void backpropag_pooling_after_convolution(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance2) {
+    
     
     BrainStormNet *nn = (BrainStormNet *)neural;
-        
+    
     unsigned int p = nn->conv2d->parameters->topology[layer][1];
     unsigned int q = nn->conv2d->parameters->topology[layer+1][1];
     
     unsigned int fh = nn->conv2d->parameters->topology[layer][2];
     unsigned int fw = nn->conv2d->parameters->topology[layer][3];
-    unsigned int kh = nn->conv2d->parameters->topology[layer][4];
-    unsigned int kw = nn->conv2d->parameters->topology[layer][5];
-   
-    int stride1_w = 0;
-    for (int k=0; k<p; k++) { // Loop accross maps in pooling layer
-        for (int i=0; i<fh; i++) {
-            for (int j=0; j<fw; j++) {
-                int stride2_w = 0;
-                for (int l=0; l<q; l++) { // Loop accross maps in convolution layer
-                
-                }
-            }
-            //stride2_w =
+    
+    unsigned int offset_m = 0;
+    for (int l=0; l<=*advance2; l++) {
+        int step = 1;
+        for (int i=0; i<nn->conv2d->conv_matrices->rank; i++) {
+            step = step * nn->conv2d->conv_matrices->shape[l][i][0];
         }
-        //stride1_w =
+        offset_m = offset_m + step;
     }
     
+    int rows_m = nn->conv2d->conv_matrices->shape[*advance2+1][2][0];
+    int cols_m = nn->conv2d->conv_matrices->shape[*advance2+1][3][0];
     
+    int rows_d = nn->conv2d->parameters->topology[layer+1][2];
+    int cols_d = nn->conv2d->parameters->topology[layer+1][3];
     
-    
-    
-    
+    float vector[fh*fw];
+   
+    int stride1_m = 0;
+    int stride_s = 0;
+    for (int k=0; k<p; k++) { // Loop accross maps in pooling layer
+        int stride_d = 0;
+        int stride2_m = 0;
+        memset(vector, 0.0f, sizeof(vector));
+        for (int l=0; l<q; l++) {
+            cblas_sgemv(CblasRowMajor, CblasTrans, rows_m, cols_m, 1.0f, nn->conv2d->conv_matrices->val+offset_m+stride1_m+stride2_m, cols_m, nn->conv2d->propag_upsampling+stride_d, 1, 1.0, vector, 1);
+            stride2_m = stride2_m + (rows_m * cols_m);
+            stride_d = stride_d + (rows_d * cols_d);
+        }
+        memcpy(nn->conv2d->propag_delta+stride_s, vector, (fh*fw)*sizeof(float));
+        stride1_m = stride1_m + (nn->conv2d->conv_matrices->shape[*advance2+1][1][0] * rows_m * cols_m);
+        stride_s = stride_s + (fh * fw);
+    }
 }
 
-void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
     
     static bool check = false;
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (!check) {
-        if (advance == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology error in convolutional network. Using a pooling layer as an output layer is not permitted.");
+        if (advance1 == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology error in convolutional network. Using a pooling layer as an output layer is not permitted.");
         check = true;
     }
     
-    if (nn->conv2d->parameters->topology[layer+1][0] == CONVOLUTION) {
-        backpropag_pooling_after_convolution((void *)nn, layer);
+    if (nn->conv2d->parameters->topology[op+1][0] == CONVOLUTION) {
+        backpropag_pooling_after_convolution((void *)nn, op, advance2);
     } else {
-        backpropag_pooling_after_fully_connected((void *)nn, layer);
+        backpropag_pooling_after_fully_connected((void *)nn, op);
     }
     
     // Upsampling
     
-    activ_idx--;
 }
 
-void backpropag_l2_pooling(void * _Nonnull neural, unsigned int layer, unsigned int *_Nullable advance) {
+void backpropag_l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int *_Nullable advance1, unsigned int * _Nullable advance2) {
     
 }
 
-void backpropag_average_pooling(void * _Nonnull neural, unsigned int layer, unsigned int * _Nullable advance) {
+void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
     
     static bool check = false;
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
     if (!check) {
-        if (advance == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology error in convolutional network. Using a pooling layer as an output layer is not permitted.");
+        if (advance1 == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology error in convolutional network. Using a pooling layer as an output layer is not permitted.");
         check = true;
     }
     
-    if (nn->conv2d->parameters->topology[layer+1][0] == CONVOLUTION) {
-        backpropag_pooling_after_convolution((void *)nn, layer);
+    if (nn->conv2d->parameters->topology[op+1][0] == CONVOLUTION) {
+        backpropag_pooling_after_convolution((void *)nn, op, advance2);
     } else {
-        backpropag_pooling_after_fully_connected((void *)nn, layer);
+        backpropag_pooling_after_fully_connected((void *)nn, op);
     }
     
     // Upsampling: the error is multiplied by 1/(kh*kw) and assigned to the
     // whole pooling block. kh and kw are the horizontal and vertical dimension
     // of the pooling kernel respectively
-    unsigned int q = nn->conv2d->parameters->topology[layer-1][1];
-    unsigned int fh = nn->conv2d->parameters->topology[layer][2];
-    unsigned int fw = nn->conv2d->parameters->topology[layer][3];
-    unsigned int kh = nn->conv2d->parameters->topology[layer][4];
-    unsigned int kw = nn->conv2d->parameters->topology[layer][5];
-    unsigned int sh = nn->conv2d->parameters->topology[layer][6];
-    unsigned int sw = nn->conv2d->parameters->topology[layer][7];
+    unsigned int q = nn->conv2d->parameters->topology[op-1][1];
+    unsigned int fh = nn->conv2d->parameters->topology[op][2];
+    unsigned int fw = nn->conv2d->parameters->topology[op][3];
+    unsigned int kh = nn->conv2d->parameters->topology[op][4];
+    unsigned int kw = nn->conv2d->parameters->topology[op][5];
+    unsigned int sh = nn->conv2d->parameters->topology[op][6];
+    unsigned int sw = nn->conv2d->parameters->topology[op][7];
     
-    unsigned int row_order_c = nn->conv2d->parameters->topology[layer-1][3];
-    unsigned int row_order_p = nn->conv2d->parameters->topology[layer][3];
+    unsigned int cols_c = nn->conv2d->parameters->topology[op-1][3];
+    unsigned int cols_s = nn->conv2d->parameters->topology[op][3];
     
     int stride_c = 0;
-    int stride_p = 0;
+    int stride_s = 0;
     for (int k=0; k<q; k++) {
         for (int i=0; i<fh; i++) {
             for (int j=0; j<fw; j++) {
                 for (int u=0; u<kh; u++) {
                     for (int v=0; v<kw; v++) {
-                        nn->conv2d->propag_upsampling[stride_c+(((i*sh+u)*row_order_c)+(j*sw+v))] =
-                                1.0/((float)(kh*kw))*nn->conv2d->propag_delta[stride_p+((i*row_order_p)+j)];
+                        nn->conv2d->propag_upsampling[stride_c+(((i*sh+u)*cols_c)+(j*sw+v))] =
+                                1.0/((float)(kh*kw))*nn->conv2d->propag_delta[stride_s+((i*cols_s)+j)];
                     }
                 }
             }
         }
-        stride_c = stride_c + (nn->conv2d->parameters->topology[layer-1][2] * nn->conv2d->parameters->topology[layer-1][3]);
-        stride_p = stride_p + (nn->conv2d->parameters->topology[layer][2] * nn->conv2d->parameters->topology[layer][3]);
+        stride_c = stride_c + (nn->conv2d->parameters->topology[op-1][2] * nn->conv2d->parameters->topology[op-1][3]);
+        stride_s = stride_s + (nn->conv2d->parameters->topology[op][2] * nn->conv2d->parameters->topology[op][3]);
     }
-    
-    activ_idx--;
 }
 
 void backpropag_in_conv2d_net(void * _Nonnull neural,
@@ -691,12 +907,12 @@ void backpropag_in_conv2d_net(void * _Nonnull neural,
     inference_in_conv2d_net((void *)neural);
     
     // Backpropagation
-    unsigned int advance = 0;
+    unsigned int advance1 = 0;
+    unsigned int advance2 = nn->conv2d->num_conv2d_layers - 1;
     for (int l=nn->conv2d->num_backpropag_ops; l>=1; l--) {
-        
-        advance++;
+        nn->conv2d->backpropagOps[l-1]((void *)nn, l, &advance1, &advance2);
+        advance1++;
     }
-    
 }
 
 void batch_accumulation_in_conv2d_net(void * _Nonnull neural) {

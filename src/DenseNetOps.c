@@ -96,7 +96,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
         k++;
     }
     
-    //Stride to dc/dw at last layer
+    //Stride to dC/dw at last layer
     unsigned int stride4 = 0;
     unsigned int m, n;
     for (int l=0; l<nn->network_num_layers-2; l++) {
@@ -140,7 +140,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
         for (int i=0; i<nn->dense->affineTransformations->shape[l-1][0][0]; i++) {
             delta[i] = buffer[i] * sp[i];
         }
-        // dc/dw at layer l
+        // dC/dw at layer l
         m = nn->dense->batchCostWeightDeriv->shape[l-1][0][0];
         n = nn->dense->batchCostWeightDeriv->shape[l-1][1][0];
         for (int i=0; i<m; i++) {
@@ -148,7 +148,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
                 nn->dense->batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
             }
         }
-        // dc/db at layer l
+        // dC/db at layer l
         for (int i=0; i<nn->dense->batchCostBiasDeriv->shape[l-1][0][0]; i++) {
             nn->dense->batchCostBiasDeriv->val[stride3+i] = delta[i];
         }
@@ -159,7 +159,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
 
 void batch_accumulation_in_dense_net(void * _Nonnull neural) {
     
-    // Accumulate dcdw and dc/db
+    // Accumulate dC/dw and dC/db
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
