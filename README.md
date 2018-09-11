@@ -3,6 +3,8 @@
 
 ### Description:
 
+**The current desciption of this project is outdated. It will be updated at a later time.**
+
 BrainStorm is a full connected (feedforward) network library written in C. It supports the following activation functions: sigmoid, relu, tanh and softmax (only at the output layer). It also supports L2 regularization, momentum and three algorithms for adapative learning rate: AdaGrad, RMSProp and Adam.
 
 At this time, parameters for the network must be defined in an input file with the define { } directive. The input file must not contain comments or tabulations. 
