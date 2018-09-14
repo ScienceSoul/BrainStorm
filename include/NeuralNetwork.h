@@ -123,10 +123,10 @@ typedef struct BrainStormNet {
     void * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
-    float (* _Nullable l0_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
-    float (* _Nullable l1_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
-    float (* _Nullable l2_regularizer)(void * _Nonnull neural, int i, int j, int n, int stride);
-    float (* _Nullable regularizer[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, int i, int j, int n, int stride);
+    float (* _Nullable l0_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
+    float (* _Nullable l1_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
+    float (* _Nullable l2_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
+    float (* _Nullable regularizer[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
     
     void (* _Nullable train_loop)(void * _Nonnull neural);
     

@@ -163,22 +163,22 @@ void batch_accumulation_in_dense_net(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    unsigned stride1 = 0;
-    unsigned stride2 = 0;
+    int offset_w = 0;
+    int offset_b = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
         unsigned int m = nn->dense->costWeightDerivatives->shape[l][0][0];
         unsigned int n = nn->dense->costWeightDerivatives->shape[l][1][0];
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense->costWeightDerivatives->val[stride1+((i*n)+j)] = nn->dense->costWeightDerivatives->val[stride1+((i*n)+j)] + nn->dense->batchCostWeightDeriv->val[stride1+((i*n)+j)];
+                nn->dense->costWeightDerivatives->val[offset_w+((i*n)+j)] = nn->dense->costWeightDerivatives->val[offset_w+((i*n)+j)] + nn->dense->batchCostWeightDeriv->val[offset_w+((i*n)+j)];
             }
         }
         for (int i=0; i<m; i++) {
-            nn->dense->costBiasDerivatives->val[stride2+i] = nn->dense->costBiasDerivatives->val[stride2+i] + nn->dense->batchCostBiasDeriv->val[stride2+i];
+            nn->dense->costBiasDerivatives->val[offset_b+i] = nn->dense->costBiasDerivatives->val[offset_b+i] + nn->dense->batchCostBiasDeriv->val[offset_b+i];
         }
         
-        stride1 = stride1 + (m * n);
-        stride2 = stride2 + m;
+        offset_w = offset_w + (m * n);
+        offset_b = offset_b + m;
     }
 }

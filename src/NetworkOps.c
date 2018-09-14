@@ -329,15 +329,11 @@ void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned int fh, unsigne
 }
 
 //
-// This routine updates the convolution matrices
+// This routine updates the convolution matrices using the flipped kernels (weights)
 //
 void convMatUpdate(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
-    
-    // Flip the kernels (weights)
-    flipKernels((void *)neural);
-    
     
     // Copy the values to the convolution matrices
     unsigned int idx = 0;

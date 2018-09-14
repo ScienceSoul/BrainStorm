@@ -403,8 +403,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
             nn->conv2d->dense_affineTransformations = (tensor *)nn->tensor((void *)nn, dict);
     }
     
-    // This array is used to store the delta at layer l+1 during backpropagation
-    // Allocate enough space for it
+    // --------------------------------------------------------------------------------
+    // ------- Buffer to store the deltas (errors) at layer l+1 during backpropagation
+    // --------------------------------------------------------------------------------
     for (int l=1; l<nn->network_num_layers; l++) {
         int size = 0;
         if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION || nn->conv2d->parameters->topology[l][0] == POOLING) {
@@ -417,7 +418,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
     }
     nn->conv2d->propag_delta = (float *)malloc(nn->conv2d->parameters->max_propag_delta_entries*sizeof(float));
     
-    // This array is used to store the upsampled deltas from the pooling layers
+    // --------------------------------------------------------------------
+    // ------- Storage for the upsampled deltas from the pooling layers
+    // --------------------------------------------------------------------
     int size = 0;
     for (int l=1; l<nn->network_num_layers; l++) {
         if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
@@ -428,28 +431,12 @@ void conv2d_net_genesis(void * _Nonnull self) {
     nn->conv2d->propag_upsampling = (float *)malloc(size*sizeof(float));
     memset(nn->conv2d->propag_upsampling, 0.0f, size*sizeof(float));
     
-    // The current implementation of the convolution operations makes use of a Matrix-Vector
-    // multiplication. For that purpose, a sparse matrix for each rotated convolution kernel at
-    // each convolution layer is created. The following allocates memory for these matrices.
+    // ------------------------------------------------------
+    // ------- Matrices used to flip the kernels (weights)
+    // ------------------------------------------------------
     tensor_dict dict;
-    dict.rank = 4;
-    int idx = 0;
-    for (int l=0; l<nn->network_num_layers; l++) {
-        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
-            dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
-            dict.shape[idx][1][0] = nn->conv2d->parameters->topology[l][1];
-            dict.shape[idx][2][0] = (nn->conv2d->parameters->topology[l][2]*nn->conv2d->parameters->topology[l][3]);
-            dict.shape[idx][3][0] = (nn->conv2d->parameters->topology[l-1][2]*nn->conv2d->parameters->topology[l-1][3]);
-            idx++;
-        }
-    }
-    dict.flattening_length = nn->conv2d->num_conv2d_layers;
-    dict.init = false;
-    nn->conv2d->conv_matrices = (tensor *)nn->tensor((void *)nn, dict);
-    
-    // Create the matrices used to flip the kernels (weights)
     dict.rank = 2;
-    idx = 0;
+    int idx = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
         if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
             dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l][4];
@@ -482,7 +469,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
     }
     
-    // Allocation to store the flipped kernels (weights)
+    // ----------------------------------------------------
+    // ------- Storage for the flipped kernels (weights)
+    // ----------------------------------------------------
     dict.rank = 4;
     idx = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
@@ -497,6 +486,30 @@ void conv2d_net_genesis(void * _Nonnull self) {
     dict.flattening_length = nn->conv2d->num_conv2d_layers;
     dict.init = false;
     nn->conv2d->flipped_weights = (tensor *)nn->tensor((void *)nn, dict);
+    
+    // -------------------------------------------------------------------------------------------------
+    // ------- The current implementation of the convolution operations makes use of a Matrix-Vector
+    // ------- multiplication. For that purpose, a sparse matrix for each rotated convolution kernel
+    // ------- at each convolution layer is created. The following allocates memory for these matrices.
+    // -------------------------------------------------------------------------------------------------
+    dict.rank = 4;
+    idx = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            dict.shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+            dict.shape[idx][1][0] = nn->conv2d->parameters->topology[l][1];
+            dict.shape[idx][2][0] = (nn->conv2d->parameters->topology[l][2]*nn->conv2d->parameters->topology[l][3]);
+            dict.shape[idx][3][0] = (nn->conv2d->parameters->topology[l-1][2]*nn->conv2d->parameters->topology[l-1][3]);
+            idx++;
+        }
+    }
+    dict.flattening_length = nn->conv2d->num_conv2d_layers;
+    dict.init = false;
+    nn->conv2d->conv_matrices = (tensor *)nn->tensor((void *)nn, dict);
+    
+    // Initialize the convolution matrices with the flipped initial kernels (weights)
+    nn->flip_kernels((void *)nn);
+    nn->conv_mat_update((void *)nn);
 }
 
 //

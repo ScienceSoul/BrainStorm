@@ -40,7 +40,7 @@ typedef struct optimizer_dict {
 
 typedef struct regularizer_dict {
     float regularization_factor;
-    float (* _Nullable regularizer_func)(void * _Nonnull neural, int i, int j, int n, int stride);
+    float (* _Nullable regularizer_func)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
 } regularizer_dict;
 
 typedef struct networkConstructor {

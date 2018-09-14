@@ -692,7 +692,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned
         offset_w = offset_w + step;
     }
     
-    // Offset to dC_db
+    // Offset to dC/db
     int offset_b = 0;
     for (int l=0; l<*advance2; l++) {
         int step = 1;
@@ -723,19 +723,23 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned
                     nn->conv2d->conv_batchCostWeightDeriv->val[offset_w+(stride1_m+(stride2_m+(u*kw+v)))] = sum_w;
                 }
             }
-            float sum_b = 0.0f;
-            for (int i=0; i<fh; i++) {
-                for (int j=0; j<fw; j++) {
-                    sum_b = sum_b + nn->conv2d->propag_upsampling[stride+(i*fw+j)];
-                }
-            }
-            nn->conv2d->conv_batchCostBiasDeriv->val[offset_b+l] = sum_b;
-            
             stride = stride + (fh * fw);
             stride2_m = stride2_m + (kh * kw);
         }
         stride_a = stride_a + (fh_p * fw_p);
         stride1_m = stride1_m + (q * kh * kw);
+    }
+    
+    int stride = 0;
+    for (int l=0; l<q; l++) {
+        float sum_b = 0.0f;
+        for (int i=0; i<fh; i++) {
+            for (int j=0; j<fw; j++) {
+                sum_b = sum_b + nn->conv2d->propag_upsampling[stride+(i*fw+j)];
+            }
+        }
+        nn->conv2d->conv_batchCostBiasDeriv->val[offset_b+l] = sum_b;
+        stride = stride + (fh * fw);
     }
     
     (*advance2)--;
@@ -917,4 +921,64 @@ void backpropag_in_conv2d_net(void * _Nonnull neural,
 
 void batch_accumulation_in_conv2d_net(void * _Nonnull neural) {
     
+    // Accumulate dC/dw and dC/db at convolution and
+    // fully connected layers
+    
+    BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    // Convolution layers
+    int offset_w = 0;
+    int offset_b = 0;
+    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
+        
+        unsigned int p = nn->conv2d->conv_batchCostWeightDeriv->shape[l][0][0];
+        unsigned int q = nn->conv2d->conv_batchCostWeightDeriv->shape[l][1][0];
+        unsigned int kh = nn->conv2d->conv_batchCostWeightDeriv->shape[l][2][0];
+        unsigned int kw = nn->conv2d->conv_batchCostWeightDeriv->shape[l][3][0];
+        
+        int stride1 = 0;
+        for (int k=0; k<p; k++) {
+            int stride2 = 0;
+            for (int ll=0; ll<q; ll++) {
+                for (int u=0; u<kh; u++) {
+                    for (int v=0; v<kw; v++) {
+                        nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
+                          nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))] +
+                              nn->conv2d->conv_batchCostWeightDeriv->val[offset_w+(stride1+(stride2+(u*kw+v)))];
+                    }
+                }
+                stride2 = stride2 + (kh * kw);
+            }
+            stride1 = stride1 + (q * kh * kw);
+        }
+        
+        for (int ll=0; ll<q; ll++) {
+            nn->conv2d->conv_costBiasDerivatives->val[offset_b+ll] = nn->conv2d->conv_costBiasDerivatives->val[offset_b+ll] + nn->conv2d->conv_batchCostBiasDeriv->val[offset_b+ll];
+        }
+        
+        offset_w = offset_w + (p * q * kh * kw);
+        offset_b = offset_b + q;
+    }
+    
+    // Fully connected layers
+    offset_w = 0;
+    offset_b = 0;
+    for (int l=0; l<nn->conv2d->num_dense_layers; l++) {
+        unsigned int m = nn->conv2d->dense_costWeightDerivatives->shape[l][0][0];
+        unsigned int n = nn->conv2d->dense_costWeightDerivatives->shape[l][1][0];
+        
+        for (int i=0; i<m; i++) {
+            for (int j=0; j<n; j++) {
+                nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] =
+                   nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] + nn->conv2d->dense_batchCostWeightDeriv->val[offset_w+((i*n)+j)];
+            }
+        }
+        for (int i=0; i<m; i++) {
+            nn->conv2d->dense_costBiasDerivatives->val[offset_b+i] =
+            nn->conv2d->dense_costBiasDerivatives->val[offset_b+i] + nn->conv2d->dense_batchCostBiasDeriv->val[offset_b+i];
+        }
+        
+        offset_w = offset_w + (m * n);
+        offset_b = offset_b + m;
+    }
 }
