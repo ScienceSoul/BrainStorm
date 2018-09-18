@@ -72,7 +72,32 @@
 		016175AA20FF107600FC40FF /* NetworkOps.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A920FF107600FC40FF /* NetworkOps.c */; };
 		016175AB20FF107600FC40FF /* NetworkOps.c in Sources */ = {isa = PBXBuildFile; fileRef = 016175A920FF107600FC40FF /* NetworkOps.c */; };
 		016175AC20FF176A00FC40FF /* NetworkOps.h in Headers */ = {isa = PBXBuildFile; fileRef = 016175A820FF105C00FC40FF /* NetworkOps.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01DD2F942150996300082198 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 01DD2F932150996300082198 /* main.c */; };
+		01DD2F9A215099CE00082198 /* LoadMNISTDataSet.c in Sources */ = {isa = PBXBuildFile; fileRef = 01DD2F99215099CE00082198 /* LoadMNISTDataSet.c */; };
+		01DD2F9D21509A1100082198 /* libBrainStorm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161756E20EEEDE500FC40FF /* libBrainStorm.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		01DD2F9B21509A0800082198 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0161751020EDDDF500FC40FF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0161756D20EEEDE500FC40FF;
+			remoteInfo = BrainStorm_static;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		01DD2F8F2150996300082198 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		014B235121195CCA008E46AC /* DenseNet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DenseNet.h; sourceTree = "<group>"; };
@@ -116,6 +141,10 @@
 		016175A320F73DDB00FC40FF /* Optimizers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Optimizers.c; sourceTree = "<group>"; };
 		016175A820FF105C00FC40FF /* NetworkOps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkOps.h; path = include/NetworkOps.h; sourceTree = SOURCE_ROOT; };
 		016175A920FF107600FC40FF /* NetworkOps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = NetworkOps.c; sourceTree = "<group>"; };
+		01DD2F912150996300082198 /* mnist */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mnist; sourceTree = BUILT_PRODUCTS_DIR; };
+		01DD2F932150996300082198 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		01DD2F982150999C00082198 /* LoadMNISTDataSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoadMNISTDataSet.h; sourceTree = "<group>"; };
+		01DD2F99215099CE00082198 /* LoadMNISTDataSet.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = LoadMNISTDataSet.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +166,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		01DD2F8E2150996300082198 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01DD2F9D21509A1100082198 /* libBrainStorm.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -147,6 +184,7 @@
 				0161752620EDDF6600FC40FF /* metal */,
 				0161752920EDDFE600FC40FF /* include */,
 				0161753320EDE03800FC40FF /* src */,
+				01DD2F922150996300082198 /* mnist */,
 				0161751920EDDDF500FC40FF /* Products */,
 				0161751F20EDDE4600FC40FF /* Frameworks */,
 			);
@@ -157,6 +195,7 @@
 			children = (
 				0161751820EDDDF500FC40FF /* libBrainStorm.dylib */,
 				0161756E20EEEDE500FC40FF /* libBrainStorm.a */,
+				01DD2F912150996300082198 /* mnist */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -229,6 +268,16 @@
 			name = src;
 			path = /Users/hakimeseddik/Documents/BrainStorm/src;
 			sourceTree = "<absolute>";
+		};
+		01DD2F922150996300082198 /* mnist */ = {
+			isa = PBXGroup;
+			children = (
+				01DD2F932150996300082198 /* main.c */,
+				01DD2F982150999C00082198 /* LoadMNISTDataSet.h */,
+				01DD2F99215099CE00082198 /* LoadMNISTDataSet.c */,
+			);
+			path = mnist;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -314,6 +363,24 @@
 			productReference = 0161756E20EEEDE500FC40FF /* libBrainStorm.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		01DD2F902150996300082198 /* mnist */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01DD2F952150996300082198 /* Build configuration list for PBXNativeTarget "mnist" */;
+			buildPhases = (
+				01DD2F8D2150996300082198 /* Sources */,
+				01DD2F8E2150996300082198 /* Frameworks */,
+				01DD2F8F2150996300082198 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				01DD2F9C21509A0800082198 /* PBXTargetDependency */,
+			);
+			name = mnist;
+			productName = mnist;
+			productReference = 01DD2F912150996300082198 /* mnist */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -328,6 +395,9 @@
 					};
 					0161756D20EEEDE500FC40FF = {
 						CreatedOnToolsVersion = 9.4.1;
+					};
+					01DD2F902150996300082198 = {
+						CreatedOnToolsVersion = 10.0;
 					};
 				};
 			};
@@ -345,6 +415,7 @@
 			targets = (
 				0161751720EDDDF500FC40FF /* BrainStorm */,
 				0161756D20EEEDE500FC40FF /* BrainStorm_static */,
+				01DD2F902150996300082198 /* mnist */,
 			);
 		};
 /* End PBXProject section */
@@ -361,7 +432,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/myLibs'\npath=$path1$path2$path3\n\nif test -d $path ; then\nrm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/libBrainStorm.dylib $path\ncp -r ${BUILT_PRODUCTS_DIR}/usr $path";
+			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/myLibs'\npath=$path1$path2$path3\n\nif test -d $path ; then\nrm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/libBrainStorm.dylib $path\ncp -r ${BUILT_PRODUCTS_DIR}/usr $path\n";
 		};
 		0161757C20EEEEEC00FC40FF /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -426,7 +497,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		01DD2F8D2150996300082198 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01DD2F9A215099CE00082198 /* LoadMNISTDataSet.c in Sources */,
+				01DD2F942150996300082198 /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		01DD2F9C21509A0800082198 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0161756D20EEEDE500FC40FF /* BrainStorm_static */;
+			targetProxy = 01DD2F9B21509A0800082198 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0161751A20EDDDF500FC40FF /* Debug */ = {
@@ -572,6 +660,7 @@
 				EXECUTABLE_PREFIX = lib;
 				PRODUCT_NAME = BrainStorm;
 				SKIP_INSTALL = YES;
+				STRIP_STYLE = debugging;
 			};
 			name = Debug;
 		};
@@ -583,6 +672,28 @@
 				EXECUTABLE_PREFIX = lib;
 				PRODUCT_NAME = BrainStorm;
 				SKIP_INSTALL = YES;
+				STRIP_STYLE = debugging;
+			};
+			name = Release;
+		};
+		01DD2F962150996300082198 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 65WT6FN4B4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		01DD2F972150996300082198 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 65WT6FN4B4;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -612,6 +723,15 @@
 			buildConfigurations = (
 				0161757020EEEDE500FC40FF /* Debug */,
 				0161757120EEEDE500FC40FF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		01DD2F952150996300082198 /* Build configuration list for PBXNativeTarget "mnist" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01DD2F962150996300082198 /* Debug */,
+				01DD2F972150996300082198 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
