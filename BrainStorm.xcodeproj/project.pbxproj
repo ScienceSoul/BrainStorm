@@ -75,6 +75,8 @@
 		01DD2F942150996300082198 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 01DD2F932150996300082198 /* main.c */; };
 		01DD2F9A215099CE00082198 /* LoadMNISTDataSet.c in Sources */ = {isa = PBXBuildFile; fileRef = 01DD2F99215099CE00082198 /* LoadMNISTDataSet.c */; };
 		01DD2F9D21509A1100082198 /* libBrainStorm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161756E20EEEDE500FC40FF /* libBrainStorm.a */; };
+		01DD2FA521509E7500082198 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 01DD2FA421509E7500082198 /* main.c */; };
+		01DD2FAB21509EB000082198 /* libBrainStorm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161756E20EEEDE500FC40FF /* libBrainStorm.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,10 +87,26 @@
 			remoteGlobalIDString = 0161756D20EEEDE500FC40FF;
 			remoteInfo = BrainStorm_static;
 		};
+		01DD2FA921509EAA00082198 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0161751020EDDDF500FC40FF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0161756D20EEEDE500FC40FF;
+			remoteInfo = BrainStorm_static;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		01DD2F8F2150996300082198 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		01DD2FA021509E7500082198 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -145,6 +163,8 @@
 		01DD2F932150996300082198 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		01DD2F982150999C00082198 /* LoadMNISTDataSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoadMNISTDataSet.h; sourceTree = "<group>"; };
 		01DD2F99215099CE00082198 /* LoadMNISTDataSet.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = LoadMNISTDataSet.c; sourceTree = "<group>"; };
+		01DD2FA221509E7500082198 /* BrainStormTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = BrainStormTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		01DD2FA421509E7500082198 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +194,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		01DD2F9F21509E7500082198 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01DD2FAB21509EB000082198 /* libBrainStorm.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -185,6 +213,7 @@
 				0161752920EDDFE600FC40FF /* include */,
 				0161753320EDE03800FC40FF /* src */,
 				01DD2F922150996300082198 /* mnist */,
+				01DD2FA321509E7500082198 /* BrainStormTest */,
 				0161751920EDDDF500FC40FF /* Products */,
 				0161751F20EDDE4600FC40FF /* Frameworks */,
 			);
@@ -196,6 +225,7 @@
 				0161751820EDDDF500FC40FF /* libBrainStorm.dylib */,
 				0161756E20EEEDE500FC40FF /* libBrainStorm.a */,
 				01DD2F912150996300082198 /* mnist */,
+				01DD2FA221509E7500082198 /* BrainStormTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -277,6 +307,14 @@
 				01DD2F99215099CE00082198 /* LoadMNISTDataSet.c */,
 			);
 			path = mnist;
+			sourceTree = "<group>";
+		};
+		01DD2FA321509E7500082198 /* BrainStormTest */ = {
+			isa = PBXGroup;
+			children = (
+				01DD2FA421509E7500082198 /* main.c */,
+			);
+			path = BrainStormTest;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -381,6 +419,24 @@
 			productReference = 01DD2F912150996300082198 /* mnist */;
 			productType = "com.apple.product-type.tool";
 		};
+		01DD2FA121509E7500082198 /* BrainStormTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01DD2FA621509E7500082198 /* Build configuration list for PBXNativeTarget "BrainStormTest" */;
+			buildPhases = (
+				01DD2F9E21509E7500082198 /* Sources */,
+				01DD2F9F21509E7500082198 /* Frameworks */,
+				01DD2FA021509E7500082198 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				01DD2FAA21509EAA00082198 /* PBXTargetDependency */,
+			);
+			name = BrainStormTest;
+			productName = BrainStormTest;
+			productReference = 01DD2FA221509E7500082198 /* BrainStormTest */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -397,6 +453,9 @@
 						CreatedOnToolsVersion = 9.4.1;
 					};
 					01DD2F902150996300082198 = {
+						CreatedOnToolsVersion = 10.0;
+					};
+					01DD2FA121509E7500082198 = {
 						CreatedOnToolsVersion = 10.0;
 					};
 				};
@@ -416,6 +475,7 @@
 				0161751720EDDDF500FC40FF /* BrainStorm */,
 				0161756D20EEEDE500FC40FF /* BrainStorm_static */,
 				01DD2F902150996300082198 /* mnist */,
+				01DD2FA121509E7500082198 /* BrainStormTest */,
 			);
 		};
 /* End PBXProject section */
@@ -506,6 +566,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		01DD2F9E21509E7500082198 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01DD2FA521509E7500082198 /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -513,6 +581,11 @@
 			isa = PBXTargetDependency;
 			target = 0161756D20EEEDE500FC40FF /* BrainStorm_static */;
 			targetProxy = 01DD2F9B21509A0800082198 /* PBXContainerItemProxy */;
+		};
+		01DD2FAA21509EAA00082198 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0161756D20EEEDE500FC40FF /* BrainStorm_static */;
+			targetProxy = 01DD2FA921509EAA00082198 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -697,6 +770,27 @@
 			};
 			name = Release;
 		};
+		01DD2FA721509E7500082198 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 65WT6FN4B4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		01DD2FA821509E7500082198 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 65WT6FN4B4;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -732,6 +826,15 @@
 			buildConfigurations = (
 				01DD2F962150996300082198 /* Debug */,
 				01DD2F972150996300082198 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		01DD2FA621509E7500082198 /* Build configuration list for PBXNativeTarget "BrainStormTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01DD2FA721509E7500082198 /* Debug */,
+				01DD2FA821509E7500082198 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

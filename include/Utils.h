@@ -90,4 +90,8 @@ void  __attribute__((overloadable)) nanToNum(float * _Nonnull array, unsigned in
 
 int nearestPower2(int num);
 
+void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR_RANK][1], unsigned int layers, unsigned int rank, int * _Nonnull vector);
+
+void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR_RANK][1], unsigned int rank, int * _Nonnull vector, unsigned int layer);
+
 #endif /* Utils_h */

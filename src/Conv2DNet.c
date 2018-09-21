@@ -109,48 +109,44 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         dict.flattening_length = nn->conv2d->num_conv2d_layers;
-        dict.init = true;
-        nn->conv2d->conv_weights = (tensor *)nn->tensor((void *)nn, dict);
+        dict.init_neural_params = true;
+        nn->conv2d->conv_weights = (tensor *)nn->tensor(self, dict);
         
-        dict.init = false;
+        dict.init_neural_params = false;
         if (nn->conv2d->conv_costWeightDerivatives == NULL)
-            nn->conv2d->conv_costWeightDerivatives = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->conv_costWeightDerivatives = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->conv_batchCostWeightDeriv == NULL)
-            nn->conv2d->conv_batchCostWeightDeriv = (tensor *)nn->tensor((void *)nn,  dict);
+            nn->conv2d->conv_batchCostWeightDeriv = (tensor *)nn->tensor(self,  dict);
         
         if (nn->conv2d->train->momentum != NULL) {
             if (nn->conv2d->conv_weightsVelocity == NULL) {
-                dict.init = false;
-                nn->conv2d->conv_weightsVelocity = (tensor *)nn->tensor((void *)nn, dict);
+                nn->conv2d->conv_weightsVelocity = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->ada_grad != NULL) {
             if (nn->conv2d->train->ada_grad->conv2d->costWeightDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->ada_grad->conv2d->costWeightDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->rms_prop != NULL) {
             if (nn->conv2d->train->rms_prop->conv2d->costWeightDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->rms_prop->conv2d->costWeightDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->adam != NULL) {
-             dict.init = false;
             if (nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate == NULL) {
                 nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
             if (nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate == NULL) {
                 nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
     }
@@ -170,47 +166,43 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         dict.flattening_length = nn->conv2d->num_conv2d_layers;
-        dict.init = true;
-        nn->conv2d->conv_biases = (tensor *)nn->tensor((void *)nn, dict);
+        dict.init_neural_params = true;
+        nn->conv2d->conv_biases = (tensor *)nn->tensor(self, dict);
         
-        dict.init = false;
+        dict.init_neural_params = false;
         if (nn->conv2d->conv_costBiasDerivatives == NULL)
-            nn->conv2d->conv_costBiasDerivatives = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->conv_costBiasDerivatives = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->conv_batchCostBiasDeriv == NULL)
-            nn->conv2d->conv_batchCostBiasDeriv = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->conv_batchCostBiasDeriv = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->train->momentum != NULL) {
             if (nn->conv2d->conv_biasesVelocity == NULL) {
-                dict.init = false;
-                nn->conv2d->conv_biasesVelocity = (tensor *)nn->tensor((void *)nn, dict);
+                nn->conv2d->conv_biasesVelocity = (tensor *)nn->tensor(self, dict);
             }
         }
         if (nn->conv2d->train->ada_grad != NULL) {
             if (nn->conv2d->train->ada_grad->conv2d->costBiasDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->ada_grad->conv2d->costBiasDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->rms_prop != NULL) {
             if (nn->conv2d->train->rms_prop->conv2d->costBiasDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->rms_prop->conv2d->costBiasDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->adam != NULL) {
-            dict.init = false;
             if (nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate == NULL) {
                 nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
             if (nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate == NULL) {
                 nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
     }
@@ -236,8 +228,8 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
          // Activations defined at feeding layer, convolution layers and pooling layers
         dict.flattening_length = nn->conv2d->num_conv2d_layers + nn->conv2d->num_pooling_layers + 1;
-        dict.init = false;
-        nn->conv2d->conv_activations = (tensor *)nn->tensor((void *)nn, dict);
+        dict.init_neural_params = false;
+        nn->conv2d->conv_activations = (tensor *)nn->tensor(self, dict);
     }
     
     if (nn->conv2d->conv_affineTransformations == NULL) {
@@ -255,8 +247,8 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
         // Affine transformations defined at convolution layers and pooling layers
         dict.flattening_length = nn->conv2d->num_conv2d_layers;
-        dict.init = false;
-        nn->conv2d->conv_affineTransformations = (tensor *)nn->tensor((void *)nn, dict);
+        dict.init_neural_params = false;
+        nn->conv2d->conv_affineTransformations = (tensor *)nn->tensor(self, dict);
     }
     
     // ------------------------------------------------------------------------
@@ -282,48 +274,44 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         dict.flattening_length = nn->conv2d->num_dense_layers;
-        dict.init = true;
-        nn->conv2d->dense_weights = (tensor *)nn->tensor((void *)nn, dict);
+        dict.init_neural_params = true;
+        nn->conv2d->dense_weights = (tensor *)nn->tensor(self, dict);
         
-        dict.init = false;
+        dict.init_neural_params = false;
         if (nn->conv2d->dense_costWeightDerivatives == NULL)
-            nn->conv2d->dense_costWeightDerivatives = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->dense_costWeightDerivatives = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->dense_batchCostWeightDeriv == NULL)
-            nn->conv2d->dense_batchCostWeightDeriv = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->dense_batchCostWeightDeriv = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->train->momentum != NULL) {
             if (nn->conv2d->dense_weightsVelocity == NULL) {
-                dict.init = false;
-                nn->conv2d->dense_weightsVelocity = (tensor *)nn->tensor((void *)nn, dict);
+                nn->conv2d->dense_weightsVelocity = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->ada_grad != NULL) {
             if (nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->rms_prop != NULL) {
             if (nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->adam != NULL) {
-            dict.init = false;
             if (nn->conv2d->train->adam->dense->weightsBiasedFirstMomentEstimate == NULL) {
                 nn->conv2d->train->adam->dense->weightsBiasedFirstMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
             if (nn->conv2d->train->adam->dense->weightsBiasedSecondMomentEstimate == NULL) {
                 nn->conv2d->train->adam->dense->weightsBiasedSecondMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
     }
@@ -339,49 +327,45 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         dict.flattening_length = nn->conv2d->num_dense_layers;
-        dict.init = true;
-        nn->conv2d->dense_biases = (tensor *)nn->tensor((void *)nn, dict);
+        dict.init_neural_params = true;
+        nn->conv2d->dense_biases = (tensor *)nn->tensor(self, dict);
         
-        dict.init = false;
+        dict.init_neural_params = false;
         if (nn->conv2d->dense_costBiasDerivatives == NULL)
-            nn->conv2d->dense_costBiasDerivatives = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->dense_costBiasDerivatives = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->dense_batchCostBiasDeriv == NULL)
-            nn->conv2d->dense_batchCostBiasDeriv = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->dense_batchCostBiasDeriv = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->train->momentum != NULL) {
             if (nn->conv2d->dense_biasesVelocity == NULL) {
-                dict.init = false;
-                nn->conv2d->dense_biasesVelocity = (tensor *)nn->tensor((void *)nn, dict);
+                nn->conv2d->dense_biasesVelocity = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->ada_grad != NULL) {
             if (nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
             
         }
         
         if (nn->conv2d->train->rms_prop != NULL) {
             if (nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
                 nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->conv2d->train->adam != NULL) {
-            dict.init = false;
             if (nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate == NULL) {
                 nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
             if (nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate == NULL) {
                 nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate =
-                                (tensor *)nn->tensor((void *)nn, dict);
+                                (tensor *)nn->tensor(self, dict);
             }
         }
     }
@@ -396,11 +380,11 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         dict.flattening_length = nn->conv2d->num_dense_layers;
-        dict.init = false;
-        nn->conv2d->dense_activations = (tensor *)nn->tensor((void *)nn, dict);
+        dict.init_neural_params = false;
+        nn->conv2d->dense_activations = (tensor *)nn->tensor(self, dict);
         
         if (nn->conv2d->dense_affineTransformations == NULL)
-            nn->conv2d->dense_affineTransformations = (tensor *)nn->tensor((void *)nn, dict);
+            nn->conv2d->dense_affineTransformations = (tensor *)nn->tensor(self, dict);
     }
     
     // --------------------------------------------------------------------------------
@@ -445,29 +429,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
     }
     dict.flattening_length = nn->conv2d->num_conv2d_layers;
-    dict.init = false;
-    nn->conv2d->flip_matrices = (tensor *)nn->tensor((void *)nn, dict);
-    
-    int offset = 0;
-    for (int l=0; l<nn->network_num_layers; l++) {
-        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
-            
-            int kh = nn->conv2d->parameters->topology[l][4];
-            int kw = nn->conv2d->parameters->topology[l][5];
-            float flip_mat[kh][kw];
-            memset(*flip_mat, 0.0f, (kh*kw)*sizeof(float));
-            for (int i=0; i<kh; i++) {
-                flip_mat[i][kw-i-1] = 1.0f;
-            }
-            
-            for (int i=0; i<kh; i++) {
-                for (int j=0; j<kw; j++) {
-                    nn->conv2d->flip_matrices->val[offset+((i*kw)+j)] = flip_mat[i][j];
-                }
-            }
-            offset = offset + (kh * kw);
-        }
-    }
+    dict.init_neural_params = false;
+    nn->conv2d->flip_matrices = (tensor *)nn->tensor(self, dict);
+    nn->create_flip(self);
     
     // ----------------------------------------------------
     // ------- Storage for the flipped kernels (weights)
@@ -484,8 +448,8 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
     }
     dict.flattening_length = nn->conv2d->num_conv2d_layers;
-    dict.init = false;
-    nn->conv2d->flipped_weights = (tensor *)nn->tensor((void *)nn, dict);
+    dict.init_neural_params = false;
+    nn->conv2d->flipped_weights = (tensor *)nn->tensor(self, dict);
     
     // -------------------------------------------------------------------------------------------------
     // ------- The current implementation of the convolution operations makes use of a Matrix-Vector
@@ -504,12 +468,12 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
     }
     dict.flattening_length = nn->conv2d->num_conv2d_layers;
-    dict.init = false;
-    nn->conv2d->conv_matrices = (tensor *)nn->tensor((void *)nn, dict);
+    dict.init_neural_params = false;
+    nn->conv2d->conv_matrices = (tensor *)nn->tensor(self, dict);
     
     // Initialize the convolution matrices with the flipped initial kernels (weights)
-    nn->flip_kernels((void *)nn);
-    nn->conv_mat_update((void *)nn);
+    nn->flip_kernels(self);
+    nn->conv_mat_update(self);
 }
 
 //

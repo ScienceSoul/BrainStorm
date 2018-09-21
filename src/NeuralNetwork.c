@@ -64,6 +64,7 @@ static void new_network_common(void * _Nonnull neural) {
     nn->eval_prediction = evalPrediction;
     nn->eval_cost = evalCost;
     
+    nn->create_flip = createFlip;
     nn->flip_kernels = flipKernels;
     nn->flip_deltas = flipDeltas;
     nn->conv_mat_update = convMatUpdate;

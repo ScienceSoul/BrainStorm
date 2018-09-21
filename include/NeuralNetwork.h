@@ -44,7 +44,7 @@ typedef struct dense_network {
     Train * _Nullable train;
     
     int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
-    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset);
+    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull object,  int l, int offset);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
 } dense_network;
@@ -88,7 +88,7 @@ typedef struct conv2d_network {
     conv2d_net_parameters * _Nullable parameters;
     Train * _Nullable train;
     
-    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset);
+    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull object,  int l, int offset);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
     void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
@@ -136,6 +136,9 @@ typedef struct BrainStormNet {
     // Function pointers to prediction evaluator
     void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
     float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
+    
+    // Function pointer to the flip matrices creation routine
+    void (* _Nullable create_flip)(void * _Nonnull self);
     
     // Function pointer to kernels (weights) flipping routine
     void (* _Nullable flip_kernels)(void * _Nonnull self);

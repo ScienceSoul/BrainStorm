@@ -46,18 +46,20 @@ typedef struct tensor {
 } tensor;
 
 typedef struct tensor_dict {
-    bool init;
+    bool init_neural_params;
+    bool init_with_value;
     bool full_connected;
     unsigned int flattening_length;
     unsigned int shape[MAX_NUMBER_NETWORK_LAYERS][MAX_TENSOR_RANK][1];
     unsigned int rank;
+    float init_value;
 } tensor_dict;
 
-void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset);
-void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset);
+void value_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset, float * _Nullable val);
+void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
+void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
 
-void * _Nonnull tensor_create_(void * _Nonnull self, tensor_dict tensor_dict);
-void * _Nonnull tensor_create(void * _Nonnull self, tensor_dict tensor_dict);
+void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict);
 
 int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
 

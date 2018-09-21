@@ -24,7 +24,7 @@ typedef struct layer_dict {
     conv2d_padding padding;
     activation_functions activation;
     pooling_ops pooling_op;
-    void (* _Nullable kernel_initializer)(void * _Nonnull neural, void * _Nonnull kernel, int l, int offset);
+    void (* _Nullable kernel_initializer)(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
 } layer_dict;
 
 typedef struct optimizer_dict {

@@ -421,7 +421,7 @@ int __attribute__((overloadable)) min_array(int * _Nonnull a, unsigned int num_e
 
 float __attribute__((overloadable)) min_array(float * _Nonnull a, unsigned int num_elements) {
     
-    float min = INT_MAX;
+    float min = HUGE_VALF;
     for (int i=0; i<num_elements; i++) {
         if (a[i] < min) {
             min = a[i];
@@ -445,7 +445,7 @@ int __attribute__((overloadable)) max_array(int * _Nonnull a, unsigned int num_e
 
 float __attribute__((overloadable)) max_array(float * _Nonnull a, unsigned int num_elements) {
     
-    float max = -INT_MAX;
+    float max = -HUGE_VALF;
     for (int i=0; i<num_elements; i++) {
         if (a[i] > max) {
             max = a[i];
@@ -471,7 +471,7 @@ int __attribute__((overloadable)) argmax(int * _Nonnull a, unsigned int num_elem
 int __attribute__((overloadable)) argmax(float * _Nonnull a, unsigned int num_elements) {
     
     int idx=0;
-    float max = -HUGE_VAL;
+    float max = -HUGE_VALF;
     for (int i=0; i<num_elements; i++) {
         if (a[i] > max) {
             max = a[i];
@@ -622,4 +622,20 @@ inline int  nearestPower2(int num) {
     n += 1;
     
     return n;
+}
+
+void __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR_RANK][1], unsigned int layers, unsigned int rank, int * _Nonnull vector) {
+    
+    for (int l=0; l<layers; l++) {
+        for (int i=0; i<rank; i++) {
+            dest[l][i][0] = vector[i];
+        }
+    }
+}
+
+void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR_RANK][1], unsigned int rank, int * _Nonnull vector, unsigned int layer) {
+    
+    for (int i=0; i<rank; i++) {
+        dest[layer][i][0] = vector[i];
+    }
 }

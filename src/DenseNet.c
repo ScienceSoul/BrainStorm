@@ -90,44 +90,40 @@ void dense_net_genesis(void * _Nonnull self) {
             dict.shape[l][1][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
-        dict.init = true;
-        nn->dense->weights = (tensor *)nn->tensor((void *)self, dict);
+        dict.init_neural_params = true;
+        nn->dense->weights = (tensor *)nn->tensor(self, dict);
         
-        dict.init = false;
+        dict.init_neural_params = false;
         if (nn->dense->costWeightDerivatives == NULL)
-            nn->dense->costWeightDerivatives = (tensor *)nn->tensor((void *)self, dict);
+            nn->dense->costWeightDerivatives = (tensor *)nn->tensor(self, dict);
         
         if (nn->dense->batchCostWeightDeriv == NULL)
-            nn->dense->batchCostWeightDeriv = (tensor *)nn->tensor((void *)self, dict);
+            nn->dense->batchCostWeightDeriv = (tensor *)nn->tensor(self, dict);
         
         if (nn->dense->train->momentum != NULL) {
             if (nn->dense->weightsVelocity == NULL) {
-                dict.init = false;
-                nn->dense->weightsVelocity = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->weightsVelocity = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->dense->train->ada_grad != NULL) {
             if (nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
-                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->dense->train->rms_prop != NULL) {
             if (nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
-                nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->dense->train->adam != NULL) {
-            dict.init = false;
             if (nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate == NULL) {
-                nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate = (tensor *)nn->tensor(self, dict);
             }
             if (nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate == NULL) {
-                nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate = (tensor *)nn->tensor((void *)self,  dict);
+                nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate = (tensor *)nn->tensor(self,  dict);
             }
         }
     }
@@ -139,44 +135,40 @@ void dense_net_genesis(void * _Nonnull self) {
             dict.shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
-        dict.init = true;
-        nn->dense->biases = (tensor *)nn->tensor((void *)self, dict);
+        dict.init_neural_params = true;
+        nn->dense->biases = (tensor *)nn->tensor(self, dict);
         
-        dict.init = false;
+        dict.init_neural_params = false;
         if (nn->dense->costBiasDerivatives == NULL)
-            nn->dense->costBiasDerivatives = (tensor *)nn->tensor((void *)self, dict);
+            nn->dense->costBiasDerivatives = (tensor *)nn->tensor(self, dict);
         
         if (nn->dense->batchCostBiasDeriv == NULL)
-            nn->dense->batchCostBiasDeriv = (tensor *)nn->tensor((void *)self, dict);
+            nn->dense->batchCostBiasDeriv = (tensor *)nn->tensor(self, dict);
         
         if (nn->dense->train->momentum != NULL) {
             if (nn->dense->biasesVelocity ==  NULL) {
-                dict.init = false;
-                nn->dense->biasesVelocity = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->biasesVelocity = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->dense->train->ada_grad != NULL) {
             if (nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
-                nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->dense->train->rms_prop != NULL) {
             if (nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated == NULL) {
-                dict.init = false;
-                nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, dict);
             }
         }
         
         if (nn->dense->train->adam != NULL) {
-            dict.init = false;
             if (nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate == NULL) {
-                nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = (tensor *)nn->tensor(self, dict);
             }
             if (nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate == NULL) {
-                nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = (tensor *)nn->tensor((void *)self, dict);
+                nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = (tensor *)nn->tensor(self, dict);
             }
         }
     }
@@ -188,8 +180,8 @@ void dense_net_genesis(void * _Nonnull self) {
             dict.shape[l][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers;
-        dict.init = false;
-        nn->dense->activations = (tensor *)nn->tensor((void *)self, dict);
+        dict.init_neural_params = false;
+        nn->dense->activations = (tensor *)nn->tensor(self, dict);
     }
     
     if (nn->dense->affineTransformations == NULL) {
@@ -199,8 +191,8 @@ void dense_net_genesis(void * _Nonnull self) {
             dict.shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict.flattening_length = nn->network_num_layers-1;
-        dict.init = false;
-        nn->dense->affineTransformations = (tensor *)nn->tensor((void *)self, dict);
+        dict.init_neural_params = false;
+        nn->dense->affineTransformations = (tensor *)nn->tensor(self, dict);
     }
 }
 
