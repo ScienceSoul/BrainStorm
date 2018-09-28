@@ -63,4 +63,6 @@ void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict);
 
 int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
 
+tensor_dict * _Nonnull init_tensor_dict(void);
+
 #endif /* NetworkUtils_h */

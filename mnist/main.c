@@ -67,7 +67,7 @@ void networkFileInput(void) {
     neural->data->test->reader = loadMnistTest;
     
     // Load training/test data
-    neural->data->load((void *)neural, neural->dataName, neural->dataPath, "/Users/hakimeseddik/Desktop/MNIST/t10k-images-idx3-ubyte", true);
+    neural->data->load((void *)neural, neural->dataName, neural->dataPath, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true);
     
     neural->train_loop((void *)neural);
     neural->finale((void *)neural);
@@ -99,7 +99,7 @@ void networkAPI(void) {
                                      (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=standard_normal_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
     
-    neural->constructor->training_data((void *)neural, "/Users/hakimeseddik/Desktop/MNIST/train-images-idx3-ubyte");
+    neural->constructor->training_data((void *)neural, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/train-images-idx3-ubyte");
     neural->constructor->split((void *)neural, 55000, 5000);
     
     int vector[10] = {0,1,2,3,4,5,6,7,8,9};
@@ -119,7 +119,7 @@ void networkAPI(void) {
     neural->data->test->reader = loadMnistTest;
     
     // Load training/test data
-    neural->data->load((void *)neural, "mnist", neural->dataPath, "/Users/hakimeseddik/Desktop/MNIST/t10k-images-idx3-ubyte", true);
+    neural->data->load((void *)neural, "mnist", neural->dataPath, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true);
     
     // Train the network
     train(neural, optimizer);

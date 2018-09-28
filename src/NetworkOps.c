@@ -310,15 +310,12 @@ void flipKernels(void * _Nonnull neural) {
         unsigned int kh = nn->conv2d->conv_weights->shape[l][2][0];
         unsigned int kw = nn->conv2d->conv_weights->shape[l][3][0];
         
-        float C[kh*kw];
-        
         int stride1_w = 0;
         for (int k=0; k<p; k++) {
             int stride2_w = 0;
             for (int ll=0; ll<q; ll++) {
-                
-                cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, kh, kw, kw, 1.0f, nn->conv2d->flip_matrices->val+offset_f, kw, nn->conv2d->conv_weights->val+offset_w+stride1_w+stride2_w, kw, 0.0f, C, kw);
-                cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, kh, kw, kw, 1.0f, C, kw, nn->conv2d->flip_matrices->val+offset_f, kw, 0.0f, nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, kw);
+            
+                flip_mat(kh, kw, kw, nn->conv2d->flip_matrices->val+offset_f, kw, nn->conv2d->conv_weights->val+offset_w+stride1_w+stride2_w, kw, nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, kw);
                 stride2_w = stride2_w + (kw * kw);
             }
             stride1_w = stride1_w + (q * kh * kw);

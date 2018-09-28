@@ -94,4 +94,6 @@ void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR
 
 void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR_RANK][1], unsigned int rank, int * _Nonnull vector, unsigned int layer);
 
+void flip_mat(int M, int N , int K, float * _Nonnull flip, int lda, float * _Nonnull mat, int ldb, float * _Nonnull C, int ldc);
+
 #endif /* Utils_h */

@@ -10,7 +10,7 @@
 #define Conv2DNetOps_h
 
 void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int * _Nullable advance);
-void infer_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
+void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
 void max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
 void l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
 void average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);

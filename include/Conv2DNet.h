@@ -9,6 +9,8 @@
 #ifndef Conv2DNet_h
 #define Conv2DNet_h
 
+#include <stdbool.h>
+
 void create_conv2d_net(void * _Nonnull  self);
 void conv2d_net_genesis(void * _Nonnull  self);
 void conv2d_net_finale(void * _Nonnull  self);

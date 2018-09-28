@@ -93,6 +93,15 @@ typedef struct conv2d_network {
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
     void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
     void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2);
+    
+    // Allocators
+    void * _Nonnull (* _Nonnull conv_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
+    void * _Nonnull (* _Nonnull conv_activations_alloc)(void * _Nonnull self, void *_Nonnull t_dict, bool reshape);
+    void * _Nonnull (* _Nonnull conv_common_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
+    
+    void * _Nonnull (* _Nonnull dense_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
+    void * _Nonnull (* _Nonnull dense_common_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
+    
 } conv2d_network;
 
 typedef struct BrainStormNet {

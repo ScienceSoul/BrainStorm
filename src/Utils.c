@@ -606,6 +606,7 @@ void  __attribute__((overloadable)) nanToNum(float * _Nonnull array, unsigned in
     }
 }
 
+//
 // Find the nearest power of 2 for a number
 //  - Parameter n: the number to find the nearest power 2 of.
 //  - Returns: The nearest power 2 of num (30 -> 32, 200 -> 256).
@@ -638,4 +639,11 @@ void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR
     for (int i=0; i<rank; i++) {
         dest[layer][i][0] = vector[i];
     }
+}
+
+void flip_mat(int M, int N , int K, float * _Nonnull flip, int lda, float * _Nonnull mat, int ldb, float * _Nonnull C, int ldc) {
+    
+    float temp[M*N];
+    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0f, flip, lda, mat, ldb, 0.0f, temp, N);
+    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0f, temp, N, flip, lda, 0.0f, C, ldc);
 }

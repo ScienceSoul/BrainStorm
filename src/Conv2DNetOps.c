@@ -42,7 +42,7 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int
     unsigned int fh = nn->conv2d->parameters->topology[op][2];
     unsigned int fw = nn->conv2d->parameters->topology[op][3];
     
-    static unsigned int local_idx = 0;
+    static unsigned int local_idx;
     
     if (*advance > 0) {
         int step = 1;
@@ -75,6 +75,7 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int
         offset_a_compute = 0;
         offset_b = 0;
         offset_z = 0;
+        local_idx = 0;
     }
     
     // Offset to activations at current convolution layer
@@ -86,9 +87,6 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int
     
     int rows_a = nn->conv2d->conv_activations->shape[*advance][1][0];
     int cols_a = nn->conv2d->conv_activations->shape[*advance][2][0];
-    
-    //int row_order_w = nn->conv2d->conv_weights->shape[local_idx][3][0];
-    //int col_order_w = nn->conv2d->conv_weights->shape[local_idx][2][0];
     
     int rows_m = nn->conv2d->conv_matrices->shape[local_idx][2][0];
     int cols_m = nn->conv2d->conv_matrices->shape[local_idx][3][0];
@@ -123,8 +121,7 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int
         
         for (int i=0; i<fh; i++) {
             for (int j=0; j<fw; j++) {
-                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*fw)+j))] =
-                nn->conv2d->activationFunctions[local_idx](vector[i*fw+j], NULL, NULL);
+                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*fw)+j))] = nn->conv2d->activationFunctions[local_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride_z+(i*fw+j))], NULL, NULL);
             }
         }
         
@@ -134,31 +131,6 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int
     }
     
     local_idx++;
-    
-//    int stride2_w = 0;
-//    int stride_a_compute = 0;
-//    for (int k=0; k<q; k++) {// Loop over all feature maps at current layer
-//        for (int i=0; i<fh; i++) {
-//            for (int j=0; j<fw; j++) {
-//                float sum = 0.0f;
-//                int stride_a = 0;
-//                int stride1_w = 0;
-//                for (int l=0; l<p; l++) { // Loop over all feature maps in previous layer
-//                    for (int u=0; u<kh; u++) {
-//                        for (int v=0; v<kw; v++) {
-//                            sum = sum +
-//                            (nn->conv2d->conv_activations->val[offset_a+(stride_a+(((i*sh+u)*row_order_a)+(j*sw+v)))] * nn->conv2d->conv_weights->val[offset_w+(stride1_w+(stride2_w+((u*row_order_w)+v)))] + nn->conv2d->conv_biases->val[offset_b+k]);
-//                        }
-//                    }
-//                    stride1_w = stride1_w + (nn->conv2d->conv_weights->shape[local_idx][1][0] * col_order_w * row_order_w);
-//                    stride_a = stride_a + (row_order_a * col_order_a);
-//                }
-//                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*row_order_a_compute)+j))] = nn->conv2d->activationFunctions[local_idx](sum, NULL, NULL);
-//            }
-//        }
-//        stride2_w = stride2_w + (col_order_w * row_order_w);
-//        stride_a_compute = stride_a_compute + (fh * fw);
-//    }
 }
 
 void max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance) {
@@ -324,7 +296,7 @@ void average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * 
     }
 }
 
-void infer_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance) {
+void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance) {
     
     static bool advance_connected_a;
     static bool advance_connected_compute;
@@ -373,18 +345,18 @@ void infer_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned i
         offset_a_connected_compute = offset_a_connected_compute + nn->conv2d->dense_activations->shape[local_idx-1][0][0];
         offset_w_connected = offset_w_connected +
              (nn->conv2d->dense_weights->shape[local_idx-1][0][0]*nn->conv2d->dense_weights->shape[local_idx-1][1][0]);
-        offset_b_connected = offset_b_connected + nn->conv2d->dense_biases->shape[local_idx-1][0][0];
         
+        offset_b_connected = offset_b_connected + nn->conv2d->dense_biases->shape[local_idx-1][0][0];
         offset_z_connected = offset_z_connected + nn->conv2d->dense_affineTransformations->shape[local_idx-1][0][0];
     }
-    
-    float buffer[nn->conv2d->dense_activations->shape[local_idx][0][0]];
-    memset(buffer, 0.0f, sizeof(buffer));
     
     unsigned int m = nn->conv2d->dense_weights->shape[local_idx][0][0];
     unsigned int n = nn->conv2d->dense_weights->shape[local_idx][1][0];
     
-    cblas_sgemv(CblasRowMajor, CblasNoTrans, (int)m, (int)n, 1.0, nn->conv2d->dense_weights->val+offset_w_connected, (int)n, ptr_activations->val+*ptr_offset, 1, 0.0, buffer, 1);
+    float buffer[m];
+    memset(buffer, 0.0f, sizeof(buffer));
+    
+    cblas_sgemv(CblasRowMajor, CblasNoTrans, (int)m, (int)n, 1.0f, nn->conv2d->dense_weights->val+offset_w_connected, (int)n, ptr_activations->val+*ptr_offset, 1, 0.0f, buffer, 1);
 #ifdef __APPLE__
     vDSP_vadd(buffer, 1, nn->conv2d->dense_biases->val+offset_b_connected, 1, nn->conv2d->dense_affineTransformations->val+offset_z_connected, 1, nn->conv2d->dense_biases->shape[local_idx][0][0]);
 #else

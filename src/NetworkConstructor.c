@@ -141,7 +141,7 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
     // If convolutional network, set this layer to fully connected inference operation
     // and to a fully connected backpropagation operation
     if (nn->is_conv2d_network) {
-        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = infer_full_connected_op;
+        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = infer_fully_connected_op;
         nn->conv2d->num_infer_ops++;
         nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_full_connected_op;
         nn->conv2d->num_backpropag_ops++;
