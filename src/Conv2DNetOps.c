@@ -873,8 +873,8 @@ void backpropag_in_conv2d_net(void * _Nonnull neural,
         nn->conv2d->conv_activations->val[i] = nn->batch[nn->example_idx][i];
     }
     
-    // Feedforward
-    inference_in_conv2d_net(neural);
+    // Inference
+    ptr_inference_func(neural);
     
     // Backpropagation
     unsigned int advance1 = 0;

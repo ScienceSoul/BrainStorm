@@ -66,7 +66,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
         nn->dense->activations->val[i] = nn->batch[nn->example_idx][i];
     }
     
-    // Feedforward
+    // Inference
     ptr_inference_func(nn);
     
     // ------------- Backward pass

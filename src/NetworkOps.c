@@ -13,7 +13,10 @@
 #include "NeuralNetwork.h"
 #include "NetworkOps.h"
 #include "DenseNetOps.h"
+#include "Conv2DNetOps.c"
 #include "Memory.h"
+
+typedef void (*eval_net_type)(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out);
 
 void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
                    ptr_inference_func inference, ptr_backpropag_func backpropagation,
@@ -104,33 +107,65 @@ float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
     return result;
 }
 
-static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
-    
-    BrainStormNet *nn = (BrainStormNet *)self;
-    
-    ptr_inference_func inference = NULL;
-    if (nn->is_dense_network) {
-        inference = inference_in_dense_net;
-    } else if (nn->is_conv2d_network) {
-        //TODO
-    }
+void eval_dense_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
+ 
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     for (int k=0; k<data_size; k++) {
         
         for (int i=0; i<nn->num_channels; i++) {
             nn->dense->activations->val[i] = data[k][i];
         }
-        
-        inference(self);
+        inference_in_dense_net(nn);
         
         // Stride to activations at last layer
-        unsigned stride = 0;
+        unsigned int stride = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
             stride = stride + nn->dense->activations->shape[l][0][0];
         }
         
         out[k] = (float)argmax(nn->dense->activations->val+stride, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->num_channels];
     }
+}
+
+void eval_conv2d_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
+    
+    BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    for (int k=0; k<data_size; k++) {
+    
+        for (int i=0; i<nn->num_channels; i++) {
+            nn->conv2d->conv_activations->val[i] = data[k][i];
+        }
+        inference_in_conv2d_net(nn);
+        
+        // Stride to activations at last fully connected layer
+        unsigned int stride = 0;
+        for (int l=0; l<nn->conv2d->num_dense_layers-1; l++) {
+            stride = stride + nn->conv2d->dense_activations->shape[l][0][0];
+        }
+        
+        out[k] = (float)argmax(nn->conv2d->conv_activations->val+stride, nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]) == data[k][nn->num_channels];
+    }
+}
+
+static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
+    
+    static bool firstTime = true;
+    static eval_net_type eval_net = NULL;
+    
+    BrainStormNet *nn = (BrainStormNet *)self;
+    
+    if (firstTime) {
+        if (nn->is_dense_network) {
+            eval_net = eval_dense_net;
+        } else if (nn->is_conv2d_network) {
+            eval_net = eval_conv2d_net;
+        }
+        firstTime = false;
+    }
+    
+    eval_net(self, data, data_size, out);
 }
 
 void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal) {
@@ -160,6 +195,7 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
     
 #ifdef __APPLE__
     if (metal) {
+        fatal(DEFAULT_CONSOLE_WRITER, "Offload evaluation to GPU broken.");
         unsigned int weightsTableSize = 0;
         unsigned int biasesTableSize = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
@@ -195,6 +231,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
         inference = inference_in_dense_net;
     } else if (nn->is_conv2d_network) {
         // TODO
+        fatal(DEFAULT_CONSOLE_WRITER, "Cost function calculation in convolution net not implemented yet.");
     }
     
     float **data = NULL;
