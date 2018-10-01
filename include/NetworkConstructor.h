@@ -19,12 +19,15 @@ typedef struct scalar_dict {
 typedef struct layer_dict {
     unsigned int num_neurons;
     unsigned int filters;
+    unsigned int dimension;
+    unsigned int shape[2];
     unsigned int kernel_size[2];
     unsigned int strides[2];
     conv2d_padding padding;
     activation_functions activation;
     pooling_ops pooling_op;
     void (* _Nullable kernel_initializer)(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
+    unsigned int * _Nullable channels;
 } layer_dict;
 
 typedef struct optimizer_dict {
@@ -45,7 +48,7 @@ typedef struct regularizer_dict {
 
 typedef struct networkConstructor {
     bool networkConstruction;
-    void (* _Nullable feed)(void * _Nonnull neural, unsigned int shape[_Nonnull 3], unsigned int dimension, unsigned int * _Nullable num_channels);
+    void (* _Nullable feed)(void * _Nonnull neural,  layer_dict layer_dict);
     void (* _Nullable layer_dense)(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regularizer);
     void (* _Nullable layer_conv2d)(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regularizer);
     void (* _Nullable layer_pool)(void * _Nonnull neural, layer_dict layer_dict);

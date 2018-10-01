@@ -18,7 +18,8 @@ typedef enum activation_functions {
     LEAKY_RELU,           // Leaky ReLU
     ELU,                  // Exponential linear unit
     TANH,                 // Hyperbolic tangent
-    SOFTMAX               // Softmax
+    SOFTMAX,              // Softmax
+    CUSTOM
 } activation_functions;
 
 typedef enum convlution_layer_types {

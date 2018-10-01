@@ -48,7 +48,7 @@ void train(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     free_fmatrix(miniBatch, 0, batch_size-1, 0, neural->data->training->n-1);
 }
 
-void networkFileInput(void) {
+void file_input_net(void) {
     
     // Instantiate a neural network and load its parameters
     BrainStormNet *neural = new_dense_net();
@@ -74,7 +74,7 @@ void networkFileInput(void) {
     free(neural);
 }
 
-void networkAPI(void) {
+void api_fully_connected_net(void) {
     
     // Instantiate a fully-connected neural network
     BrainStormNet *neural = new_dense_net();
@@ -82,9 +82,7 @@ void networkAPI(void) {
     float regularization_factor=0.001f;
     
     // The feeding layer
-    unsigned int shape[0];
-    shape[0] = 784;
-    neural->constructor->feed((void *)neural, shape, 1, NULL);
+    neural->constructor->feed((void *)neural, (layer_dict){.shape[0]=784, .dimension=1});
     
     // Fully connected layers
     neural->constructor->layer_dense((void *)neural,
@@ -133,9 +131,9 @@ int main(int argc, const char * argv[]) {
     
     bool inputPutFile = false;
     if (inputPutFile) {
-        networkFileInput();
+        file_input_net();
     } else {
-        networkAPI();
+        api_fully_connected_net();
     }
     
     return 0;

@@ -40,6 +40,9 @@ static void set_activation_function(activation_functions activationFunctionsRef[
         activationFunctionsRef[idx] = SOFTMAX;
         activationFunctions[idx] = softmax;
         activationDerivatives[idx] = NULL;
+    } else if (layer_dict.activation == CUSTOM) {
+        // Must be defined by the user
+        activationFunctionsRef[idx] = CUSTOM;
     } else {
         fprintf(stdout, "%s: activation function not given, default to sigmoid.\n", DEFAULT_CONSOLE_WRITER);
         activationFunctionsRef[idx] = SIGMOID;
@@ -59,7 +62,7 @@ static void set_kernel_initializer(void (* _Nonnull kernelInitializers[MAX_NUMBE
     }
 }
 
-void set_feed(void * _Nonnull neural, unsigned int shape[_Nonnull 3], unsigned int dimension, unsigned int * _Nullable num_channels) {
+void set_feed(void * _Nonnull neural, layer_dict layer_dict) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -68,25 +71,23 @@ void set_feed(void * _Nonnull neural, unsigned int shape[_Nonnull 3], unsigned i
         fatal(DEFAULT_CONSOLE_WRITER, "network topolgy error. The feeding layer must be created first.");
     }
     
-    if (dimension == 1) {
+    if (layer_dict.dimension == 1) {
         if (nn->dense == NULL) {
             fatal(DEFAULT_CONSOLE_WRITER, "feeding dimension equal to 1 must be used with a fully connected netwotk.");
         }
-        nn->dense->parameters->topology[nn->network_num_layers] = shape[0];
-        nn->num_channels = shape[0];
-    } else if (dimension == 2 || dimension == 3) {
-        if (num_channels == NULL) {
-            fatal(DEFAULT_CONSOLE_WRITER, "the nunber of channels must be provided for feeding dimensions higher than 2.");
-        }
-        if (dimension == 2) {
-            if (nn->conv2d == NULL) {
-                fatal(DEFAULT_CONSOLE_WRITER, "feeding dimension >=2 must be used with a convolutional netwotk.");
-            }
+        nn->dense->parameters->topology[nn->network_num_layers] = layer_dict.shape[0];
+        nn->num_channels = layer_dict.shape[0];
+    } else if (layer_dict.dimension == 2 || layer_dict.dimension == 3) {
+        if (layer_dict.dimension == 2) {
             nn->conv2d->parameters->topology[nn->network_num_layers][0] = FEED;
-            nn->conv2d->parameters->topology[nn->network_num_layers][1] = 1;
-            nn->conv2d->parameters->topology[nn->network_num_layers][2] = shape[0];
-            nn->conv2d->parameters->topology[nn->network_num_layers][3] = shape[1];
-            nn->num_channels = shape[0] * shape[1] * (*num_channels);
+            nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.filters;
+            nn->conv2d->parameters->topology[nn->network_num_layers][2] = layer_dict.shape[0];
+            nn->conv2d->parameters->topology[nn->network_num_layers][3] = layer_dict.shape[1];
+            if (layer_dict.channels != NULL) {
+                nn->num_channels = layer_dict.shape[0] * layer_dict.shape[1] * (*layer_dict.channels);
+            } else {
+                fatal(DEFAULT_CONSOLE_WRITER, "the nunber of channels must be provided for feeding dimensions higher than 2.");
+            }
         } else {
             //TODO: needs implementation
             fatal(DEFAULT_CONSOLE_WRITER, "3D convolution is not supported yet.");
