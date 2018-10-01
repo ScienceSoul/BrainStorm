@@ -1599,7 +1599,7 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     for (int l=0; l<nn->network_num_layers; l++) {
         if (l == 0) {
             nn->conv2d->parameters->topology[l][0] = FEED;
-            nn->conv2d->parameters->topology[l][1] = 2;
+            nn->conv2d->parameters->topology[l][1] = 1;
             nn->conv2d->parameters->topology[l][2] = maps_size[l];
             nn->conv2d->parameters->topology[l][3] = maps_size[l];
         } else if (l == 1) {
@@ -1709,19 +1709,8 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
         offset = offset + (m * n);
     }
     
-    // The reference convolution
-    float ref_conv[4*4];
-    ref_convol(ref_conv, kh_c);
-    
     // Apply the inference
     inference_in_conv2d_net(neural);
-    
-    ptr[0] = ref_conv;
-    ptr[1] = ref_pool;
-    func_ptr formater = truncated;
-    if (!check_activations(neural, formater)) {
-        return false;
-    }
     
     // Check the result
     offset = 0;
