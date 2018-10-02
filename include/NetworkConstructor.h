@@ -20,9 +20,15 @@ typedef struct layer_dict {
     unsigned int num_neurons;
     unsigned int filters;
     unsigned int dimension;
-    unsigned int shape[2];
-    unsigned int kernel_size[2];
-    unsigned int strides[2];
+    
+    unsigned int shape;
+    unsigned int kernel_size;
+    unsigned int stride;
+    
+    unsigned int * _Nullable shapes[1];
+    unsigned int * _Nullable kernel_sizes[1];
+    unsigned int * _Nullable strides[1];
+    
     conv2d_padding padding;
     activation_functions activation;
     pooling_ops pooling_op;

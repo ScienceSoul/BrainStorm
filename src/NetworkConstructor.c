@@ -75,16 +75,26 @@ void set_feed(void * _Nonnull neural, layer_dict layer_dict) {
         if (nn->dense == NULL) {
             fatal(DEFAULT_CONSOLE_WRITER, "feeding dimension equal to 1 must be used with a fully connected netwotk.");
         }
-        nn->dense->parameters->topology[nn->network_num_layers] = layer_dict.shape[0];
-        nn->num_channels = layer_dict.shape[0];
+        nn->dense->parameters->topology[nn->network_num_layers] = layer_dict.shape;
+        nn->num_channels = layer_dict.shape;
     } else if (layer_dict.dimension == 2 || layer_dict.dimension == 3) {
         if (layer_dict.dimension == 2) {
+            unsigned int sh1;
+            unsigned int sh2;
+            if (layer_dict.shapes[0] != NULL) {
+                sh1 = *(layer_dict.shapes[0]+0);
+                sh2 = *(layer_dict.shapes[0]+1);
+            } else {
+                sh1 = layer_dict.shape;
+                sh2 = layer_dict.shape;
+            }
+            
             nn->conv2d->parameters->topology[nn->network_num_layers][0] = FEED;
             nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.filters;
-            nn->conv2d->parameters->topology[nn->network_num_layers][2] = layer_dict.shape[0];
-            nn->conv2d->parameters->topology[nn->network_num_layers][3] = layer_dict.shape[1];
+            nn->conv2d->parameters->topology[nn->network_num_layers][2] = sh1;
+            nn->conv2d->parameters->topology[nn->network_num_layers][3] = sh2;
             if (layer_dict.channels != NULL) {
-                nn->num_channels = layer_dict.shape[0] * layer_dict.shape[1] * (*layer_dict.channels);
+                nn->num_channels = sh1 * sh2 * (*layer_dict.channels);
             } else {
                 fatal(DEFAULT_CONSOLE_WRITER, "the nunber of channels must be provided for feeding dimensions higher than 2.");
             }
@@ -133,7 +143,11 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
     
     // Add the regularizer if given
     if (regularizer != NULL) {
-        nn->dense->parameters->lambda = regularizer->regularization_factor;
+        if (nn->is_dense_network) {
+            nn->dense->parameters->lambda = regularizer->regularization_factor;
+        } else if (nn->is_conv2d_network) {
+            nn->conv2d->parameters->lambda = regularizer->regularization_factor;
+        }
         nn->regularizer[nn->num_activation_functions] = regularizer->regularizer_func;
     } else nn->regularizer[nn->num_activation_functions] = nn->l0_regularizer;
     
@@ -166,17 +180,42 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
         int input_size_y = nn->conv2d->parameters->topology[nn->network_num_layers-1][3];
         
         // Horizontal and vertical size of the map after convolution
-        int map_size_x = floorf((input_size_x-layer_dict.kernel_size[0])/layer_dict.strides[0]) + 1;
-        int map_size_y = floorf((input_size_y-layer_dict.kernel_size[1])/layer_dict.strides[1]) + 1;
+        unsigned int kh;
+        unsigned int kw;
+        unsigned int sh;
+        unsigned int sw;
+        if (layer_dict.kernel_sizes[0] != NULL && layer_dict.strides[0] != NULL) {
+            kh = *(layer_dict.kernel_sizes[0]+0);
+            kw = *(layer_dict.kernel_sizes[0]+1);
+            sh = *(layer_dict.strides[0]+0);
+            sw = *(layer_dict.strides[0]+1);
+        } else if (layer_dict.kernel_sizes[0] != NULL && layer_dict.strides[0] == NULL) {
+            kh = *(layer_dict.kernel_sizes[0]+0);
+            kw = *(layer_dict.kernel_sizes[0]+1);
+            sh = layer_dict.stride;
+            sw = layer_dict.stride;
+        } else if (layer_dict.kernel_sizes[0] == NULL && layer_dict.strides[0] != NULL) {
+            kh = layer_dict.kernel_size;
+            kw = layer_dict.kernel_size;
+            sh = *(layer_dict.strides[0]+0);
+            sw = *(layer_dict.strides[0]+1);
+        } else {
+            kh = layer_dict.kernel_size;
+            kw = layer_dict.kernel_size;
+            sh = layer_dict.stride;
+            sw = layer_dict.stride;
+        }
+        int map_size_x = floorf((input_size_x-kh)/sh) + 1;
+        int map_size_y = floorf((input_size_y-kw)/sw) + 1;
         
         nn->conv2d->parameters->topology[nn->network_num_layers][0] = CONVOLUTION;
         nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.filters;
         nn->conv2d->parameters->topology[nn->network_num_layers][2] = map_size_x;
         nn->conv2d->parameters->topology[nn->network_num_layers][3] = map_size_y;
-        nn->conv2d->parameters->topology[nn->network_num_layers][4] = layer_dict.kernel_size[0];
-        nn->conv2d->parameters->topology[nn->network_num_layers][5] = layer_dict.kernel_size[1];
-        nn->conv2d->parameters->topology[nn->network_num_layers][6] = layer_dict.strides[0];
-        nn->conv2d->parameters->topology[nn->network_num_layers][7] = layer_dict.strides[1];
+        nn->conv2d->parameters->topology[nn->network_num_layers][4] = kh;
+        nn->conv2d->parameters->topology[nn->network_num_layers][5] = kw;
+        nn->conv2d->parameters->topology[nn->network_num_layers][6] = sh;
+        nn->conv2d->parameters->topology[nn->network_num_layers][7] = sw;
         nn->network_num_layers++;
         
     } else if (layer_dict.padding == SAME) {
@@ -222,17 +261,42 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
         int input_size_y = nn->conv2d->parameters->topology[nn->network_num_layers-1][3];
         
         // Horizontal and vertical size of the map after pooling
-        int pool_size_x = floorf((input_size_x-layer_dict.kernel_size[0])/layer_dict.strides[0]) + 1;
-        int pool_size_y = floorf((input_size_y-layer_dict.kernel_size[1])/layer_dict.strides[1]) + 1;
+        unsigned int kh;
+        unsigned int kw;
+        unsigned int sh;
+        unsigned int sw;
+        if (layer_dict.kernel_sizes[0] != NULL && layer_dict.strides[0] != NULL) {
+            kh = *(layer_dict.kernel_sizes[0]+0);
+            kw = *(layer_dict.kernel_sizes[0]+1);
+            sh = *(layer_dict.strides[0]+0);
+            sw = *(layer_dict.strides[0]+1);
+        } else if (layer_dict.kernel_sizes[0] != NULL && layer_dict.strides[0] == NULL) {
+            kh = *(layer_dict.kernel_sizes[0]+0);
+            kw = *(layer_dict.kernel_sizes[0]+1);
+            sh = layer_dict.stride;
+            sw = layer_dict.stride;
+        } else if (layer_dict.kernel_sizes[0] == NULL && layer_dict.strides[0] != NULL) {
+            kh = layer_dict.kernel_size;
+            kw = layer_dict.kernel_size;
+            sh = *(layer_dict.strides[0]+0);
+            sw = *(layer_dict.strides[0]+1);
+        } else {
+            kh = layer_dict.kernel_size;
+            kw = layer_dict.kernel_size;
+            sh = layer_dict.stride;
+            sw = layer_dict.stride;
+        }
+        int pool_size_x = floorf((input_size_x-kh)/sh) + 1;
+        int pool_size_y = floorf((input_size_y-kw)/sw) + 1;
         
         nn->conv2d->parameters->topology[nn->network_num_layers][0] = POOLING;
         nn->conv2d->parameters->topology[nn->network_num_layers][1] = nn->conv2d->parameters->topology[nn->network_num_layers-1][1];
         nn->conv2d->parameters->topology[nn->network_num_layers][2] = pool_size_x;
         nn->conv2d->parameters->topology[nn->network_num_layers][3] = pool_size_y;
-        nn->conv2d->parameters->topology[nn->network_num_layers][4] = layer_dict.kernel_size[0];
-        nn->conv2d->parameters->topology[nn->network_num_layers][5] = layer_dict.kernel_size[1];
-        nn->conv2d->parameters->topology[nn->network_num_layers][6] = layer_dict.strides[0];
-        nn->conv2d->parameters->topology[nn->network_num_layers][7] = layer_dict.strides[1];
+        nn->conv2d->parameters->topology[nn->network_num_layers][4] = kh;
+        nn->conv2d->parameters->topology[nn->network_num_layers][5] = kw;
+        nn->conv2d->parameters->topology[nn->network_num_layers][6] = sh;
+        nn->conv2d->parameters->topology[nn->network_num_layers][7] = sw;
         nn->network_num_layers++;
         
     } else if (layer_dict.padding == SAME) {

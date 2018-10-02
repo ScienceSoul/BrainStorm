@@ -1141,10 +1141,9 @@ bool test_convolution(void * _Nonnull neural) {
     // Assume a network with two layers: one feeding layer
     // and one convolution layer
     unsigned int channels = 1;
-    nn->constructor->feed(neural, (layer_dict){.filters=1, .dimension=2, .shape[0]=8, .shape[1]=8, .channels=&channels});
+    nn->constructor->feed(neural, (layer_dict){.filters=1, .dimension=2, .shape=8, .channels=&channels});
     
-    nn->constructor->layer_conv2d(neural, (layer_dict){.filters=1, .kernel_size[0]=kh, .kernel_size[1]=kh, .strides[0]=sh,
-        .strides[1]=sh, .padding=VALID, .activation=CUSTOM}, NULL);
+    nn->constructor->layer_conv2d(neural, (layer_dict){.filters=1, .kernel_size=kh, .stride=sh, .padding=VALID, .activation=CUSTOM}, NULL);
     
     nn->conv2d->activationFunctions[0] = activation_func;
     
@@ -1304,15 +1303,12 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     // Assume a network with three layers: one feeding layer,
     // one convolution layer and one pooling layer
     unsigned int channels = 1;
-    nn->constructor->feed(neural, (layer_dict){.filters=1, .dimension=2, .shape[0]=8, .shape[1]=8, .channels=&channels});
+    nn->constructor->feed(neural, (layer_dict){.filters=1, .dimension=2, .shape=8, .channels=&channels});
     
-    nn->constructor->layer_conv2d(neural, (layer_dict){.filters=1, .kernel_size[0]=kh_c,
-        .kernel_size[1]=kh_c, .strides[0]=sh, .strides[1]=sh, .padding=VALID,
+    nn->constructor->layer_conv2d(neural, (layer_dict){.filters=1, .kernel_size=kh_c, .stride=sh, .padding=VALID,
         .activation=CUSTOM}, NULL);
     
-    nn->constructor->layer_pool(neural, (layer_dict){.filters=1, .kernel_size[0]=kh_p,
-        .kernel_size[1]=kh_p, .strides[0]=sh, .strides[1]=sh, .padding=VALID,
-        .pooling_op=MAX_POOLING});
+    nn->constructor->layer_pool(neural, (layer_dict){.filters=1, .kernel_size=kh_p, .stride=sh, .padding=VALID, .pooling_op=MAX_POOLING});
     
     nn->conv2d->activationFunctions[0] = activation_func;
     
@@ -1419,11 +1415,9 @@ bool test_pooling_fully_connected(void * _Nonnull  neural) {
     // Assume a network with five layers: one feeding layer,
     // one pooling layer and three fully connected layers
     unsigned int channels = 1;
-    nn->constructor->feed(neural, (layer_dict){.filters=2, .dimension=2, .shape[0]=8,
-        .shape[1]=8, .channels=&channels});
+    nn->constructor->feed(neural, (layer_dict){.filters=2, .dimension=2, .shape=8, .channels=&channels});
     
-    nn->constructor->layer_pool(neural, (layer_dict){.filters=2, .kernel_size[0]=kh, .kernel_size[1]=kh, .strides[0]=sh, .strides[1]=sh,
-        .padding=VALID, .pooling_op=MAX_POOLING});
+    nn->constructor->layer_pool(neural, (layer_dict){.filters=2, .kernel_size=kh, .stride=sh, .padding=VALID, .pooling_op=MAX_POOLING});
     
     nn->constructor->layer_dense(neural, (layer_dict){.num_neurons=4, .activation=CUSTOM}, NULL);
     nn->constructor->layer_dense(neural, (layer_dict){.num_neurons=4, .activation=CUSTOM}, NULL);
@@ -1520,15 +1514,11 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     // one convolution layer, one pooling layer and three
     // fully connected layers
     unsigned int channels = 1;
-    nn->constructor->feed(neural, (layer_dict){.filters=1, .dimension=2, .shape[0]=8, .shape[1]=8, .channels=&channels});
+    nn->constructor->feed(neural, (layer_dict){.filters=1, .dimension=2, .shape=8, .channels=&channels});
     
-    nn->constructor->layer_conv2d(neural, (layer_dict){.filters=1, .kernel_size[0]=kh_c,
-        .kernel_size[1]=kh_c, .strides[0]=sh, .strides[1]=sh, .padding=VALID,
-        .activation=CUSTOM}, NULL);
+    nn->constructor->layer_conv2d(neural, (layer_dict){.filters=1, .kernel_size=kh_c, .stride=sh, .padding=VALID, .activation=CUSTOM}, NULL);
     
-    nn->constructor->layer_pool(neural, (layer_dict){.filters=1, .kernel_size[0]=kh_p,
-        .kernel_size[1]=kh_p, .strides[0]=sh, .strides[1]=sh, .padding=VALID,
-        .pooling_op=MAX_POOLING});
+    nn->constructor->layer_pool(neural, (layer_dict){.filters=1, .kernel_size=kh_p, .stride=sh, .padding=VALID, .pooling_op=MAX_POOLING});
     
     nn->constructor->layer_dense(neural, (layer_dict){.num_neurons=4, .activation=CUSTOM}, NULL);
     nn->constructor->layer_dense(neural, (layer_dict){.num_neurons=4, .activation=CUSTOM}, NULL);
@@ -1635,7 +1625,7 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
             return false;
         }
     }
-    fprintf(stdout, ">>>>>>> Test: dummy convol net: success...\n");
+    fprintf(stdout, ">>>>>>> Test: dummy conv net: success...\n");
     
     free(nn->conv2d->conv_activations->val);
     free(nn->conv2d->conv_activations);
@@ -1751,7 +1741,7 @@ int main(int argc, const char * argv[]) {
     // layer, one pooling layer and three fully connected layers
     neural = new_conv2d_net();
     if (!test_dummy_convol_net(neural)) {
-        fprintf(stderr, "Test: dummy convol net: failed.\n");
+        fprintf(stderr, "Test: dummy conv net: failed.\n");
         return -1;
     }
     free(neural);
