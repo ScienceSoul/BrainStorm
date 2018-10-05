@@ -297,7 +297,6 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
         nn->conv2d->parameters->topology[nn->network_num_layers][5] = kw;
         nn->conv2d->parameters->topology[nn->network_num_layers][6] = sh;
         nn->conv2d->parameters->topology[nn->network_num_layers][7] = sw;
-        nn->network_num_layers++;
         
     } else if (layer_dict.padding == SAME) {
         fatal(DEFAULT_CONSOLE_WRITER, "zero padding is not implemented yet.");
@@ -308,17 +307,21 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
     // Set this layer to a pooling inference operation and
     // to pooling backpropagation operation
     if (layer_dict.pooling_op == MAX_POOLING) {
+        nn->conv2d->parameters->topology[nn->network_num_layers][8] = MAX_POOLING;
         nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = max_pooling_op;
         nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_max_pooling_op;
     } else if (layer_dict.pooling_op == L2_POOLING) {
+        nn->conv2d->parameters->topology[nn->network_num_layers][8] = L2_POOLING;
         nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = l2_pooling_op;
         nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_l2_pooling_op;
     } else if (layer_dict.pooling_op == AVERAGE_POOLING) {
+        nn->conv2d->parameters->topology[nn->network_num_layers][8] = AVERAGE_POOLING;
         nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = average_pooling_op;
         nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_average_pooling_op;
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized pooling operation.");
     }
+    nn->network_num_layers++;
     nn->conv2d->num_infer_ops++;
     nn->conv2d->num_backpropag_ops++;
     nn->conv2d->num_pooling_layers++;

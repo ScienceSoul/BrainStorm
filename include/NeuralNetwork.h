@@ -53,6 +53,7 @@ typedef struct conv2d_network {
     unsigned int num_conv2d_layers;
     unsigned int num_dense_layers;
     unsigned int num_pooling_layers;
+    unsigned int num_max_pooling_layers;
     unsigned int num_infer_ops;
     unsigned int num_backpropag_ops;
     
@@ -81,6 +82,7 @@ typedef struct conv2d_network {
     tensor * _Nullable flip_matrices;
     tensor * _Nullable flipped_weights;
     tensor * _Nullable conv_matrices;
+    tensor * _Nullable max_pool_mask;
     
     float * _Nullable propag_upsampling;
     
@@ -91,7 +93,7 @@ typedef struct conv2d_network {
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
     void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
-    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2);
+    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2, unsigned int * _Nullable advance3);
     
     // Allocators
     void * _Nonnull (* _Nonnull conv_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);

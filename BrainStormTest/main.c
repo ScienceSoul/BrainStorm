@@ -269,9 +269,23 @@ void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int numbe
     tensor_dict *dict = init_tensor_dict();
     dict->rank = 3;
     nn->conv2d->conv_activations = (tensor *)nn->conv2d->conv_activations_alloc(neural, (void *)dict, true);
-    free(dict);
     
     init_feed_activations(neural);
+    
+    dict->rank = 3;
+    int idx = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == POOLING && nn->conv2d->parameters->topology[l][8] == MAX_POOLING) {
+            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l-1][2];
+            dict->shape[idx][2][0] = nn->conv2d->parameters->topology[l-1][3];
+        }
+    }
+    nn->conv2d->num_max_pooling_layers = idx;
+    dict->flattening_length = idx;
+    dict->init_neural_params = false;
+    nn->conv2d->max_pool_mask = (tensor *)nn->tensor(neural, *dict);
+    free(dict);
 }
 
 void init_convol_kernels(void * _Nonnull neural, unsigned int kh) {
@@ -971,6 +985,8 @@ bool test_max_pooling(void * _Nonnull neural) {
     
     free(nn->conv2d->conv_activations->val);
     free(nn->conv2d->conv_activations);
+    free(nn->conv2d->max_pool_mask->val);
+    free(nn->conv2d->max_pool_mask);
     
     sh = 2;
     maps_size[1] = 4;

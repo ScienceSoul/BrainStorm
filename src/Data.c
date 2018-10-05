@@ -36,7 +36,7 @@ static float __attribute__((overloadable)) * _Nonnull * _Nonnull createTrainigDa
     return trainingData;
 }
 
-static float __attribute__((overloadable)) * _Nonnull * _Nonnull createTrainigData(float * _Nonnull * _Nonnull dataSet, unsigned int start, unsigned int end, unsigned int * _Nonnull t1, unsigned int * _Nonnull t2, int * _Nonnull classifications, unsigned int numberOfClassifications, int topology[][8], int numberOfLayers) {
+static float __attribute__((overloadable)) * _Nonnull * _Nonnull createTrainigData(float * _Nonnull * _Nonnull dataSet, unsigned int start, unsigned int end, unsigned int * _Nonnull t1, unsigned int * _Nonnull t2, int * _Nonnull classifications, unsigned int numberOfClassifications, int topology[][9], int numberOfLayers) {
     
     //TODO: Take into accounts channels > 1
     

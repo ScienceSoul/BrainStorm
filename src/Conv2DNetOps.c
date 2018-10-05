@@ -21,6 +21,8 @@ static unsigned int offset_a;
 static unsigned int offset_a_compute;
 static unsigned int offset_b;
 static unsigned int offset_z;
+static unsigned int offset_mask;
+static unsigned int mask_idx;
 
 static unsigned int offset_a_connected;
 static unsigned int offset_a_connected_compute;
@@ -45,6 +47,9 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int
     static unsigned int local_idx;
     
     if (*advance > 0) {
+        // Note that if local_idx is undefined because advance was incremented
+        // by another op (pooling coming before convolution which is wrong), then
+        // we get a non valid memory access.
         int step = 1;
         for (int i=0; i<nn->conv2d->conv_matrices->rank; i++) {
             step = step * nn->conv2d->conv_matrices->shape[local_idx-1][i][0];
@@ -75,6 +80,8 @@ void infer_convolution_op(void * _Nonnull  neural, unsigned int op, unsigned int
         offset_a_compute = 0;
         offset_b = 0;
         offset_z = 0;
+        offset_mask = 0;
+        mask_idx = 0;
         local_idx = 0;
     }
     
@@ -151,7 +158,21 @@ void max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nul
             step = step * nn->conv2d->conv_activations->shape[*advance-1][i][0];
         }
         offset_a = offset_a + step;
+        
+        if (mask_idx > 0) {
+            step = 1;
+            for (int i=0; i<nn->conv2d->max_pool_mask->rank; i++) {
+                step = step * nn->conv2d->max_pool_mask->shape[mask_idx-1][i][0];
+            }
+            offset_mask = offset_mask + step;
+        }
+        mask_idx++;
+        
     } else {
+        // A pooling op should not come so early int the network stack, but we allow
+        // it only for being able to test the pooling operation independently.
+        // We issue a warning to
+        fprintf(stdout, "topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.");
         offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
@@ -174,14 +195,17 @@ void max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nul
         for (int i=0; i<fh; i++) {
             for (int j=0; j<fw; j++) {
                 float max_val = -HUGE_VALF;
+                int winning_unit = 0;
                 for (int u=0; u<kh; u++) {
                     for (int v=0; v<kw; v++) {
                         if (nn->conv2d->conv_activations->val[offset_a+(stride_a+(((i*sh+u)*cols_a)+(j*sw+v)))] > max_val) {
                             max_val = nn->conv2d->conv_activations->val[offset_a+(stride_a+(((i*sh+u)*cols_a)+(j*sw+v)))];
+                            winning_unit = stride_a+(((i*sh+u)*cols_a)+(j*sw+v));
                         }
                     }
                 }
                 nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*fw)+j))] = max_val;
+                nn->conv2d->max_pool_mask->val[offset_mask+winning_unit] = 1.0f;
             }
         }
         stride_a = stride_a + (rows_a * cols_a);
@@ -208,6 +232,10 @@ void l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Null
         }
         offset_a = offset_a + step;
     } else {
+        // A pooling op should not come so early int the network stack, but we allow
+        // it only for being able to test the pooling operation independently.
+        // We issue a warning to
+        fprintf(stdout, "topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.");
         offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
@@ -261,6 +289,10 @@ void average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * 
         }
         offset_a = offset_a + step;
     } else {
+        // A pooling op should not come so early int the network stack, but we allow
+        // it only for being able to test the pooling operation independently.
+        // We issue a warning to
+        fprintf(stdout, "topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.");
         offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
@@ -398,7 +430,7 @@ void inference_in_conv2d_net(void * _Nonnull neural) {
 // This routine does the backward propagation on the fully connected layers
 // similarly to the routine used for a fully connected network.
 //
-void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
+void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3) {
     
     extern float * propag_delta;
     static unsigned int local_idx;
@@ -450,8 +482,8 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, unsig
             offset_dcdw_connected = 0;
             for (int l=0; l<nn->conv2d->num_dense_layers-1; l++) {
                 offset_w_connected = offset_w_connected + (nn->conv2d->dense_weights->shape[l][0][0]*nn->conv2d->dense_weights->shape[l][1][0]);
-                offset_dcdw_connected = offset_dcdw_connected + (nn->conv2d->dense_weights->shape[l][0][0]*nn->conv2d->dense_weights->shape[l][1][0]);
             }
+            offset_dcdw_connected = offset_w_connected;
             ptr_activations = nn->conv2d->dense_activations;
         } else { // The previous layer is a convolution/pooling layer
             // Compute the offset to the activations at the last pooling/convolutional layer
@@ -550,7 +582,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, unsig
 // This routine computes the dela_{l} at the current convolution layer and updates
 // the derivatives of the cost function with respect to the convolution weights and biases
 //
-void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
+void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3) {
     
     extern float * propag_delta;
     BrainStormNet *nn = (BrainStormNet *)neural;
@@ -786,8 +818,9 @@ static void backpropag_pooling_after_convolution(void * _Nonnull neural, unsigne
     }
 }
 
-void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
+void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3) {
     
+    extern float * propag_delta;
     static bool check = false;
     
     BrainStormNet *nn = (BrainStormNet *)neural;
@@ -797,21 +830,59 @@ void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned
         check = true;
     }
     
+    int offset = 0;
+    for (int l=0; l<*advance3; l++) {
+        int step = 1;
+        for (int i=0; i<nn->conv2d->max_pool_mask->rank; i++) {
+            step = step * nn->conv2d->max_pool_mask->shape[l][i][0];
+        }
+        offset = offset + step;
+    }
+    
     if (nn->conv2d->parameters->topology[op+1][0] == CONVOLUTION) {
         backpropag_pooling_after_convolution((void *)nn, op, advance2);
     } else {
         backpropag_pooling_after_fully_connected((void *)nn, op);
     }
     
-    // Upsampling
+    // Upsampling: The error is directly assigned to the winning unit
+    // kh and kw are the horizontal and vertical dimension of the pooling kernel respectively
+    unsigned int q = nn->conv2d->parameters->topology[op-1][1];
+    unsigned int fh = nn->conv2d->parameters->topology[op][2];
+    unsigned int fw = nn->conv2d->parameters->topology[op][3];
+    unsigned int kh = nn->conv2d->parameters->topology[op][4];
+    unsigned int kw = nn->conv2d->parameters->topology[op][5];
+    unsigned int sh = nn->conv2d->parameters->topology[op][6];
+    unsigned int sw = nn->conv2d->parameters->topology[op][7];
+    
+    unsigned int cols_c = nn->conv2d->parameters->topology[op-1][3];
+    unsigned int cols_s = nn->conv2d->parameters->topology[op][3];
+    
+    int stride_c = 0;
+    int stride_s = 0;
+    for (int k=0; k<q; k++) {
+        for (int i=0; i<fh; i++) {
+            for (int j=0; j<fw; j++) {
+                for (int u=0; u<kh; u++) {
+                    for (int v=0; v<kw; v++) {
+                        nn->conv2d->propag_upsampling[stride_c+(((i*sh+u)*cols_c)+(j*sw+v))] =
+                        propag_delta[stride_s+((i*cols_s)+j)]*nn->conv2d->max_pool_mask->val[offset+(stride_c+(((i*sh+u)*cols_c)+(j*sw+v)))];
+                    }
+                }
+            }
+        }
+        stride_c = stride_c + (nn->conv2d->parameters->topology[op-1][2] * nn->conv2d->parameters->topology[op-1][3]);
+        stride_s = stride_s + (nn->conv2d->parameters->topology[op][2] * nn->conv2d->parameters->topology[op][3]);
+    }
+    
+    (*advance3)--;
+}
+
+void backpropag_l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int *_Nullable advance1, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3) {
     
 }
 
-void backpropag_l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int *_Nullable advance1, unsigned int * _Nullable advance2) {
-    
-}
-
-void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2) {
+void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3) {
     
     extern float * propag_delta;
     static bool check = false;
@@ -864,7 +935,21 @@ void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, unsi
 void backpropag_in_conv2d_net(void * _Nonnull neural,
                               void (* _Nullable ptr_inference_func)(void * _Nonnull self)) {
     
+    static bool first_time = true;
     BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    // Compute only once the length of the tensor storing the max pooling mask
+    static int length = 0;
+    if (first_time) {
+        for (int l=0; l<nn->conv2d->num_max_pooling_layers; l++) {
+            int size = 1;
+            for (int i=0; i<nn->conv2d->max_pool_mask->rank; i++) {
+                size = size * nn->conv2d->max_pool_mask->shape[l][i][0];
+            }
+            length = length + size;
+        }
+        first_time = false;
+    }
     
     // Activations at the input layer
     // TODO: it would be maybe better to have the batch being
@@ -875,13 +960,15 @@ void backpropag_in_conv2d_net(void * _Nonnull neural,
     }
     
     // Inference (forward pass)
+    memset(nn->conv2d->max_pool_mask->val, 0.0f, length*sizeof(float));
     ptr_inference_func(neural);
     
     // Backpropagation
     unsigned int advance1 = 0;
     unsigned int advance2 = nn->conv2d->num_conv2d_layers - 1;
+    unsigned int advance3 = nn->conv2d->num_max_pooling_layers - 1;
     for (int l=nn->conv2d->num_backpropag_ops; l>=1; l--) {
-        nn->conv2d->backpropagOps[l-1](neural, l, &advance1, &advance2);
+        nn->conv2d->backpropagOps[l-1](neural, l, &advance1, &advance2, &advance3);
         advance1++;
     }
 }

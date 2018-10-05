@@ -141,6 +141,7 @@ void create_conv2d_net(void * _Nonnull self) {
     
     nn->conv2d = (conv2d_network *)malloc(sizeof(conv2d_network));
     *(nn->conv2d) = (conv2d_network){.num_conv2d_layers=0, .num_dense_layers=0, .num_pooling_layers=0,
+        .num_max_pooling_layers=0,
         .num_infer_ops=0,
         .num_backpropag_ops=0,
         .conv_weights=NULL,
@@ -166,6 +167,7 @@ void create_conv2d_net(void * _Nonnull self) {
         .flip_matrices=NULL,
         .flipped_weights=NULL,
         .conv_matrices=NULL,
+        .max_pool_mask=NULL,
         .propag_upsampling=NULL
     };
     
@@ -503,6 +505,22 @@ void conv2d_net_genesis(void * _Nonnull self) {
     dict->init_neural_params = false;
     nn->conv2d->conv_matrices = (tensor *)nn->tensor(self, *dict);
     
+    // If max pooling is used, create a mask which is used during backpropagation
+    dict->rank = 3;
+    idx = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == POOLING && nn->conv2d->parameters->topology[l][8] == MAX_POOLING) {
+            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l-1][2];
+            dict->shape[idx][2][0] = nn->conv2d->parameters->topology[l-1][3];
+            idx++;
+        }
+    }
+    nn->conv2d->num_max_pooling_layers = idx;
+    dict->flattening_length = idx;
+    dict->init_neural_params = false;
+    nn->conv2d->max_pool_mask = (tensor *)nn->tensor(self, *dict);
+    
     // Initialize the convolution matrices with the flipped initial kernels (weights)
     nn->flip_kernels(self);
     nn->conv_mat_update(self);
@@ -701,9 +719,26 @@ void conv2d_net_finale(void * _Nonnull self) {
         }
         free(nn->conv2d->train->adam);
     }
-    if (nn->conv2d->flip_matrices != NULL) free(nn->conv2d->flip_matrices);
-    if (nn->conv2d->flipped_weights != NULL) free(nn->conv2d->flipped_weights);
-    if (nn->conv2d->conv_matrices != NULL) free(nn->conv2d->conv_matrices);
+    if (nn->conv2d->flip_matrices != NULL) {
+        free(nn->conv2d->flip_matrices->val);
+    }
+    free(nn->conv2d->flip_matrices);
+    
+    if (nn->conv2d->flipped_weights != NULL) {
+        free(nn->conv2d->flipped_weights->val);
+    }
+    free(nn->conv2d->flipped_weights);
+    
+    if (nn->conv2d->conv_matrices != NULL) {
+        free(nn->conv2d->conv_matrices->val);
+    }
+    free(nn->conv2d->conv_matrices);
+    
+    if (nn->conv2d->max_pool_mask != NULL) {
+        free(nn->conv2d->max_pool_mask->val);
+    }
+    free(nn->conv2d->max_pool_mask);
+    
     if (nn->conv2d->propag_upsampling != NULL) free(nn->conv2d->propag_upsampling);
     if (nn->conv2d->train != NULL) free(nn->conv2d->train);
     if (nn->conv2d->parameters != NULL) free(nn->conv2d->parameters);

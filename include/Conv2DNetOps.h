@@ -15,12 +15,12 @@ void max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nul
 void l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
 void average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
 
-void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2);
-void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2);
+void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3);
+void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3);
 
-void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2);
-void backpropag_l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2);
-void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2);
+void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3);
+void backpropag_l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3);
+void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance, unsigned int * _Nullable advance2, unsigned int  * _Nullable advance3);
 
 void inference_in_conv2d_net(void * _Nonnull neural);
 void backpropag_in_conv2d_net(void * _Nonnull neural,
