@@ -77,6 +77,10 @@
 		01DD2F9D21509A1100082198 /* libBrainStorm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161756E20EEEDE500FC40FF /* libBrainStorm.a */; };
 		01DD2FA521509E7500082198 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 01DD2FA421509E7500082198 /* main.c */; };
 		01DD2FAB21509EB000082198 /* libBrainStorm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0161756E20EEEDE500FC40FF /* libBrainStorm.a */; };
+		01E4E8CB2166D9F50053248C /* Conv2DNet.h in Headers */ = {isa = PBXBuildFile; fileRef = 014B2355211960C0008E46AC /* Conv2DNet.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01E4E8CC2166D9F50053248C /* Conv2DNetOps.h in Headers */ = {isa = PBXBuildFile; fileRef = 014B235E21217164008E46AC /* Conv2DNetOps.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01E4E8CD2166D9F50053248C /* DenseNet.h in Headers */ = {isa = PBXBuildFile; fileRef = 014B235121195CCA008E46AC /* DenseNet.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01E4E8CE2166D9F50053248C /* DenseNetOps.h in Headers */ = {isa = PBXBuildFile; fileRef = 014B235A21216B6E008E46AC /* DenseNetOps.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -346,11 +350,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				0161757D20EEEFCB00FC40FF /* BrainStorm.h in Headers */,
+				01E4E8CB2166D9F50053248C /* Conv2DNet.h in Headers */,
+				01E4E8CC2166D9F50053248C /* Conv2DNetOps.h in Headers */,
 				0161757E20EEEFCB00FC40FF /* Data.h in Headers */,
+				01E4E8CD2166D9F50053248C /* DenseNet.h in Headers */,
+				01E4E8CE2166D9F50053248C /* DenseNetOps.h in Headers */,
 				0161757F20EEEFCB00FC40FF /* Memory.h in Headers */,
 				0161758020EEEFCB00FC40FF /* MetalCompute.h in Headers */,
-				016175AC20FF176A00FC40FF /* NetworkOps.h in Headers */,
 				0161759220EF46D300FC40FF /* NetworkConstructor.h in Headers */,
+				016175AC20FF176A00FC40FF /* NetworkOps.h in Headers */,
 				0161759320EF46D300FC40FF /* NetworkParams.h in Headers */,
 				0161758120EEEFCB00FC40FF /* NetworkUtils.h in Headers */,
 				0161758220EEEFCB00FC40FF /* NeuralNetwork.h in Headers */,
@@ -505,7 +513,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/myLibs'\npath=$path1$path2$path3\n\nif test -d $path ; then\nrm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/libBrainStorm.a $path\ncp -r ${BUILT_PRODUCTS_DIR}/usr $path";
+			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/myLibs'\npath=$path1$path2$path3\n\nif test -d $path ; then\nrm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/libBrainStorm.a $path\ncp -r ${BUILT_PRODUCTS_DIR}/usr $path\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

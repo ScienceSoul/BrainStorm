@@ -111,6 +111,12 @@ void eval_dense_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, un
  
     BrainStormNet *nn = (BrainStormNet *)neural;
     
+    // Offset to activations at output layer
+    unsigned int offset = 0;
+    for (int l=0; l<nn->network_num_layers-1; l++) {
+        offset = offset + nn->dense->activations->shape[l][0][0];
+    }
+    
     for (int k=0; k<data_size; k++) {
         
         for (int i=0; i<nn->num_channels; i++) {
@@ -118,19 +124,19 @@ void eval_dense_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, un
         }
         inference_in_dense_net(nn);
         
-        // Stride to activations at last layer
-        unsigned int stride = 0;
-        for (int l=0; l<nn->network_num_layers-1; l++) {
-            stride = stride + nn->dense->activations->shape[l][0][0];
-        }
-        
-        out[k] = (float)argmax(nn->dense->activations->val+stride, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->num_channels];
+        out[k] = (float)argmax(nn->dense->activations->val+offset, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->num_channels];
     }
 }
 
 void eval_conv2d_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    // Offset to activations at the output layer
+    unsigned int offset = 0;
+    for (int l=0; l<nn->conv2d->num_dense_layers-1; l++) {
+        offset = offset + nn->conv2d->dense_activations->shape[l][0][0];
+    }
     
     for (int k=0; k<data_size; k++) {
     
@@ -139,13 +145,7 @@ void eval_conv2d_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, u
         }
         inference_in_conv2d_net(nn);
         
-        // Stride to activations at last fully connected layer
-        unsigned int stride = 0;
-        for (int l=0; l<nn->conv2d->num_dense_layers-1; l++) {
-            stride = stride + nn->conv2d->dense_activations->shape[l][0][0];
-        }
-        
-        out[k] = (float)argmax(nn->conv2d->conv_activations->val+stride, nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]) == data[k][nn->num_channels];
+        out[k] = (float)argmax(nn->conv2d->dense_activations->val+offset, nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]) == data[k][nn->num_channels];
     }
 }
 
@@ -186,7 +186,7 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
         data_size = nn->data->validation->m;
     } else if (strcmp(dataSet, "test") == 0) {
         if (!test_check) {
-            if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on test data but the data  do not exist.");
+            if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on test data but the data do not exist.");
             test_check = true;
         }
         data = nn->data->test->set;
@@ -369,6 +369,7 @@ void flipKernels(void * _Nonnull neural) {
 //
 void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned int fh, unsigned int fw) {
     
+    extern float * propag_delta;
     BrainStormNet *nn = (BrainStormNet *)neural;
     
     float C[fh*fw];
@@ -383,7 +384,7 @@ void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned int fh, unsigne
     int stride = 0;
     for (int k=0; k<q; k++) {
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, fh, fw, fw, 1.0f, *flip_mat, fw, nn->conv2d->propag_upsampling+stride, fw, 0.0f, C, fw);
-        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, fh, fw, fw, 1.0f, C, fw, *flip_mat, fw, 0.0f, nn->conv2d->propag_delta+stride, fw);
+        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, fh, fw, fw, 1.0f, C, fw, *flip_mat, fw, 0.0f, propag_delta+stride, fw);
         stride = stride + (fh * fw);
     }
 }

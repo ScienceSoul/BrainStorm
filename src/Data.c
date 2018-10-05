@@ -104,7 +104,7 @@ void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const cha
         if (nn->is_dense_network) {
             nn->data->validation->set = getData(raw_training, len1, len2, nn->dense->parameters->split[0], nn->dense->parameters->split[1], &nn->data->validation->m, &nn->data->validation->n);
         } else if (nn->is_conv2d_network) {
-            nn->data->validation->set = getData(raw_training, len1, len2, nn->conv2d->parameters->split[0], nn->conv2d->parameters->split[1], &nn->data->validation->n, &nn->data->validation->n);
+            nn->data->validation->set = getData(raw_training, len1, len2, nn->conv2d->parameters->split[0], nn->conv2d->parameters->split[1], &nn->data->validation->m, &nn->data->validation->n);
         }
     } else {
         if (nn->is_dense_network) {

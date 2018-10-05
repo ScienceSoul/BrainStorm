@@ -66,7 +66,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
         nn->dense->activations->val[i] = nn->batch[nn->example_idx][i];
     }
     
-    // Inference
+    // Inference (forward pass)
     ptr_inference_func(nn);
     
     // ------------- Backward pass
@@ -112,9 +112,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
             nn->dense->batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
         }
     }
-    for (int i=0; i<nn->dense->batchCostBiasDeriv->shape[nn->network_num_layers-2][0][0]; i++) {
-        nn->dense->batchCostBiasDeriv->val[stride3+i] = delta[i];
-    }
+    memcpy(nn->dense->batchCostBiasDeriv->val+stride3, delta, nn->dense->batchCostBiasDeriv->shape[nn->network_num_layers-2][0][0]*sizeof(float));
     
     // The backward pass loop
     
@@ -137,9 +135,13 @@ void backpropag_in_dense_net(void * _Nonnull neural,
         }
         
         cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->dense->weights->shape[l][0][0], (int)nn->dense->weights->shape[l][1][0], 1.0, nn->dense->weights->val+stride, (int)nn->dense->weights->shape[l][1][0], delta, 1, 0.0, buffer, 1);
+#ifdef __APPLE__
+        vDSP_vmul(buffer, 1, sp, 1, delta, 1, nn->dense->affineTransformations->shape[l-1][0][0]);
+#else
         for (int i=0; i<nn->dense->affineTransformations->shape[l-1][0][0]; i++) {
             delta[i] = buffer[i] * sp[i];
         }
+#endif
         // dC/dw at layer l
         m = nn->dense->batchCostWeightDeriv->shape[l-1][0][0];
         n = nn->dense->batchCostWeightDeriv->shape[l-1][1][0];
@@ -148,11 +150,9 @@ void backpropag_in_dense_net(void * _Nonnull neural,
                 nn->dense->batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
             }
         }
-        // dC/db at layer l
-        for (int i=0; i<nn->dense->batchCostBiasDeriv->shape[l-1][0][0]; i++) {
-            nn->dense->batchCostBiasDeriv->val[stride3+i] = delta[i];
-        }
         
+        // dC/db at layer l
+        memcpy(nn->dense->batchCostBiasDeriv->val+stride3, delta, nn->dense->batchCostBiasDeriv->shape[l-1][0][0]*sizeof(float));
         stride = stride - (nn->dense->weights->shape[l-1][0][0] * nn->dense->weights->shape[l-1][1][0]);
     }
 }

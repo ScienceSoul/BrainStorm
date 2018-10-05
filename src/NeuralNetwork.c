@@ -11,6 +11,8 @@
 #include "Memory.h"
 #include "Regularization.h"
 
+float * _Nullable propag_delta = NULL;
+
 static void initNeuralData(void * _Nonnull self);
 
 static void genesis(void * _Nonnull self);
@@ -138,6 +140,23 @@ static void genesis(void * _Nonnull self) {
         dense_net_genesis(self);
     } else if (nn->is_conv2d_network) {
         conv2d_net_genesis(self);
+        
+        // ---------------------------------------------------------------------------------------
+        // ------- Global buffer to store the deltas (errors) at layer l+1 during backpropagation
+        // ---------------------------------------------------------------------------------------
+        int size = 0;
+        for (int l=1; l<nn->network_num_layers; l++) {
+            int m = 0;
+            if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION || nn->conv2d->parameters->topology[l][0] == POOLING) {
+                m = nn->conv2d->parameters->topology[l][1] * nn->conv2d->parameters->topology[l][2] *
+                nn->conv2d->parameters->topology[l][3];
+            } else {
+                m = nn->conv2d->parameters->topology[l][1];
+            }
+            size = max(size, m);
+        }
+        propag_delta = (float *)malloc(size*sizeof(float));
+        memset(propag_delta, 0.0f, size*sizeof(float));
     }
 }
 
@@ -155,13 +174,13 @@ static void finale(void * _Nonnull self) {
     free(nn->data->test);
     free(nn->data->validation);
     free(nn->data);
-    free(nn->dense->parameters);
     free(nn->constructor);
     
     if (nn->is_dense_network) {
         dense_net_finale(self);
     } else if (nn->is_conv2d_network) {
         conv2d_net_finale(self);
+        free(propag_delta);
     }
     
     if (nn->gpu != NULL) {

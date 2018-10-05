@@ -36,11 +36,12 @@ void set_value(void * _Nonnull object, int l, int offset, float * _Nullable val,
     int n = tensor_object->shape[l][indx+1][0];
     
     float *value = NULL;
+    float nn;
     if (func_ptr == constant_func) {
         value = val;
     } else if (func_ptr == random_func2) {
-        float val = (float)n;
-        value = &val;
+        nn = (int)n;
+        value = &nn;
     }
     
     if (tensor_object->rank == 2) {

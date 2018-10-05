@@ -111,15 +111,15 @@ static void init_in_conv2d_net(void * _Nonnull neural) {
         firstTime = false;
     }
     
-    memset(nn->conv2d->conv_costWeightDerivatives, 0.0f, w_conv_length*sizeof(float));
-    memset(nn->conv2d->conv_batchCostWeightDeriv, 0.0f, w_conv_length*sizeof(float));
-    memset(nn->conv2d->conv_costBiasDerivatives, 0.0f, b_conv_length*sizeof(float));
-    memset(nn->conv2d->conv_batchCostBiasDeriv, 0.0f, b_conv_length*sizeof(float));
+    memset(nn->conv2d->conv_costWeightDerivatives->val, 0.0f, w_conv_length*sizeof(float));
+    memset(nn->conv2d->conv_batchCostWeightDeriv->val, 0.0f, w_conv_length*sizeof(float));
+    memset(nn->conv2d->conv_costBiasDerivatives->val, 0.0f, b_conv_length*sizeof(float));
+    memset(nn->conv2d->conv_batchCostBiasDeriv->val, 0.0f, b_conv_length*sizeof(float));
     
-    memset(nn->conv2d->dense_costWeightDerivatives, 0.0f, w_dense_length*sizeof(float));
-    memset(nn->conv2d->dense_batchCostWeightDeriv, 0.0f, w_dense_length*sizeof(float));
-    memset(nn->conv2d->dense_costBiasDerivatives, 0.0f, b_dense_length*sizeof(float));
-    memset(nn->conv2d->dense_batchCostBiasDeriv, 0.0f, b_dense_length*sizeof(float));
+    memset(nn->conv2d->dense_costWeightDerivatives->val, 0.0f, w_dense_length*sizeof(float));
+    memset(nn->conv2d->dense_batchCostWeightDeriv->val, 0.0f, w_dense_length*sizeof(float));
+    memset(nn->conv2d->dense_costBiasDerivatives->val, 0.0f, b_dense_length*sizeof(float));
+    memset(nn->conv2d->dense_batchCostBiasDeriv->val, 0.0f, b_dense_length*sizeof(float));
 }
 
 static void grad_descent_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
@@ -172,7 +172,7 @@ static void grad_descent_update_in_conv2d_net(void * _Nonnull neural, unsigned i
             int stride2 = 0;
             for (int ll=0; ll<q; ll++) {
                 for (int u=0; u<kh; u++) {
-                    for (int v=0; v<kw; k++) {
+                    for (int v=0; v<kw; v++) {
                         nn->conv2d->conv_weights->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
                            nn->regularizer[l](neural, nn->conv2d->conv_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, u, v, kw, offset_w, stride1, stride2) -
                         (nn->conv2d->train->gradient_descent->learning_rate/(float)batch_size)*nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))];
@@ -291,12 +291,12 @@ static void momentum_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
             int stride2 = 0;
             for (int ll=0; ll<q; ll++) {
                 for (int u=0; u<kh; u++) {
-                    for (int v=0; v<kw; k++) {
+                    for (int v=0; v<kw; v++) {
                         coeff_w[u][v] =  (nn->conv2d->train->momentum->learning_rate/(float)batch_size)*nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))];
                     }
                 }
                 for (int u=0; u<kh; u++) {
-                    for (int v=0; v<kw; k++) {
+                    for (int v=0; v<kw; v++) {
                         nn->conv2d->conv_weightsVelocity->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
                             nn->conv2d->train->momentum->momentum_coefficient * nn->conv2d->conv_weightsVelocity->val[offset_w+(stride1+(stride2+(u*kw+v)))] - coeff_w[u][v];
                         nn->conv2d->conv_weights->val[offset_w+(stride1+(stride2+(u*kw+v)))] = nn->regularizer[l](neural, nn->conv2d->conv_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, u, v, kw, offset_w, stride1, stride2) + nn->conv2d->conv_weightsVelocity->val[offset_w+(stride1+(stride2+(u*kw+v)))];

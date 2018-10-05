@@ -24,7 +24,6 @@ typedef struct dense_net_parameters {
 typedef struct conv2d_net_parameters {
     unsigned int numberOfClassifications;
     unsigned int max_number_nodes_in_dense_layer;
-    unsigned int max_propag_delta_entries;
     float eta, lambda;
     
     // For a 2D convolutional network, the first dimension of topology is the layer index,

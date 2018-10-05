@@ -166,7 +166,6 @@ void create_conv2d_net(void * _Nonnull self) {
         .flip_matrices=NULL,
         .flipped_weights=NULL,
         .conv_matrices=NULL,
-        .propag_delta = NULL,
         .propag_upsampling=NULL
     };
     
@@ -189,7 +188,6 @@ void create_conv2d_net(void * _Nonnull self) {
     nn->conv2d->parameters->lambda = 0.0f;
     nn->conv2d->parameters->numberOfClassifications = 0;
     nn->conv2d->parameters->max_number_nodes_in_dense_layer = 0;
-    nn->conv2d->parameters->max_propag_delta_entries = 0;
     memset(nn->conv2d->parameters->topology, 0, sizeof(nn->dense->parameters->topology));
     memset(nn->conv2d->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
     memset(nn->conv2d->parameters->split, 0, sizeof(nn->dense->parameters->split));
@@ -438,29 +436,13 @@ void conv2d_net_genesis(void * _Nonnull self) {
             nn->conv2d->dense_affineTransformations = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
     }
     
-    // --------------------------------------------------------------------------------
-    // ------- Buffer to store the deltas (errors) at layer l+1 during backpropagation
-    // --------------------------------------------------------------------------------
-    for (int l=1; l<nn->network_num_layers; l++) {
-        int size = 0;
-        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION || nn->conv2d->parameters->topology[l][0] == POOLING) {
-            size = nn->conv2d->parameters->topology[l][1] * nn->conv2d->parameters->topology[l][2] *
-                   nn->conv2d->parameters->topology[l][3];
-        } else {
-            size = nn->conv2d->parameters->topology[l][1];
-        }
-        nn->conv2d->parameters->max_propag_delta_entries = max((int)nn->conv2d->parameters->max_propag_delta_entries, size);
-    }
-    nn->conv2d->propag_delta = (float *)malloc(nn->conv2d->parameters->max_propag_delta_entries*sizeof(float));
-    
     // --------------------------------------------------------------------
     // ------- Storage for the upsampled deltas from the pooling layers
     // --------------------------------------------------------------------
     int size = 0;
     for (int l=1; l<nn->network_num_layers; l++) {
         if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
-            size = max(size, (nn->conv2d->parameters->topology[l][1] * nn->conv2d->parameters->topology[l][2] *
-                                 nn->conv2d->parameters->topology[l][3]));
+            size = max(size, (nn->conv2d->parameters->topology[l][1] * nn->conv2d->parameters->topology[l][2] * nn->conv2d->parameters->topology[l][3]));
         }
     }
     nn->conv2d->propag_upsampling = (float *)malloc(size*sizeof(float));
@@ -722,8 +704,8 @@ void conv2d_net_finale(void * _Nonnull self) {
     if (nn->conv2d->flip_matrices != NULL) free(nn->conv2d->flip_matrices);
     if (nn->conv2d->flipped_weights != NULL) free(nn->conv2d->flipped_weights);
     if (nn->conv2d->conv_matrices != NULL) free(nn->conv2d->conv_matrices);
-    if (nn->conv2d->propag_delta != NULL) free(nn->conv2d->propag_delta);
     if (nn->conv2d->propag_upsampling != NULL) free(nn->conv2d->propag_upsampling);
     if (nn->conv2d->train != NULL) free(nn->conv2d->train);
+    if (nn->conv2d->parameters != NULL) free(nn->conv2d->parameters);
     if (nn->conv2d != NULL) free(nn->conv2d);
 }

@@ -82,7 +82,6 @@ typedef struct conv2d_network {
     tensor * _Nullable flipped_weights;
     tensor * _Nullable conv_matrices;
     
-    float * _Nullable propag_delta;
     float * _Nullable propag_upsampling;
     
     conv2d_net_parameters * _Nullable parameters;
