@@ -102,6 +102,7 @@ typedef struct conv2d_network {
     
     void * _Nonnull (* _Nonnull dense_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
     void * _Nonnull (* _Nonnull dense_common_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
+    void * _Nonnull (* _Nonnull max_pool_mask_alloc)(void * _Nonnull self, void * _Nonnull t_dict);
     
 } conv2d_network;
 

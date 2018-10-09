@@ -172,7 +172,7 @@ void max_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Nul
         // A pooling op should not come so early int the network stack, but we allow
         // it only for being able to test the pooling operation independently.
         // We issue a warning to
-        fprintf(stdout, "topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.");
+        fprintf(stdout, "WARNING: topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.\n");
         offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
@@ -235,7 +235,7 @@ void l2_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * _Null
         // A pooling op should not come so early int the network stack, but we allow
         // it only for being able to test the pooling operation independently.
         // We issue a warning to
-        fprintf(stdout, "topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.");
+        fprintf(stdout, "WARNING: topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.\n");
         offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
@@ -292,7 +292,7 @@ void average_pooling_op(void * _Nonnull neural, unsigned int op, unsigned int * 
         // A pooling op should not come so early int the network stack, but we allow
         // it only for being able to test the pooling operation independently.
         // We issue a warning to
-        fprintf(stdout, "topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.");
+        fprintf(stdout, "WARNING: topology error in convolutional network. Pooling layer operation coming too early in the network operations stack.\n");
         offset_m = 0;
         offset_a = 0;
         offset_a_compute = 0;
@@ -960,7 +960,8 @@ void backpropag_in_conv2d_net(void * _Nonnull neural,
     }
     
     // Inference (forward pass)
-    memset(nn->conv2d->max_pool_mask->val, 0.0f, length*sizeof(float));
+   if (nn->conv2d->max_pool_mask != NULL)
+       memset(nn->conv2d->max_pool_mask->val, 0.0f, length*sizeof(float));
     ptr_inference_func(neural);
     
     // Backpropagation

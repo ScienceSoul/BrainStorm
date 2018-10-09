@@ -235,7 +235,7 @@ void init_feed_activations(void * _Nonnull neural) {
     }
 }
 
-void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int number_of_maps, unsigned int kh, unsigned int sh) {
+void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int number_of_maps, unsigned int kh, unsigned int sh, pooling_ops pooling_ops) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -254,6 +254,7 @@ void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int numbe
             nn->conv2d->parameters->topology[l][5] = kh;
             nn->conv2d->parameters->topology[l][6] = sh;
             nn->conv2d->parameters->topology[l][7] = sh;
+            nn->conv2d->parameters->topology[l][8] = pooling_ops;
         }
     }
     
@@ -273,18 +274,7 @@ void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int numbe
     init_feed_activations(neural);
     
     dict->rank = 3;
-    int idx = 0;
-    for (int l=0; l<nn->network_num_layers; l++) {
-        if (nn->conv2d->parameters->topology[l][0] == POOLING && nn->conv2d->parameters->topology[l][8] == MAX_POOLING) {
-            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
-            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l-1][2];
-            dict->shape[idx][2][0] = nn->conv2d->parameters->topology[l-1][3];
-        }
-    }
-    nn->conv2d->num_max_pooling_layers = idx;
-    dict->flattening_length = idx;
-    dict->init_neural_params = false;
-    nn->conv2d->max_pool_mask = (tensor *)nn->tensor(neural, *dict);
+    nn->conv2d->max_pool_mask = nn->conv2d->max_pool_mask_alloc(neural, (void *)dict);
     free(dict);
 }
 
@@ -965,7 +955,7 @@ bool test_max_pooling(void * _Nonnull neural) {
     }
     
     int maps_size[3] = {8, 7, 6};
-    set_up(neural, maps_size, 6, kh, sh);
+    set_up(neural, maps_size, 6, kh, sh, MAX_POOLING);
     
     // Apply the pooling
     inference_in_conv2d_net(neural);
@@ -991,7 +981,7 @@ bool test_max_pooling(void * _Nonnull neural) {
     sh = 2;
     maps_size[1] = 4;
     maps_size[2] = 2;
-    set_up(neural, maps_size, 6, kh, sh);
+    set_up(neural, maps_size, 6, kh, sh, MAX_POOLING);
     
     // Apply the pooling
     inference_in_conv2d_net(neural);
@@ -1006,6 +996,8 @@ bool test_max_pooling(void * _Nonnull neural) {
     
     free(nn->conv2d->conv_activations->val);
     free(nn->conv2d->conv_activations);
+    free(nn->conv2d->max_pool_mask->val);
+    free(nn->conv2d->max_pool_mask);
     
     return true;
 }
@@ -1035,7 +1027,7 @@ bool test_average_pooling(void * _Nonnull neural) {
     }
     
     int maps_size[3] = {8, 7, 6};
-    set_up(neural, maps_size, 6, kh, sh);
+    set_up(neural, maps_size, 6, kh, sh, AVERAGE_POOLING);
     
     // Apply the pooling
     inference_in_conv2d_net(neural);
@@ -1059,7 +1051,7 @@ bool test_average_pooling(void * _Nonnull neural) {
     sh = 2;
     maps_size[1] = 4;
     maps_size[2] = 2;
-    set_up(neural, maps_size, 6, kh, sh);
+    set_up(neural, maps_size, 6, kh, sh, AVERAGE_POOLING);
     
     // Apply the pooling
     inference_in_conv2d_net(neural);
@@ -1103,7 +1095,7 @@ bool test_l2_pooling(void * _Nonnull neural) {
     }
     
     int maps_size[3] = {8, 7, 6};
-    set_up(neural, maps_size, 6, kh, sh);
+    set_up(neural, maps_size, 6, kh, sh, L2_POOLING);
     
     // Apply yje pooling
     inference_in_conv2d_net(neural);
@@ -1127,7 +1119,7 @@ bool test_l2_pooling(void * _Nonnull neural) {
     sh = 2;
     maps_size[1] = 4;
     maps_size[2] = 2;
-    set_up(neural, maps_size, 6, kh, sh);
+    set_up(neural, maps_size, 6, kh, sh, L2_POOLING);
     
     // Apply the pooling
     inference_in_conv2d_net(neural);
@@ -1338,6 +1330,9 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     
     init_feed_activations(neural);
     
+    dict->rank = 3;
+    nn->conv2d->max_pool_mask = nn->conv2d->max_pool_mask_alloc(neural, (void *) dict);
+    
     // The weights tensors
     // t1 = shape[1,1,5,5]
     dict->rank = 4;
@@ -1415,6 +1410,9 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     
     free(nn->conv2d->conv_affineTransformations->val);
     free(nn->conv2d->conv_affineTransformations);
+    
+    free(nn->conv2d->max_pool_mask->val);
+    free(nn->conv2d->max_pool_mask);
  
     free(dict);
     
@@ -1451,6 +1449,8 @@ bool test_pooling_fully_connected(void * _Nonnull  neural) {
     nn->conv2d->conv_activations = (tensor *)nn->conv2d->conv_activations_alloc(neural, (void *)dict, true);
     
     init_feed_activations(neural);
+    
+    nn->conv2d->max_pool_mask = nn->conv2d->max_pool_mask_alloc(neural, (void *)dict);
     
     // Fully connected layers activations, biases and affine transformations
     dict->rank = 1;
@@ -1513,6 +1513,9 @@ bool test_pooling_fully_connected(void * _Nonnull  neural) {
     free(nn->conv2d->dense_weights->val);
     free(nn->conv2d->dense_weights);
     
+    free(nn->conv2d->max_pool_mask->val);
+    free(nn->conv2d->max_pool_mask);
+    
     free(dict);
     
     return true;
@@ -1553,6 +1556,8 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     nn->conv2d->conv_activations = (tensor *)nn->conv2d->conv_activations_alloc(neural, (void *)dict, true);
     
     init_feed_activations(neural);
+    
+    nn->conv2d->max_pool_mask = nn->conv2d->max_pool_mask_alloc(neural, (void *)dict);
     
     // The weights tensors
     // t1 = shape[1,1,5,5]
@@ -1673,6 +1678,9 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     
     free(nn->conv2d->dense_weights->val);
     free(nn->conv2d->dense_weights);
+    
+    free(nn->conv2d->max_pool_mask->val);
+    free(nn->conv2d->max_pool_mask);
     
     free(dict);
     

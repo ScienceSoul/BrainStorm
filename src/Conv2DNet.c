@@ -132,6 +132,30 @@ static void * _Nonnull dense_common_alloc(void * _Nonnull self, void * _Nonnull 
     return (void *)t;
 }
 
+static void * _Nonnull max_pool_mask_alloc(void * _Nonnull self, void * _Nonnull t_dict) {
+    
+    BrainStormNet *nn = (BrainStormNet *)self;
+    tensor_dict *dict = (tensor_dict *)t_dict;
+    
+    int idx = 0;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == POOLING && nn->conv2d->parameters->topology[l][8] == MAX_POOLING) {
+            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l-1][2];
+            dict->shape[idx][2][0] = nn->conv2d->parameters->topology[l-1][3];
+            idx++;
+        }
+    }
+    tensor *t = NULL;
+    if (idx > 0) {
+        nn->conv2d->num_max_pooling_layers = idx;
+        dict->flattening_length = idx;
+        t = (tensor *)nn->tensor(self, *dict);
+    }
+    
+    return (void *)t;
+}
+
 //
 // Convolutional network allocation
 //
@@ -200,6 +224,7 @@ void create_conv2d_net(void * _Nonnull self) {
     
     nn->conv2d->dense_weights_alloc = dense_weights_alloc;
     nn->conv2d->dense_common_alloc = dense_common_alloc;
+    nn->conv2d->max_pool_mask_alloc = max_pool_mask_alloc;
 }
 
 //
@@ -505,21 +530,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
     dict->init_neural_params = false;
     nn->conv2d->conv_matrices = (tensor *)nn->tensor(self, *dict);
     
-    // If max pooling is used, create a mask which is used during backpropagation
+    // If max pooling is used, allocate a mask which is used during backpropagation
     dict->rank = 3;
-    idx = 0;
-    for (int l=0; l<nn->network_num_layers; l++) {
-        if (nn->conv2d->parameters->topology[l][0] == POOLING && nn->conv2d->parameters->topology[l][8] == MAX_POOLING) {
-            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
-            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l-1][2];
-            dict->shape[idx][2][0] = nn->conv2d->parameters->topology[l-1][3];
-            idx++;
-        }
-    }
-    nn->conv2d->num_max_pooling_layers = idx;
-    dict->flattening_length = idx;
-    dict->init_neural_params = false;
-    nn->conv2d->max_pool_mask = (tensor *)nn->tensor(self, *dict);
+    nn->conv2d->max_pool_mask = nn->conv2d->max_pool_mask_alloc(self, (void *)dict);
     
     // Initialize the convolution matrices with the flipped initial kernels (weights)
     nn->flip_kernels(self);
