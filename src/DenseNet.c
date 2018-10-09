@@ -239,66 +239,71 @@ void dense_net_finale(void * _Nonnull  self) {
     // ------------------------------------------------------------------------
     // ------- Free up the optimizer
     // ------------------------------------------------------------------------
-    
-    if (nn->dense->train->gradient_descent != NULL) {
-        free(nn->dense->train->gradient_descent);
-    }
-    
-    if (nn->dense->train->momentum != NULL) {
-        if (nn->dense->weightsVelocity != NULL) {
-            free(nn->dense->weightsVelocity->val);
-            free(nn->dense->weightsVelocity);
-        }
-        if (nn->dense->biasesVelocity != NULL) {
-            free(nn->dense->biasesVelocity->val);
-            free(nn->dense->biasesVelocity);
-        }
-        free(nn->dense->train->momentum);
-    }
-    
-    if (nn->dense->train->ada_grad != NULL) {
-        if (nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated != NULL) {
-            free(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val);
-            free(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated);
-        }
-        if (nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated != NULL) {
-            free(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val);
-            free(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated);
-        }
-        free(nn->dense->train->ada_grad);
-    }
-    if (nn->dense->train->rms_prop != NULL) {
-        if (nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated != NULL) {
-            free(nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val);
-            free(nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated);
-        }
-        if (nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated != NULL) {
-            free(nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val);
-            free(nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated);
-        }
-        free(nn->dense->train->rms_prop);
-    }
-    if (nn->dense->train->adam != NULL) {
-        if (nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate != NULL) {
-            free(nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate->val);
-            free(nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate);
-        }
-        if (nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate != NULL) {
-            free(nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate->val);
-            free(nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate);
+    if (nn->dense->train != NULL) {
+        if (nn->dense->train->gradient_descent != NULL) {
+            free(nn->dense->train->gradient_descent);
         }
         
-        if (nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate != NULL) {
-            free(nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate->val);
-            free(nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate);
+        if (nn->dense->train->momentum != NULL) {
+            if (nn->dense->weightsVelocity != NULL) {
+                free(nn->dense->weightsVelocity->val);
+                free(nn->dense->weightsVelocity);
+            }
+            if (nn->dense->biasesVelocity != NULL) {
+                free(nn->dense->biasesVelocity->val);
+                free(nn->dense->biasesVelocity);
+            }
+            free(nn->dense->train->momentum);
         }
-        if (nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate != NULL) {
-            free(nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate->val);
-            free(nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate);
+        
+        if (nn->dense->train->ada_grad != NULL) {
+            if (nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated != NULL) {
+                free(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val);
+                free(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated);
+            }
+            if (nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated != NULL) {
+                free(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val);
+                free(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated);
+            }
+            free(nn->dense->train->ada_grad->dense);
+            free(nn->dense->train->ada_grad);
         }
-        free(nn->dense->train->adam);
+        if (nn->dense->train->rms_prop != NULL) {
+            if (nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated != NULL) {
+                free(nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val);
+                free(nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated);
+            }
+            if (nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated != NULL) {
+                free(nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val);
+                free(nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated);
+            }
+            free(nn->dense->train->rms_prop->dense);
+            free(nn->dense->train->rms_prop);
+        }
+        if (nn->dense->train->adam != NULL) {
+            if (nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate != NULL) {
+                free(nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate->val);
+                free(nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate);
+            }
+            if (nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate != NULL) {
+                free(nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate->val);
+                free(nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate);
+            }
+            
+            if (nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate != NULL) {
+                free(nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate->val);
+                free(nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate);
+            }
+            if (nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate != NULL) {
+                free(nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate->val);
+                free(nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate);
+            }
+            free(nn->dense->train->adam->dense);
+            free(nn->dense->train->adam);
+        }
+        free(nn->dense->train);
     }
-    if (nn->dense->train != NULL) free(nn->dense->train);
+   
     if (nn->dense->parameters != NULL) free(nn->dense->parameters);
     if (nn->dense != NULL) free(nn->dense);
 }

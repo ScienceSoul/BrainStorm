@@ -53,7 +53,7 @@ typedef struct AdaGradOptimizer {
 typedef struct RMSPropOptimizer {
     float learning_rate;
     float delta;
-    float decayRate;
+    float decay_rate;
     dense * _Nullable dense;
     conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);
@@ -61,10 +61,10 @@ typedef struct RMSPropOptimizer {
 
 typedef struct AdamOptimizer {
     unsigned int time;
-    float stepSize;
+    float step_size;
     float delta;
-    float decayRate1;
-    float decayRate2;
+    float decay_rate1;
+    float decay_rate2;
     dense * _Nullable dense;
     conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size);

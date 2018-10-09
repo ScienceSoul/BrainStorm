@@ -506,7 +506,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 3) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate, the decay rate and a delata value should be given to the RMSProp optimizer.");
                 nn->dense->train->rms_prop->learning_rate = result[0];
-                nn->dense->train->rms_prop->decayRate = result[1];
+                nn->dense->train->rms_prop->decay_rate = result[1];
                 nn->dense->train->rms_prop->delta = result[2];
                 nn->dense->parameters->eta = result[0];
                 nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = NULL;
@@ -521,9 +521,9 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 4) fatal(DEFAULT_CONSOLE_WRITER, "The step size, two decay rates and a delta value should be given to the Adam optimizer.");
                 nn->dense->train->adam->time = 0;
-                nn->dense->train->adam->stepSize = result[0];
-                nn->dense->train->adam->decayRate1 = result[1];
-                nn->dense->train->adam->decayRate2 = result[2];
+                nn->dense->train->adam->step_size = result[0];
+                nn->dense->train->adam->decay_rate1 = result[1];
+                nn->dense->train->adam->decay_rate2 = result[2];
                 nn->dense->train->adam->delta = result[3];
                 nn->dense->parameters->eta = result[0];
                 nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate = NULL;

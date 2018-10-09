@@ -191,6 +191,9 @@ void api_convolutional_net(void) {
     
     // The optimizer
     MomentumOptimizer *optimizer = (MomentumOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
+    //AdaGradOptimizer *optimizer = (AdaGradOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adagrad", .learning_rate=0.01f, .delta=1.0e-7});
+    //RMSPropOptimizer *optimizer = (RMSPropOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="rmsprop", .learning_rate=0.01f, .decay_rate1=0.9f, .delta=1.0e-6});
+    //AdamOptimizer *optimizer = (AdamOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adam", .step_size=0.001f, .decay_rate1=0.9f, .decay_rate2=0.999f, .delta=1.0e-8});
     
     neural->genesis((void *)neural);
     
