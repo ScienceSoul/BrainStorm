@@ -390,13 +390,9 @@ static void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int b
                 coeff[i][j] =
                 -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)])) )
                 * ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)] );
-            }
-        }
-        for (int i=0; i<m; i++) {
-            for (int j=0; j<n; j++) {
+                
                 nn->dense->weights->val[offset+((i*n)+j)] =
-                nn->regularizer[l](neural, nn->dense->weights->val, nn->dense->parameters->eta, nn->dense->parameters->lambda, i, j, n, offset, 0, 0)
-                + coeff[i][j];
+                nn->regularizer[l](neural, nn->dense->weights->val, nn->dense->parameters->eta, nn->dense->parameters->lambda, i, j, n, offset, 0, 0) + coeff[i][j];
             }
         }
         offset = offset + (m * n);
@@ -456,10 +452,7 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
                         coeff_w[u][v] =
                         -( nn->conv2d->train->ada_grad->learning_rate/(nn->conv2d->train->ada_grad->delta+sqrtf(nn->conv2d->train->ada_grad->conv2d->costWeightDerivativeSquaredAccumulated->val[offset_w+(stride1+(stride2+(u*kw+v)))])) )
                         * ( (1.0f/(float)batch_size)*nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))] );
-                    }
-                }
-                for (int u=0; u<kh; u++) {
-                    for (int v=0; v<kw; v++) {
+                        
                         nn->conv2d->conv_weights->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
                         nn->regularizer[l](neural, nn->conv2d->conv_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, u, v, kw, offset_w, stride1, stride2) + coeff_w[u][v];
                     }
@@ -507,10 +500,7 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
                 coeff[i][j] =
                 -( nn->conv2d->train->ada_grad->learning_rate/(nn->conv2d->train->ada_grad->delta+sqrtf(nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)])) )
                 * ( (1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] );
-            }
-        }
-        for (int i=0; i<m; i++) {
-            for (int j=0; j<n; j++) {
+                
                 nn->conv2d->dense_weights->val[offset_w+((i*n)+j)] =
                 nn->regularizer[idx](neural, nn->conv2d->dense_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, i, j, n, offset_w, 0, 0)
                 + coeff[i][j];
@@ -572,10 +562,7 @@ static void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int ba
                 coeff[i][j] =
                 -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)])) )
                 * ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)] );
-            }
-        }
-        for (int i=0; i<m; i++) {
-            for (int j=0; j<n; j++) {
+                
                 nn->dense->weights->val[offset+((i*n)+j)] = nn->regularizer[l](neural, nn->dense->weights->val, nn->dense->parameters->eta, nn->dense->parameters->lambda, i, j, n, offset, 0, 0) + coeff[i][j];
             }
         }
@@ -639,12 +626,9 @@ static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
                         coeff_w[u][v] =
                         -( nn->conv2d->train->rms_prop->learning_rate/(sqrtf(nn->conv2d->train->rms_prop->delta+nn->conv2d->train->rms_prop->conv2d->costWeightDerivativeSquaredAccumulated->val[offset_w+(stride1+(stride2+(u*kw+v)))])) )
                         * ( (1.0f/(float)batch_size)*nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))] );
-                    }
-                }
-                for (int u=0; u<kh; u++) {
-                    for (int v=0; v<kw; v++) {
+                        
                         nn->conv2d->conv_weights->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
-                            nn->regularizer[l](neural, nn->conv2d->conv_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, u, v, kw, offset_w, stride1, stride2) + coeff_w[u][v];
+                        nn->regularizer[l](neural, nn->conv2d->conv_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, u, v, kw, offset_w, stride1, stride2) + coeff_w[u][v];
                     }
                 }
                 stride2 = stride2 + (kh * kw);
@@ -691,11 +675,8 @@ static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
                 coeff[i][j] =
                 -( nn->conv2d->train->rms_prop->learning_rate/(sqrtf(nn->conv2d->train->rms_prop->delta+nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)])) )
                 * ( (1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] );
-            }
-        }
-        for (int i=0; i<m; i++) {
-            for (int j=0; j<n; j++) {
-                nn->conv2d->dense_weights->val[offset_w+((i*n)+j)] = nn->regularizer[idx](neural, nn->conv2d->dense_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, i, j, n, offset_w, 0, 0) + coeff[i][j];
+                
+                 nn->conv2d->dense_weights->val[offset_w+((i*n)+j)] = nn->regularizer[idx](neural, nn->conv2d->dense_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, i, j, n, offset_w, 0, 0) + coeff[i][j];
             }
         }
         offset_w = offset_w + (m * n);
@@ -766,11 +747,7 @@ static void adam_update_in_dense_net(void * _Nonnull neural, unsigned int batch_
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 coeff[i][j] = -nn->dense->train->adam->step_size*( s_hat[i][j] / (sqrtf(r_hat[i][j]+nn->dense->train->adam->delta)) );
-            }
-        }
-        
-        for (int i=0; i<m; i++) {
-            for (int j=0; j<n; j++) {
+                
                 nn->dense->weights->val[offset+((i*n)+j)] = nn->regularizer[l](neural, nn->dense->weights->val, nn->dense->parameters->eta, nn->dense->parameters->lambda, i, j, n, offset, 0, 0) + coeff[i][j];
             }
         }
@@ -856,11 +833,8 @@ static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch
                 for (int u=0; u<kh; u++) {
                     for (int v=0; v<kw; v++) {
                        coeff_w[u][v] = -nn->conv2d->train->adam->step_size*( s_hat_w[u][v] / (sqrtf(r_hat_w[u][v]+nn->conv2d->train->adam->delta)) );
-                    }
-                }
-                for (int u=0; u<kh; u++) {
-                    for (int v=0; v<kw; v++) {
-                       nn->conv2d->conv_weights->val[offset_w+(stride1+(stride2+(u*kw+v)))] = nn->regularizer[l](neural, nn->conv2d->conv_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, u, v, kw, offset_w, stride1, stride2) + coeff_w[u][v];
+                        
+                        nn->conv2d->conv_weights->val[offset_w+(stride1+(stride2+(u*kw+v)))] = nn->regularizer[l](neural, nn->conv2d->conv_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, u, v, kw, offset_w, stride1, stride2) + coeff_w[u][v];
                     }
                 }
                 stride2 = stride2 + (kh * kw);
@@ -926,11 +900,8 @@ static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 coeff[i][j] = -nn->conv2d->train->adam->step_size*( s_hat[i][j] / (sqrtf(r_hat[i][j]+nn->conv2d->train->adam->delta)) );
-            }
-        }
-        for (int i=0; i<m; i++) {
-            for (int j=0; j<n; j++) {
-                nn->conv2d->dense_weights->val[offset_w+((i*n)+j)] = nn->regularizer[idx](neural, nn->conv2d->dense_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, i, j, n, offset_w, 0, 0) + coeff[i][j];
+                
+                 nn->conv2d->dense_weights->val[offset_w+((i*n)+j)] = nn->regularizer[idx](neural, nn->conv2d->dense_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, i, j, n, offset_w, 0, 0) + coeff[i][j];
             }
         }
         offset_w = offset_w + (m * n);
