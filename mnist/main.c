@@ -32,7 +32,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
             neural->dense->train->progression((void *)neural, (progress_dict){.batch_size=batch_size,
                 .percent=5});
         }
-        fprintf(stdout, "%s: time to complete all training data set (s): %f\n", DEFAULT_CONSOLE_WRITER, train_time);
+        fprintf(stdout, "%s: Training time for epoch {%d} : %f (s)\n", DEFAULT_CONSOLE_WRITER, k, train_time);
         
         
         neural->eval_prediction((void *)neural, "validation", out_validation, false);
@@ -69,7 +69,7 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
             train_time += rt;
             neural->conv2d->train->progression((void *)neural, (progress_dict){.batch_size=batch_size, .percent=5});
         }
-        fprintf(stdout, "%s: time to complete all training data set (s): %f\n", DEFAULT_CONSOLE_WRITER, train_time);
+        fprintf(stdout, "%s: Training time for epoch {%d} : %f (s)\n", DEFAULT_CONSOLE_WRITER, k, train_time);
         
         neural->eval_prediction((void *)neural, "validation", out_validation, false);
         float acc_valid = neural->math_ops(out_validation, neural->data->validation->m, "reduce sum");
@@ -119,7 +119,7 @@ void api_fully_connected_net(void) {
     // The feeding layer
     neural->constructor->feed((void *)neural, (layer_dict){.shape=784, .dimension=1});
     
-    // Fully connected layers
+    // Fully hidden connected layers
     neural->constructor->layer_dense((void *)neural,
                                      (layer_dict){.num_neurons=300, .activation=RELU, .kernel_initializer=standard_normal_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
@@ -128,6 +128,7 @@ void api_fully_connected_net(void) {
                                      (layer_dict){.num_neurons=100, .activation=RELU, .kernel_initializer=standard_normal_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
     
+    // Output layer
     neural->constructor->layer_dense((void *)neural,
                                      (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=standard_normal_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});

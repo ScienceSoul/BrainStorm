@@ -741,8 +741,7 @@ void conv2d_net_finale(void * _Nonnull self) {
         }
         free(nn->conv2d->train);
     }
-    
-   
+
     if (nn->conv2d->flip_matrices != NULL) {
         free(nn->conv2d->flip_matrices->val);
     }

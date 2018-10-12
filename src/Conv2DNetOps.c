@@ -701,9 +701,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, unsigned
         offset_b = offset_b + step;
     }
     
-    // We update the dC/dw by computing the convolution operation.
-    // TODO: Try to replace the convolution with the more efficient Matrix-Vector
-    // multiplication operation
+    // Update dC/dw by using a convolution (cross-correlation) operation.
     
     int stride_a = 0;
     int stride1_m = 0;
