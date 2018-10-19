@@ -220,8 +220,8 @@ static void grad_descent_update_in_conv2d_net(void * _Nonnull neural, unsigned i
     // -----------------------------------------------------------
     // Update also the convolution matrices with the new weights
     // -----------------------------------------------------------
-    nn->flip_kernels((void *)nn);
-    nn->conv_mat_update((void *)nn);
+    nn->flip_kernels(neural);
+    nn->kernel_mat_update(neural);
 }
 
 static void momentum_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
@@ -362,8 +362,8 @@ static void momentum_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
     // -----------------------------------------------------------
     // Update also the convolution matrices with the new weights
     // -----------------------------------------------------------
-    nn->flip_kernels((void *)nn);
-    nn->conv_mat_update((void *)nn);
+    nn->flip_kernels(neural);
+    nn->kernel_mat_update(neural);
 }
 
 static void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
@@ -534,8 +534,8 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
     // -----------------------------------------------------------
     // Update also the convolution matrices with the new weights
     // -----------------------------------------------------------
-    nn->flip_kernels((void *)nn);
-    nn->conv_mat_update((void *)nn);
+    nn->flip_kernels(neural);
+    nn->kernel_mat_update(neural);
 }
 
 static void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
@@ -707,8 +707,8 @@ static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
     // -----------------------------------------------------------
     // Update also the convolution matrices with the new weights
     // -----------------------------------------------------------
-    nn->flip_kernels((void *)nn);
-    nn->conv_mat_update((void *)nn);
+    nn->flip_kernels(neural);
+    nn->kernel_mat_update(neural);
 }
 
 static void adam_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
@@ -942,8 +942,8 @@ static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch
     // -----------------------------------------------------------
     // Update also the convolution matrices with the new weights
     // -----------------------------------------------------------
-    nn->flip_kernels((void *)nn);
-    nn->conv_mat_update((void *)nn);
+    nn->flip_kernels(neural);
+    nn->kernel_mat_update(neural);
 }
 
 static void set_func_ptr(void * _Nonnull neural, optimizer optimizer) {

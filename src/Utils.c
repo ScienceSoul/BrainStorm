@@ -641,9 +641,30 @@ void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR
     }
 }
 
-void flip_mat(int M, int N , int K, float * _Nonnull flip, int lda, float * _Nonnull mat, int ldb, float * _Nonnull C, int ldc) {
-    
-    float temp[M*N];
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0f, flip, lda, mat, ldb, 0.0f, temp, N);
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0f, temp, N, flip, lda, 0.0f, C, ldc);
+void __attribute__((overloadable)) swap(float * _Nonnull A, int i, int j, int k, int lda) {
+    float temp = A[j*lda+i];
+    A[j*lda+i] = A[k*lda+i];
+    A[k*lda+i] = temp;
+}
+
+void __attribute__((overloadable)) swap(float * _Nonnull A, int i, int j, int lda) {
+    float temp = A[i*lda+j];
+    A[i*lda+j] = A[j*lda+i];
+    A[j*lda+i] = temp;
+}
+
+void reverse_rows(float * _Nonnull A, int m, int n) {
+    for (int i=0; i<n; i++) {
+        for (int j=0, k=n-1; j<k; j++, k--) {
+            swap(A, i, j, k, n);
+        }
+    }
+}
+
+void transpose(float * _Nonnull A, int m, int n) {
+    for (int i=0; i<m; i++) {
+        for (int j=i; j<n; j++) {
+            swap(A, i, j, n);
+        }
+    }
 }

@@ -289,7 +289,7 @@ tensor_dict * _Nonnull init_tensor_dict(void) {
     
     tensor_dict *dict = (tensor_dict *)malloc(sizeof(tensor_dict));
     
-    *(dict) = (tensor_dict){.init_neural_params=false, .init_with_value=false, .full_connected=false, .flattening_length=0, .rank =0, .init_value=0.0f};
+    *(dict) = (tensor_dict){.init_neural_params=false, .init_with_value=false, .full_connected=false, .flattening_length=1, .rank =0, .init_value=0.0f};
     memset(**dict->shape, 0, (MAX_NUMBER_NETWORK_LAYERS*MAX_TENSOR_RANK)*sizeof(int));
     return dict;
 }

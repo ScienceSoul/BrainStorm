@@ -33,10 +33,9 @@ float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
 void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
 float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
 
-void createFlip(void * _Nonnull neural);
 void flipKernels(void * _Nonnull neural);
 void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned int fh, unsigned int fw);
-void convMatUpdate(void * _Nonnull neural);
+void kernelMatUpdate(void * _Nonnull neural);
 
 // Only used when loading a network from a param file
 void trainLoop(void * _Nonnull  neural);

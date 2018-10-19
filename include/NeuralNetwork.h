@@ -79,12 +79,11 @@ typedef struct conv2d_network {
     tensor * _Nullable dense_batchCostWeightDeriv;
     tensor * _Nullable dense_batchCostBiasDeriv;
     
-    tensor * _Nullable flip_matrices;
     tensor * _Nullable flipped_weights;
-    tensor * _Nullable conv_matrices;
+    tensor * _Nullable kernel_matrices;
     tensor * _Nullable max_pool_mask;
     
-    float * _Nullable propag_upsampling;
+    tensor * _Nullable deltas_buffer;
     
     conv2d_net_parameters * _Nullable parameters;
     Train * _Nullable train;
@@ -147,18 +146,15 @@ typedef struct BrainStormNet {
     // Function pointers to prediction evaluator
     void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
     float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
-    
-    // Function pointer to the flip matrices creation routine
-    void (* _Nullable create_flip)(void * _Nonnull self);
-    
+        
     // Function pointer to kernels (weights) flipping routine
     void (* _Nullable flip_kernels)(void * _Nonnull self);
     
     // Function pointer to deltas (errors) flipping routine
     void (* _Nullable flip_deltas)(void * _Nonnull self, unsigned int q, unsigned int fh, unsigned int fw);
     
-    // Function pointer to routine for convolution matrices update
-    void (* _Nullable conv_mat_update)(void * _Nonnull self);
+    // Funcion pointer to routine for kernel matrices update
+    void (* _Nullable kernel_mat_update)(void * _Nonnull self);
     
 } BrainStormNet;
 

@@ -674,262 +674,6 @@ bool test_kernels_flipping(void * _Nonnull neural) {
     return true;
 }
 
-bool test_create_convol_matrix(void * _Nonnull neural) {
-    
-    BrainStormNet *nn = (BrainStormNet *)neural;
-    
-    //---------------------------------------
-    // Test with unit strides
-    //---------------------------------------
-    
-    unsigned int kh = 2;
-    unsigned int sh = 1;
-    nn->network_num_layers = 3;
-    nn->conv2d->num_conv2d_layers = 2;
-    
-    // The weights tensors
-    // t1 = shape[1,6,2,2]
-    // t2 = shape[6,12,2,2]
-    tensor_dict *dict = init_tensor_dict();
-    dict->rank = 4;
-    int maps[4] = {1, 6, 12};
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        int vec[4] = {maps[l], maps[l+1], kh, kh};
-        shape(dict->shape, dict->rank, vec, l);
-    }
-    dict->flattening_length = nn->conv2d->num_conv2d_layers;
-    nn->conv2d->conv_weights = (tensor *)nn->tensor(neural, *dict);
-    nn->conv2d->flipped_weights = (tensor *)nn->tensor(neural, *dict);
-    
-    dict->rank = 2;
-    int vec[2] = {kh, kh};
-    shape(dict->shape, nn->conv2d->num_conv2d_layers, dict->rank, vec);
-    nn->conv2d->flip_matrices = (tensor *)nn->tensor(neural, *dict);
-    nn->create_flip(neural);
-    
-    // The convolution matrix tensors
-    // Assume 4 x 4 input layer. With 2 x 2 kernels and unit strides,
-    // after the first convolution we get maps of size 3 x 3. After the
-    // second convolution we get maps of size 2 x 2
-    // The convolution matrix tensors are:
-    //   c1 = shape[1,6,9,16]
-    //   c2 = shape[6,12,4,9]
-    dict->rank = 4;
-    int maps_size[3] = {4, 3, 2};
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        int vec[4] = {maps[l], maps[l+1],
-                      maps_size[l+1] * maps_size[l+1],
-                      maps_size[l] * maps_size[l]};
-        shape(dict->shape, dict->rank, vec, l);
-    }
-    nn->conv2d->conv_matrices = (tensor *)nn->tensor(neural, *dict);
-    
-    for (int l=0; l<nn->network_num_layers; l++) {
-        if (l == 0) {
-            nn->conv2d->parameters->topology[l][0] = FEED;
-        }
-        nn->conv2d->parameters->topology[l][3] = maps_size[l];
-    }
-    for (int l=1; l<nn->network_num_layers; l++) {
-        nn->conv2d->parameters->topology[l][0] = CONVOLUTION;
-        nn->conv2d->parameters->topology[l][6] = sh;
-        nn->conv2d->parameters->topology[l][7] = sh;
-    }
-    
-    // Initialize the kernel (weight) matrices with:
-    // | 1  2 |
-    // | 3  4 |
-    int offset = 0;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        
-        unsigned p = maps[l];
-        unsigned q = maps[l+1];
-        
-        int stride1 = 0;
-        for (int k=0; k<p; k++) {
-            int stride2 = 0;
-            for (int ll=0; ll<q; ll++) {
-                float value = 1.0f;
-                for (int i=0; i<kh; i++) {
-                    for (int j=0; j<kh; j++) {
-                        nn->conv2d->conv_weights->val[offset+(stride1+(stride2+((i*kh)+j)))] = value;
-                        value = value + 1.0f;
-                    }
-                }
-                stride2 = stride2 + (kh * kh);
-            }
-            stride1 = stride1 + (q * kh * kh);
-        }
-        offset = offset + (p * q * kh * kh);
-    }
-    
-    // Flip the kernels (weights) to get
-    // | 4  3 |
-    // | 2  1 |
-    nn->flip_kernels(neural);
-    
-    // Create the convolution matrices
-    nn->conv_mat_update(neural);
-    
-    // Check the results, the convolution matrices should be
-    // First convolution matrix:
-    //   | 4 3 0 0 2 1 0 0 0 0 0 0 0 0 0 0 |
-    //   | 0 4 3 0 0 2 1 0 0 0 0 0 0 0 0 0 |
-    //   | 0 0 4 3 0 0 2 1 0 0 0 0 0 0 0 0 |
-    //   | 0 0 0 0 4 3 0 0 2 1 0 0 0 0 0 0 |
-    //   | 0 0 0 0 0 4 3 0 0 2 1 0 0 0 0 0 |
-    //   | 0 0 0 0 0 0 4 3 0 0 2 1 0 0 0 0 |
-    //   | 0 0 0 0 0 0 0 0 4 3 0 0 2 1 0 0 |
-    //   | 0 0 0 0 0 0 0 0 0 4 3 0 0 2 1 0 |
-    //   | 0 0 0 0 0 0 0 0 0 0 4 3 0 0 2 1 |
-    //
-    // Second convolution matrix:
-    //   | 4 3 0 2 1 0 0 0 0 |
-    //   | 0 4 3 0 2 1 0 0 0 |
-    //   | 0 0 0 4 3 0 2 1 0 |
-    //   | 0 0 0 0 4 3 0 2 1 |
-    float conv_mat1[9*16] = {4, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 4, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 4, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 4, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 4, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 2, 1, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 2, 1, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 2, 1, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 2, 1};
-    
-    float conv_mat2[4*9] = {4, 3, 0, 2, 1, 0, 0, 0, 0,
-                            0, 4, 3, 0, 2, 1, 0, 0, 0,
-                            0, 0, 0, 4, 3, 0, 2, 1, 0,
-                            0, 0, 0, 0, 4, 3, 0, 2, 1};
-    offset = 0;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        
-        unsigned int p = nn->conv2d->conv_matrices->shape[l][0][0];
-        unsigned int q = nn->conv2d->conv_matrices->shape[l][1][0];
-        unsigned int kh = nn->conv2d->conv_matrices->shape[l][2][0];
-        unsigned int kw = nn->conv2d->conv_matrices->shape[l][3][0];
-        
-        float *ptr = NULL;
-        if (l==0) {
-            ptr = conv_mat1;
-        } else ptr = conv_mat2;
-        
-        int stride1 = 0;
-        for (int k=0; k<p; k++) {
-            int stride2 = 0;
-            for (int ll=0; ll<q; ll++) {
-                int idx = 0;
-                for (int i=0; i<kh; i++) {
-                    for (int j=0; j<kw; j++) {
-                        if (nn->conv2d->conv_matrices->val[offset+(stride1+(stride2+((i*kw)+j)))] != ptr[idx]) {
-                            return false;
-                        }
-                        idx++;
-                    }
-                }
-                stride2 = stride2 + (kh * kw);
-            }
-            stride1 = stride1 + (q * kh * kw);
-        }
-        offset = offset + (p * q * kh * kw);
-    }
-    
-    fprintf(stdout, ">>>>>>> Test: convolution matrix (unit strides): success...\n");
-    
-    //---------------------------------------
-    // Test with non-unit strides
-    //---------------------------------------
-    
-    sh = 2;
-    nn->network_num_layers = 2;
-    nn->conv2d->num_conv2d_layers = 1;
-    
-    free(nn->conv2d->conv_matrices->val);
-    free(nn->conv2d->conv_matrices);
-    
-    // Assume 4 x 4 input layer. With 2 x 2 kernel and strides of 2,
-    // after the convolution we get maps of size 2 x 2.
-    dict->rank = 4;
-    int map_size_stride[2] = {4, 2};
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        int vec[4] = {maps[l], maps[l+1],
-                      map_size_stride[l+1] * map_size_stride[l+1],
-                      map_size_stride[l] * map_size_stride[l]};
-        shape(dict->shape, dict->rank, vec, l);
-    }
-    nn->conv2d->conv_matrices = (tensor *)nn->tensor(neural, *dict);
-    
-    for (int l=0; l<nn->network_num_layers; l++) {
-        if (l == 0) {
-            nn->conv2d->parameters->topology[l][0] = FEED;
-        }
-        nn->conv2d->parameters->topology[l][3] = map_size_stride[l];
-    }
-    for (int l=1; l<nn->network_num_layers; l++) {
-        nn->conv2d->parameters->topology[l][0] = CONVOLUTION;
-        nn->conv2d->parameters->topology[l][6] = sh;
-        nn->conv2d->parameters->topology[l][7] = sh;
-    }
-    
-    nn->conv_mat_update(neural);
-    
-    // Check the results, the convolution matrix should be:
-    //   | 4 3 0 0 2 1 0 0 0 0 0 0 0 0 0 0 |
-    //   | 0 0 4 3 0 0 2 1 0 0 0 0 0 0 0 0 |
-    //   | 0 0 0 0 0 0 0 0 4 3 0 0 2 1 0 0 |
-    //   | 0 0 0 0 0 0 0 0 0 0 4 3 0 0 2 1 |
-    float conv_mat_stride[4*16] = {4, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                   0, 0, 4, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-                                   0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 2, 1, 0, 0,
-                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 2, 1};
-    offset = 0;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        
-        unsigned int p = nn->conv2d->conv_matrices->shape[l][0][0];
-        unsigned int q = nn->conv2d->conv_matrices->shape[l][1][0];
-        unsigned int kh = nn->conv2d->conv_matrices->shape[l][2][0];
-        unsigned int kw = nn->conv2d->conv_matrices->shape[l][3][0];
-        
-        int stride1 = 0;
-        for (int k=0; k<p; k++) {
-            int stride2 = 0;
-            for (int ll=0; ll<q; ll++) {
-                int idx = 0;
-                for (int i=0; i<kh; i++) {
-                    for (int j=0; j<kw; j++) {
-                        if (nn->conv2d->conv_matrices->val[offset+(stride1+(stride2+((i*kw)+j)))] != conv_mat_stride[idx]) {
-                            return false;
-                        }
-                        idx++;
-                    }
-                }
-                stride2 = stride2 + (kh * kw);
-            }
-            stride1 = stride1 + (q * kh * kw);
-        }
-        offset = offset + (p * q * kh * kw);
-    }
-    
-    fprintf(stdout, ">>>>>>> Test: convolution matrix (non-unit strides): success...\n");
-    
-    free(nn->conv2d->conv_weights->val);
-    free(nn->conv2d->conv_weights);
-    
-    free(nn->conv2d->flipped_weights->val);
-    free(nn->conv2d->flipped_weights);
-    
-    free(nn->conv2d->flip_matrices->val);
-    free(nn->conv2d->flip_matrices);
-    
-    free(nn->conv2d->conv_matrices->val);
-    free(nn->conv2d->conv_matrices);
-    
-    free(dict);
-    
-    return true;
-}
-
 bool test_max_pooling(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
@@ -1140,8 +884,9 @@ bool test_l2_pooling(void * _Nonnull neural) {
 
 bool test_convolution(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    extern tensor *conv_input_matrix;
     
+    BrainStormNet *nn = (BrainStormNet *)neural;
     
     unsigned int kh = 5;
     unsigned int sh = 1;
@@ -1221,23 +966,33 @@ bool test_convolution(void * _Nonnull neural) {
     dict->rank = 3;
     nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
     
-    // The convolution matrix tensors
+    // The kernel matrices
     int maps_size[2] = {8, 4};
     int maps[2] = {1,1};
-    dict->rank = 4;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        int vec[4] = {maps[l], maps[l+1],
-                     maps_size[l+1] * maps_size[l+1],
-                     maps_size[l] * maps_size[l]};
-        shape(dict->shape, dict->rank, vec, l);
+    dict->rank = 2;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            int vec[2] = {maps[l-1]*(kh*kh), maps[l]};
+            shape(dict->shape, dict->rank, vec, l-1);
+        }
     }
-    nn->conv2d->conv_matrices = (tensor *)nn->tensor(neural, *dict);
+    nn->conv2d->kernel_matrices = (tensor*)nn->tensor(neural, *dict);
+    
+    // The input matrix
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            int vec[2] = {maps_size[l]*maps_size[l], maps[l-1]*(kh*kh)};
+            shape(dict->shape, dict->rank, vec, l-1);
+        }
+    }
+    conv_input_matrix = (tensor*)nn->tensor(neural, *dict);
+    
     
     // Flip the kernels
     nn->flip_kernels(neural);
     
-    // Create the convolution matrices
-    nn->conv_mat_update(neural);
+    // Update the kernel matrices
+    nn->kernel_mat_update(neural);
     
     // The reference convolution
     float C[8*8];
@@ -1286,8 +1041,11 @@ bool test_convolution(void * _Nonnull neural) {
     free(nn->conv2d->flip_matrices->val);
     free(nn->conv2d->flip_matrices);
     
-    free(nn->conv2d->conv_matrices->val);
-    free(nn->conv2d->conv_matrices);
+    free(nn->conv2d->kernel_matrices->val);
+    free(nn->conv2d->kernel_matrices);
+    
+    free(conv_input_matrix->val);
+    free(conv_input_matrix);
     
     free(nn->conv2d->conv_biases->val);
     free(nn->conv2d->conv_biases);
@@ -1301,6 +1059,8 @@ bool test_convolution(void * _Nonnull neural) {
 }
 
 bool test_convolution_pooling(void * _Nonnull neural) {
+    
+    extern tensor *conv_input_matrix;
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -1356,23 +1116,32 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     dict->rank = 3;
     nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
     
-    // The convolution matrix tensors
-    int maps_size[3] = {8,4,3};
+    // The kernel matrices
+    int maps_size[2] = {8, 4};
     int maps[2] = {1,1};
-    dict->rank = 4;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        int vec[4] = {maps[l], maps[l+1],
-                      maps_size[l+1] * maps_size[l+1],
-                      maps_size[l] * maps_size[l]};
-        shape(dict->shape, dict->rank, vec, l);
+    dict->rank = 2;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            int vec[2] = {maps[l-1]*(kh_c*kh_c), maps[l]};
+            shape(dict->shape, dict->rank, vec, l-1);
+        }
     }
-    nn->conv2d->conv_matrices = (tensor *)nn->tensor(neural, *dict);
+    nn->conv2d->kernel_matrices = (tensor*)nn->tensor(neural, *dict);
+    
+    // The input matrix
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            int vec[2] = {maps_size[l]*maps_size[l], maps[l-1]*(kh_c*kh_c)};
+            shape(dict->shape, dict->rank, vec, l-1);
+        }
+    }
+    conv_input_matrix = (tensor*)nn->tensor(neural, *dict);
     
     // Flip the kernels
     nn->flip_kernels(neural);
     
     // Create the convolution matrices
-    nn->conv_mat_update(neural);
+    nn->kernel_mat_update(neural);
     
     // The reference convolution
     float ref_conv[4*4];
@@ -1402,8 +1171,11 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     free(nn->conv2d->flip_matrices->val);
     free(nn->conv2d->flip_matrices);
     
-    free(nn->conv2d->conv_matrices->val);
-    free(nn->conv2d->conv_matrices);
+    free(nn->conv2d->kernel_matrices->val);
+    free(nn->conv2d->kernel_matrices);
+    
+    free(conv_input_matrix->val);
+    free(conv_input_matrix);
     
     free(nn->conv2d->conv_biases->val);
     free(nn->conv2d->conv_biases);
@@ -1523,6 +1295,8 @@ bool test_pooling_fully_connected(void * _Nonnull  neural) {
 
 bool test_dummy_convol_net(void * _Nonnull neural) {
     
+    extern tensor *conv_input_matrix;
+    
     BrainStormNet *nn = (BrainStormNet *)neural;
     
     unsigned int kh_c = 5;
@@ -1582,23 +1356,33 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     dict->rank = 3;
     nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
     
-    // The convolution matrix tensors
-    int maps_size[6] = {8,4,3,4,4,4};
+    // The kernel matrices
+    int maps_size[2] = {8, 4};
     int maps[2] = {1,1};
-    dict->rank = 4;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        int vec[4] = {maps[l], maps[l+1],
-            maps_size[l+1] * maps_size[l+1],
-            maps_size[l] * maps_size[l]};
-        shape(dict->shape, dict->rank, vec, l);
+    dict->rank = 2;
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            int vec[2] = {maps[l-1]*(kh_c*kh_c), maps[l]};
+            shape(dict->shape, dict->rank, vec, l-1);
+        }
     }
-    nn->conv2d->conv_matrices = (tensor *)nn->tensor(neural, *dict);
+    nn->conv2d->kernel_matrices = (tensor*)nn->tensor(neural, *dict);
+    
+    // The input matrix
+    for (int l=0; l<nn->network_num_layers; l++) {
+        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+            int vec[2] = {maps_size[l]*maps_size[l], maps[l-1]*(kh_c*kh_c)};
+            shape(dict->shape, dict->rank, vec, l-1);
+        }
+    }
+    conv_input_matrix = (tensor*)nn->tensor(neural, *dict);
     
     // Flip the kernels
     nn->flip_kernels(neural);
     
     // Create the convolution matrices
-    nn->conv_mat_update(neural);
+    //nn->conv_mat_update(neural);
+    nn->kernel_mat_update(neural);
     
     // Fully connected layers activations, biases and affine transformations
     dict->rank = 2;
@@ -1660,8 +1444,11 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     free(nn->conv2d->flip_matrices->val);
     free(nn->conv2d->flip_matrices);
     
-    free(nn->conv2d->conv_matrices->val);
-    free(nn->conv2d->conv_matrices);
+    free(nn->conv2d->kernel_matrices->val);
+    free(nn->conv2d->kernel_matrices);
+    
+    free(conv_input_matrix->val);
+    free(conv_input_matrix);
     
     free(nn->conv2d->conv_biases->val);
     free(nn->conv2d->conv_biases);
@@ -1671,8 +1458,10 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     
     free(nn->conv2d->dense_activations->val);
     free(nn->conv2d->dense_activations);
+    
     free(nn->conv2d->dense_biases->val);
     free(nn->conv2d->dense_biases);
+    
     free(nn->conv2d->dense_affineTransformations->val);
     free(nn->conv2d->dense_affineTransformations);
     
@@ -1702,14 +1491,6 @@ int main(int argc, const char * argv[]) {
     neural = new_conv2d_net();
     if (!test_kernels_flipping(neural)) {
         fprintf(stderr, "Test: tensor flipping: failed.\n");
-        return -1;
-    }
-    free(neural);
-    
-    // Test the convolution matrix creation
-    neural = new_conv2d_net();
-    if (!test_create_convol_matrix(neural)) {
-        fprintf(stderr, "Test: convolution matrix: failed.\n");
         return -1;
     }
     free(neural);

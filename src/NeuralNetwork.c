@@ -11,7 +11,8 @@
 #include "Memory.h"
 #include "Regularization.h"
 
-float * _Nullable propag_delta = NULL;
+tensor * _Nullable propag_buffer = NULL;
+tensor * _Nullable conv_input_matrix = NULL;
 
 static void initNeuralData(void * _Nonnull self);
 
@@ -65,11 +66,6 @@ static void new_network_common(void * _Nonnull neural) {
     
     nn->eval_prediction = evalPrediction;
     nn->eval_cost = evalCost;
-    
-    nn->create_flip = createFlip;
-    nn->flip_kernels = flipKernels;
-    nn->flip_deltas = flipDeltas;
-    nn->conv_mat_update = convMatUpdate;
 }
 
 //
@@ -141,9 +137,9 @@ static void genesis(void * _Nonnull self) {
     } else if (nn->is_conv2d_network) {
         conv2d_net_genesis(self);
         
-        // ---------------------------------------------------------------------------------------
-        // ------- Global buffer to store the deltas (errors) at layer l+1 during backpropagation
-        // ---------------------------------------------------------------------------------------
+        // ----------------------------------
+        // ------- Global propagation buffer
+        // ----------------------------------
         int size = 0;
         for (int l=1; l<nn->network_num_layers; l++) {
             int m = 0;
@@ -155,8 +151,37 @@ static void genesis(void * _Nonnull self) {
             }
             size = max(size, m);
         }
-        propag_delta = (float *)malloc(size*sizeof(float));
-        memset(propag_delta, 0.0f, size*sizeof(float));
+        tensor_dict *dict = init_tensor_dict();
+        dict->rank = 1;
+        dict->shape[0][0][0] = size;
+        propag_buffer = (tensor *)nn->tensor(self, *dict);
+        memset(propag_buffer->val, 0.0f, propag_buffer->shape[0][0][0]*sizeof(float));
+        free(dict);
+        
+        // ---------------------------------------------------------------------------------------------
+        // ------- Global buffer for the input matrix used during the convolution matrix-matrix product
+        // ---------------------------------------------------------------------------------------------
+        int max[2] = {-INT_MAX, -INT_MAX};
+        for (int l=0; l<nn->network_num_layers; l++) {
+            if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+                if (nn->conv2d->parameters->topology[l][2] * nn->conv2d->parameters->topology[l][3] > max[0]) {
+                    max[0] = nn->conv2d->parameters->topology[l][2] * nn->conv2d->parameters->topology[l][3];
+                }
+                if (nn->conv2d->parameters->topology[l-1][1] *
+                    (nn->conv2d->parameters->topology[l][4]*nn->conv2d->parameters->topology[l][5]) > max[1]) {
+                    max[1] = nn->conv2d->parameters->topology[l-1][1] *
+                    (nn->conv2d->parameters->topology[l][4]*nn->conv2d->parameters->topology[l][5]);
+                }
+            }
+        }
+        
+        dict = init_tensor_dict();
+        dict->rank = 2;
+        dict->shape[0][0][0] = max[0];
+        dict->shape[0][1][0] = max[1];
+        dict->flattening_length = 1;
+        conv_input_matrix = (tensor*)nn->tensor(self, *dict);
+        free(dict);
     }
 }
 
@@ -180,7 +205,10 @@ static void finale(void * _Nonnull self) {
         dense_net_finale(self);
     } else if (nn->is_conv2d_network) {
         conv2d_net_finale(self);
-        free(propag_delta);
+        free(propag_buffer->val);
+        free(propag_buffer);
+        free(conv_input_matrix->val);
+        free(conv_input_matrix);
     }
     
     if (nn->gpu != NULL) {

@@ -305,32 +305,6 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
 }
 
 //
-// This routine creates the flip matrices
-//
-void createFlip(void * _Nonnull neural) {
-    
-    BrainStormNet *nn = (BrainStormNet *)neural;
-    
-    int offset = 0;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        int kh = nn->conv2d->flip_matrices->shape[l][0][0];
-        int kw = nn->conv2d->flip_matrices->shape[l][1][0];
-        
-        float flip_mat[kh][kw];
-        memset(*flip_mat, 0.0f, (kh*kw)*sizeof(float));
-        for (int i=0; i<kh; i++) {
-            flip_mat[i][kw-i-1] = 1.0f;
-        }
-        for (int i=0; i<kh; i++) {
-            for (int j=0; j<kw; j++) {
-                nn->conv2d->flip_matrices->val[offset+((i*kw)+j)] = flip_mat[i][j];
-            }
-        }
-        offset = offset + (kh * kw);
-    }
-}
-
-//
 // This routine flips horizontally and vertically the
 // kernels accross all convolution layers
 //
@@ -351,8 +325,11 @@ void flipKernels(void * _Nonnull neural) {
         for (int k=0; k<p; k++) {
             int stride2_w = 0;
             for (int ll=0; ll<q; ll++) {
-            
-                flip_mat(kh, kw, kw, nn->conv2d->flip_matrices->val+offset_f, kw, nn->conv2d->conv_weights->val+offset_w+stride1_w+stride2_w, kw, nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, kw);
+                memcpy(nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, nn->conv2d->conv_weights->val+offset_w+stride1_w+stride2_w, (kh*kw)*sizeof(float));
+                transpose(nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, kh, kw);
+                reverse_rows(nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, kh, kw);
+                transpose(nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, kh, kw);
+                reverse_rows(nn->conv2d->flipped_weights->val+offset_w+stride1_w+stride2_w, kh, kw);
                 stride2_w = stride2_w + (kw * kw);
             }
             stride1_w = stride1_w + (q * kh * kw);
@@ -364,41 +341,33 @@ void flipKernels(void * _Nonnull neural) {
 
 //
 // This routine flips horizontally and vertically the deltas (errors).
-// It operates on the latest updated values in propag_upsampling
-// and stores the result in propag_delta
+// It operates on the latest updated values in deltas_buffer and stores the result in propag_buffer
 //
 void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned int fh, unsigned int fw) {
     
-    extern float * propag_delta;
+    extern tensor * propag_buffer;
     BrainStormNet *nn = (BrainStormNet *)neural;
-    
-    float C[fh*fw];
-    
-    // The flipping matrix
-    float flip_mat[fh][fw];
-    memset(*flip_mat, 0.0f, (fh*fw)*sizeof(float));
-    for (int i=0; i<fh; i++) {
-        flip_mat[i][fw-i-1] = 1.0f;
-    }
     
     int stride = 0;
     for (int k=0; k<q; k++) {
-        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, fh, fw, fw, 1.0f, *flip_mat, fw, nn->conv2d->propag_upsampling+stride, fw, 0.0f, C, fw);
-        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, fh, fw, fw, 1.0f, C, fw, *flip_mat, fw, 0.0f, propag_delta+stride, fw);
+        memcpy(propag_buffer->val+stride, nn->conv2d->deltas_buffer->val+stride, (fh*fw)*sizeof(float));
+        transpose(propag_buffer->val+stride, fh, fw);
+        reverse_rows(propag_buffer->val+stride, fh, fw);
+        transpose(propag_buffer->val+stride, fh, fw);
+        reverse_rows(propag_buffer->val+stride, fh, fw);
         stride = stride + (fh * fw);
     }
 }
 
 //
-// This routine updates the convolution matrices using the flipped kernels (weights)
+// This routine updates the kernel matrices using the flipped kernels (weights)
 //
-void convMatUpdate(void * _Nonnull neural) {
+void kernelMatUpdate(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    // Copy the values to the convolution matrices
     unsigned int idx = 0;
-    int offset_cm = 0;
+    int offset_km = 0;
     int offset_w = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
         if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
@@ -407,54 +376,32 @@ void convMatUpdate(void * _Nonnull neural) {
             unsigned int q = nn->conv2d->conv_weights->shape[idx][1][0];
             unsigned int kh = nn->conv2d->conv_weights->shape[idx][2][0];
             unsigned int kw = nn->conv2d->conv_weights->shape[idx][3][0];
-            unsigned int sh = nn->conv2d->parameters->topology[l][6];
-            unsigned int sw = nn->conv2d->parameters->topology[l][7];
             
-            unsigned int mh = nn->conv2d->conv_matrices->shape[idx][2][0];
-            unsigned int mw = nn->conv2d->conv_matrices->shape[idx][3][0];
+            unsigned int kmh = nn->conv2d->kernel_matrices->shape[idx][0][0];
+            unsigned int kmw = nn->conv2d->kernel_matrices->shape[idx][1][0];
             
-            unsigned int n = nn->conv2d->parameters->topology[l-1][3];
-            unsigned int n_c = nn->conv2d->parameters->topology[l][3];
-            unsigned int after_zeros_step = n - kw;
-            
-            int stride1_cm = 0;
-            int stride1_w = 0;
-            for (int k=0; k<p; k++) {
-                int stride2_cm = 0;
-                int stride2_w = 0;
+            int stride1 = 0;
+            int m = 0;
+            for (int k=0; k<p*(kh*kw); k++) {
+                int stride2 = 0;
                 for (int ll=0; ll<q; ll++) {
-                    int step_before_next_row = 0;
-                    int left_offset_sh = 0;
-                    int left_offset_sw = 0;
-                    for (int i = 0; i<mh; i++) {
-                        int pos = 0;
-                        for (int ii=0; ii<kh; ii++) {
-                            for (int jj=0; jj<kw; jj++) {
-                                nn->conv2d->conv_matrices->val[offset_cm+(stride1_cm+(stride2_cm+(((i*mw)+left_offset_sw+left_offset_sh*sh)+after_zeros_step*ii+pos)))] = nn->conv2d->flipped_weights->val[offset_w+(stride1_w+(stride2_w+((ii*kw)+jj)))];
-                                pos++;
-                            }
-                        }
-                        step_before_next_row++;
-                        left_offset_sh++;
-                        if (step_before_next_row == n_c) {
-                            left_offset_sh = 0;
-                            step_before_next_row = 0;
-                            left_offset_sw = left_offset_sw + (sw * n);
-                        }
-                    }
-                    stride2_cm = stride2_cm + (mh * mw);
-                    stride2_w = stride2_w + (kh * kw);
+                    nn->conv2d->kernel_matrices->val[offset_km+(k*q+ll)] = nn->conv2d->flipped_weights->val[offset_w+(stride1+(stride2+m))];
+                    stride2 = stride2 + (kh * kw);
                 }
-                stride1_cm = stride1_cm + (q * mh * mw);
-                stride1_w = stride1_w + (q * kh * kw);
+                m++;
+                if (m == (kh * kw)) {
+                    stride1 = stride1 + (q * kh * kw);
+                     m = 0;
+                }
             }
-            
-            idx++;
-            offset_cm = offset_cm + (p * q * mh * mw);
             offset_w = offset_w + (p * q * kh * kw);
+            offset_km = offset_km + (kmh * kmw);
+            idx++;
         }
     }
 }
+
+
 
 void trainLoop(void * _Nonnull  neural) {
     
