@@ -365,12 +365,12 @@ void ref_convol(float * _Nonnull ref_conv, unsigned int kh) {
     
     float C[8*8];
     float flipped_kernel[5*5];
-    float flip[5*5] = {0, 0, 0, 0, 1,
-                       0, 0, 0, 1, 0,
-                       0, 0, 1, 0 ,0,
-                       0, 1, 0, 0, 0,
-                       1, 0, 0, 0 ,0};
-    flip_mat(kh, kh, kh, flip, kh, kernel, kh, flipped_kernel, kh);
+
+    memcpy(flipped_kernel, kernel, sizeof(kernel));
+    transpose(flipped_kernel, 5, 5);
+    reverse_rows(flipped_kernel, 5, 5);
+    transpose(flipped_kernel, 5, 5);
+    reverse_rows(flipped_kernel, 5, 5);
     vDSP_f5x5(mat_feed, 8, 8, flipped_kernel, C);
     
     int idx = 0;
@@ -561,43 +561,13 @@ bool test_kernels_flipping(void * _Nonnull neural) {
     nn->conv2d->conv_weights = (tensor *)nn->tensor(neural, *dict);
     nn->conv2d->flipped_weights = (tensor *)nn->tensor(neural, *dict);
     
-    // The flipping matrix is of the form:
-    // | 0  0  0  0  1  |
-    // | 0  0  0  1  0  |
-    // | 0  0  1  0  0  |
-    // | 0  1  0  0  0  |
-    // | 1  0  0  0  0  |
-    float flip[5][5] = {{0, 0, 0, 0, 1},
-                        {0, 0, 0, 1, 0},
-                        {0, 0, 1, 0 ,0},
-                        {0, 1, 0, 0, 0},
-                        {1, 0, 0, 0 ,0}};
-    dict->rank = 2;
-    int vec[2] = {kh, kh};
-    shape(dict->shape, nn->conv2d->num_conv2d_layers, dict->rank, vec);
-    nn->conv2d->flip_matrices = (tensor *)nn->tensor(neural, *dict);
-    nn->create_flip(neural);
-    
-    int offset = 0;
-    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
-        for (int i=0; i<kh; i++) {
-            for (int j=0; j<kh; j++) {
-                if (nn->conv2d->flip_matrices->val[offset+((i*kh)+j)] != flip[i][j]) {
-                    fprintf(stdout, "error: wrong flip matrix.\n");
-                    return false;
-                }
-            }
-        }
-        offset = offset + (kh * kh);
-    }
-    
     // Initialize the kernel (weight) matrices with:
     // | 1  2  3  4  5  |
     // | 6  7  8  9  10 |
     // | 11 12 13 14 15 |
     // | 16 17 18 19 20 |
     // | 21 22 23 24 25 |
-    offset = 0;
+    int offset = 0;
     for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
         
         unsigned p = maps[l];
@@ -664,9 +634,6 @@ bool test_kernels_flipping(void * _Nonnull neural) {
     
     free(nn->conv2d->flipped_weights->val);
     free(nn->conv2d->flipped_weights);
-    
-    free(nn->conv2d->flip_matrices->val);
-    free(nn->conv2d->flip_matrices);
     
     free(dict);
     
@@ -915,18 +882,6 @@ bool test_convolution(void * _Nonnull neural) {
     nn->conv2d->conv_weights = (tensor *)nn->conv2d->conv_weights_alloc(neural, (void *)dict, true);
     nn->conv2d->flipped_weights = (tensor *)nn->conv2d->conv_weights_alloc(neural, (void *)dict, false);
     
-    // The flipping matrix
-    // | 0  0  0  0  1  |
-    // | 0  0  0  1  0  |
-    // | 0  0  1  0  0  |
-    // | 0  1  0  0  0  |
-    // | 1  0  0  0  0  |
-    dict->rank = 2;
-    int vec[2] = {kh, kh};
-    shape(dict->shape, nn->conv2d->num_conv2d_layers, dict->rank, vec);
-    nn->conv2d->flip_matrices = (tensor *)nn->tensor(neural, *dict);
-    nn->create_flip(neural);
-    
     // Initialize the kernels (weights) matrices
     float kernel[5*5] = {0.1, 0.2, 0.3, 0.4, 0.5,
                          0.2, 0.3, 0.4, 0.5, 0.6,
@@ -997,12 +952,11 @@ bool test_convolution(void * _Nonnull neural) {
     // The reference convolution
     float C[8*8];
     float flipped_kernel[5*5];
-    float flip[5*5] = {0, 0, 0, 0, 1,
-                       0, 0, 0, 1, 0,
-                       0, 0, 1, 0 ,0,
-                       0, 1, 0, 0, 0,
-                       1, 0, 0, 0 ,0};
-    flip_mat(kh, kh, kh, flip, kh, kernel, kh, flipped_kernel, kh);
+    memcpy(flipped_kernel, kernel, sizeof(kernel));
+    transpose(flipped_kernel, 5, 5);
+    reverse_rows(flipped_kernel, 5, 5);
+    transpose(flipped_kernel, 5, 5);
+    reverse_rows(flipped_kernel, 5, 5);
     vDSP_f5x5(mat_feed, 8, 8, flipped_kernel, C);
     
     float ref_conv[4*4];
@@ -1037,9 +991,6 @@ bool test_convolution(void * _Nonnull neural) {
     
     free(nn->conv2d->flipped_weights->val);
     free(nn->conv2d->flipped_weights);
-    
-    free(nn->conv2d->flip_matrices->val);
-    free(nn->conv2d->flip_matrices);
     
     free(nn->conv2d->kernel_matrices->val);
     free(nn->conv2d->kernel_matrices);
@@ -1099,12 +1050,6 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     nn->conv2d->conv_weights = (tensor *)nn->conv2d->conv_weights_alloc(neural, (void *)dict, true);
     nn->conv2d->flipped_weights = (tensor *)nn->conv2d->conv_weights_alloc(neural, (void *)dict, false);
     
-    // The flipping matrix
-    dict->rank = 2;
-    int vec[2] = {kh_c, kh_c};
-    shape(dict->shape, nn->conv2d->num_conv2d_layers, dict->rank, vec);
-    nn->conv2d->flip_matrices = (tensor *)nn->tensor(neural, *dict);
-    nn->create_flip(neural);
     
     init_convol_kernels(neural, kh_c);
     
@@ -1167,9 +1112,6 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     
     free(nn->conv2d->flipped_weights->val);
     free(nn->conv2d->flipped_weights);
-    
-    free(nn->conv2d->flip_matrices->val);
-    free(nn->conv2d->flip_matrices);
     
     free(nn->conv2d->kernel_matrices->val);
     free(nn->conv2d->kernel_matrices);
@@ -1339,13 +1281,6 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     nn->conv2d->conv_weights = (tensor *)nn->conv2d->conv_weights_alloc(neural, (void *)dict, true);
     nn->conv2d->flipped_weights = (tensor *)nn->conv2d->conv_weights_alloc(neural, (void *)dict, false);
     
-    // The flipping matrix
-    dict->rank = 2;
-    int vec1[2] = {kh_c, kh_c};
-    shape(dict->shape, nn->conv2d->num_conv2d_layers, dict->rank, vec1);
-    nn->conv2d->flip_matrices = (tensor *)nn->tensor(neural, *dict);
-    nn->create_flip(neural);
-    
     init_convol_kernels(neural, kh_c);
     
     // The convolution biases with zero values
@@ -1440,9 +1375,6 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     
     free(nn->conv2d->flipped_weights->val);
     free(nn->conv2d->flipped_weights);
-    
-    free(nn->conv2d->flip_matrices->val);
-    free(nn->conv2d->flip_matrices);
     
     free(nn->conv2d->kernel_matrices->val);
     free(nn->conv2d->kernel_matrices);
