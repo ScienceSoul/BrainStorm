@@ -340,22 +340,23 @@ void flipKernels(void * _Nonnull neural) {
 }
 
 //
-// This routine flips horizontally and vertically the deltas (errors).
+// This routine flips horizontally and vertically the deltas (errors) at a given convolutional layer.
 // It operates on the latest updated values in deltas_buffer and stores the result in propag_buffer
 //
-void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned int fh, unsigned int fw) {
+void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned fh, unsigned int fw) {
     
-    extern tensor * propag_buffer;
+    extern tensor *propag_buffer;
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    int stride = 0;
+    int offset = 0;
     for (int k=0; k<q; k++) {
-        memcpy(propag_buffer->val+stride, nn->conv2d->deltas_buffer->val+stride, (fh*fw)*sizeof(float));
-        transpose(propag_buffer->val+stride, fh, fw);
-        reverse_rows(propag_buffer->val+stride, fh, fw);
-        transpose(propag_buffer->val+stride, fh, fw);
-        reverse_rows(propag_buffer->val+stride, fh, fw);
-        stride = stride + (fh * fw);
+        int indx = 0;
+        int stride = offset + (fh * fw);
+        for (int i=stride-1; i>=offset; i--) {
+            propag_buffer->val[offset+indx] = nn->conv2d->deltas_buffer->val[i];
+            indx++;
+        }
+        offset = offset + (fh * fw);
     }
 }
 
