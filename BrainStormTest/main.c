@@ -409,6 +409,18 @@ bool test_create_tensors(void * _Nonnull neural) {
     dict->init_with_value = true;
     dict->init_value = init_value;
     
+    memset(vec, 0, sizeof(vec));
+    
+    dict->rank = 0;
+    shape(dict->shape, 1, dict->rank, vec);
+    tensor *scalar = (tensor *)nn->tensor(neural, *dict);
+    if (scalar == NULL) {
+        return false;
+    }
+    if (scalar->val[0] != init_value) {
+        return false;
+    }
+    
     dict->rank = 1;
     vec[0] = kh;
     shape(dict->shape, layers, dict->rank, vec);
@@ -457,21 +469,6 @@ bool test_create_tensors(void * _Nonnull neural) {
     tensor *tensor_3d = (tensor *)nn->tensor(neural, *dict);
     if (tensor_3d == NULL) {
         return false;;
-    }
-    offset = 0;
-    for (int l=0; l<layers; l++) {
-        int stride = 0;
-        for (int k=0; k<kh; k++) {
-            for (int i=0; i<kh; i++) {
-                for (int j=0; j<kh; j++) {
-                    if (tensor_3d->val[offset+(stride+((i*kh)+j))] != init_value) {
-                        return false;
-                    }
-                }
-            }
-            stride = stride + (kh * kh);
-        }
-        offset = offset + (kh * kh * kh);
     }
     fprintf(stdout, ">>>>>>> Test: tensor 3D: success...\n");
     free(tensor_3d->val);
@@ -1153,7 +1150,7 @@ bool test_convolution(void * _Nonnull neural) {
     return true;
 }
 
-bool test_transpose_convolution(void * _Nonnull neural) {
+bool test_transpose_convolution_1(void * _Nonnull neural) {
     
     extern tensor *propag_buffer;
     extern tensor *conv_input_matrix;
@@ -1962,7 +1959,7 @@ int main(int argc, const char * argv[]) {
     
     // Test the transpose convolution
     neural = new_conv2d_net();
-    if (!test_transpose_convolution(neural)) {
+    if (!test_transpose_convolution_1(neural)) {
         fprintf(stderr, "Test: transpose convolution: failed.\n");
         return -1;
     }
