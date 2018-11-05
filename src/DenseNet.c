@@ -38,7 +38,6 @@ void create_dense_net(void * _Nonnull self) {
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
         nn->dense->activationFunctions[i] = NULL;
         nn->dense->activationDerivatives[i] = NULL;
-        nn->dense->kernelInitializers[i] = NULL;
     }
     
     nn->dense->parameters = (dense_net_parameters *)malloc(sizeof(dense_net_parameters));

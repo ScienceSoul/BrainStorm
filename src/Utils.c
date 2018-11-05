@@ -349,6 +349,11 @@ float randn(float mu, float sigma) {
     return (mu + sigma * (float) X1);
 }
 
+float random_uniform(float r1, float r2) {
+    
+    return ( ((float)arc4random()/0x100000000)*(r2-r1)+r1 );
+}
+
 int __attribute__((overloadable)) max(int x, int y) {
     
     return (x > y) ? x : y;

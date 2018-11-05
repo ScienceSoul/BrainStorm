@@ -132,7 +132,7 @@ static void * _Nonnull dense_common_alloc(void * _Nonnull self, void * _Nonnull 
     return (void *)t;
 }
 
-static void * _Nonnull max_pool_mask_alloc(void * _Nonnull self, void * _Nonnull t_dict) {
+static void * _Nonnull max_pool_mask_indexes(void * _Nonnull self, void * _Nonnull t_dict) {
     
     BrainStormNet *nn = (BrainStormNet *)self;
     tensor_dict *dict = (tensor_dict *)t_dict;
@@ -140,17 +140,28 @@ static void * _Nonnull max_pool_mask_alloc(void * _Nonnull self, void * _Nonnull
     int idx = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
         if (nn->conv2d->parameters->topology[l][0] == POOLING && nn->conv2d->parameters->topology[l][8] == MAX_POOLING) {
-            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
-            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l-1][2];
-            dict->shape[idx][2][0] = nn->conv2d->parameters->topology[l-1][3];
+            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l][1];
+            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l][2];
+            dict->shape[idx][2][0] = nn->conv2d->parameters->topology[l][3];
             idx++;
         }
     }
     tensor *t = NULL;
     if (idx > 0) {
+        t = (tensor *)malloc(sizeof(tensor));
+        t->rank = dict->rank;
+        
+        int tensor_length = 0;
+        for (int l=0; l<idx; l++) {
+            int dim = 1;
+            for (int i=0; i<dict->rank; i++) {
+                t->shape[l][i][0] = dict->shape[l][i][0];
+                dim = dim * dict->shape[l][i][0];
+            }
+            tensor_length = tensor_length + dim;
+        }
+        t->int32_val = (int *)malloc(tensor_length*sizeof(int));
         nn->conv2d->num_max_pooling_layers = idx;
-        dict->flattening_length = idx;
-        t = (tensor *)nn->tensor(self, *dict);
     }
     
     return (void *)t;
@@ -190,7 +201,7 @@ void create_conv2d_net(void * _Nonnull self) {
         .dense_batchCostBiasDeriv=NULL,
         .flipped_weights=NULL,
         .kernel_matrices=NULL,
-        .max_pool_mask=NULL,
+        .max_pool_indexes=NULL,
         .deltas_buffer=NULL
     };
     
@@ -203,7 +214,6 @@ void create_conv2d_net(void * _Nonnull self) {
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
         nn->conv2d->activationFunctions[i] = NULL;
         nn->conv2d->activationDerivatives[i] = NULL;
-        nn->conv2d->kernelInitializers[i] = NULL;
         nn->conv2d->inferenceOps[i] = NULL;
         nn->conv2d->backpropagOps[i] = NULL;
     }
@@ -220,6 +230,7 @@ void create_conv2d_net(void * _Nonnull self) {
     nn->flip_kernels = flipKernels;
     nn->flip_deltas = flipDeltas;
     nn->kernel_mat_update = kernelMatUpdate;
+    //nn->conv_mat_update = convMatUpdate;
     
     nn->conv2d->conv_weights_alloc = conv_weights_alloc;
     nn->conv2d->conv_activations_alloc = conv_activations_alloc;
@@ -227,7 +238,7 @@ void create_conv2d_net(void * _Nonnull self) {
     
     nn->conv2d->dense_weights_alloc = dense_weights_alloc;
     nn->conv2d->dense_common_alloc = dense_common_alloc;
-    nn->conv2d->max_pool_mask_alloc = max_pool_mask_alloc;
+    nn->conv2d->max_pool_mask_indexes = max_pool_mask_indexes;
 }
 
 //
@@ -305,10 +316,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
         // fn: is the number of feature maps at the layer l
         
         dict->rank = 1;
-        dict->init_neural_params = true;
+        dict->init_neural_params = false;
         nn->conv2d->conv_biases = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, true);
         
-        dict->init_neural_params = false;
         if (nn->conv2d->conv_costBiasDerivatives == NULL)
             nn->conv2d->conv_costBiasDerivatives = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
         
@@ -354,13 +364,11 @@ void conv2d_net_genesis(void * _Nonnull self) {
         // fw: is the width of the feature map
         
         dict->rank = 3;
-        dict->init_neural_params = false;
         nn->conv2d->conv_activations = (tensor *)nn->conv2d->conv_activations_alloc(self, (void *)dict, true);
     }
     
     if (nn->conv2d->conv_affineTransformations == NULL) {
         dict->rank = 3;
-        dict->init_neural_params = false;
         nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, true);
     }
     
@@ -414,10 +422,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
     
     if (nn->conv2d->dense_biases == NULL) {
         dict->rank = 1;
-        dict->init_neural_params = true;
+        dict->init_neural_params = false;
         nn->conv2d->dense_biases = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, true);
         
-        dict->init_neural_params = false;
         if (nn->conv2d->dense_costBiasDerivatives == NULL)
             nn->conv2d->dense_costBiasDerivatives = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
         
@@ -459,7 +466,6 @@ void conv2d_net_genesis(void * _Nonnull self) {
     
     if (nn->conv2d->dense_activations == NULL) {
         dict->rank = 1;
-        dict->init_neural_params = false;
         nn->conv2d->dense_activations = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, true);
         
         if (nn->conv2d->dense_affineTransformations == NULL)
@@ -500,6 +506,22 @@ void conv2d_net_genesis(void * _Nonnull self) {
     dict->init_neural_params = false;
     nn->conv2d->flipped_weights = (tensor *)nn->tensor(self, *dict);
     
+
+//    dict->rank = 4;
+//    idx = 0;
+//    for (int l=0; l<nn->network_num_layers; l++) {
+//        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
+//            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
+//            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l][1];
+//            dict->shape[idx][2][0] = (nn->conv2d->parameters->topology[l][2]*nn->conv2d->parameters->topology[l][3]);
+//            dict->shape[idx][3][0] = (nn->conv2d->parameters->topology[l-1][2]*nn->conv2d->parameters->topology[l-1][3]);
+//            idx++;
+//        }
+//    }
+//    dict->flattening_length = nn->conv2d->num_conv2d_layers;
+//    dict->init_neural_params = false;
+//    nn->conv2d->conv_matrices = (tensor *)nn->tensor(self, *dict);
+    
     // -------------------------------------------------------------------------------------------------
     // ------- The convolution operation is implemented as matrix-matrix product.
     // ------- The following allocates the kernel matrices used during the product
@@ -519,11 +541,12 @@ void conv2d_net_genesis(void * _Nonnull self) {
     
     // If max pooling is used, allocate a mask which is used during backpropagation
     dict->rank = 3;
-    nn->conv2d->max_pool_mask = nn->conv2d->max_pool_mask_alloc(self, (void *)dict);
+    nn->conv2d->max_pool_indexes = (tensor *)nn->conv2d->max_pool_mask_indexes(self, (void *)dict);
     
     // Initialize the convolution matrices with the flipped initial kernels (weights)
     nn->flip_kernels(self);
     nn->kernel_mat_update(self);
+    //nn->conv_mat_update((void *)nn);
     
     free(dict);
 }
@@ -734,14 +757,19 @@ void conv2d_net_finale(void * _Nonnull self) {
         free(nn->conv2d->flipped_weights);
     }
     
+//    if (nn->conv2d->conv_matrices != NULL) {
+//        free(nn->conv2d->conv_matrices->val);
+//    }
+//    free(nn->conv2d->conv_matrices);
+    
     if (nn->conv2d->kernel_matrices != NULL) {
         free(nn->conv2d->kernel_matrices->val);
         free(nn->conv2d->kernel_matrices);
     }
     
-    if (nn->conv2d->max_pool_mask != NULL) {
-        free(nn->conv2d->max_pool_mask->val);
-        free(nn->conv2d->max_pool_mask);
+    if (nn->conv2d->max_pool_indexes != NULL) {
+        free(nn->conv2d->max_pool_indexes->int32_val);
+        free(nn->conv2d->max_pool_indexes);
     }
     
     if (nn->conv2d->deltas_buffer != NULL) {

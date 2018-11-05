@@ -44,7 +44,6 @@ typedef struct dense_network {
     Train * _Nullable train;
     
     int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
-    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull object,  int l, int offset);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
 } dense_network;
@@ -81,18 +80,18 @@ typedef struct conv2d_network {
     
     tensor * _Nullable flipped_weights;
     tensor * _Nullable kernel_matrices;
-    tensor * _Nullable max_pool_mask;
+    tensor * _Nullable max_pool_indexes;
+    //tensor * _Nullable conv_matrices;
     
     tensor * _Nullable deltas_buffer;
     
     conv2d_net_parameters * _Nullable parameters;
     Train * _Nullable train;
     
-    void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull object,  int l, int offset);
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
-    void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance);
-    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, unsigned int * _Nullable advance1, unsigned int * _Nullable advance2, unsigned int * _Nullable advance3);
+    void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, int * _Nullable advance);
+    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op,  int * _Nullable advance1, int * _Nullable advance2, int * _Nullable advance3);
     
     // Allocators
     void * _Nonnull (* _Nonnull conv_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
@@ -101,7 +100,7 @@ typedef struct conv2d_network {
     
     void * _Nonnull (* _Nonnull dense_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
     void * _Nonnull (* _Nonnull dense_common_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
-    void * _Nonnull (* _Nonnull max_pool_mask_alloc)(void * _Nonnull self, void * _Nonnull t_dict);
+    void * _Nonnull (* _Nonnull max_pool_mask_indexes)(void * _Nonnull self, void * _Nonnull t_dict);
     
 } conv2d_network;
 
@@ -133,6 +132,9 @@ typedef struct BrainStormNet {
     void * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
+    
+     void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
+    
     float (* _Nullable l0_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
     float (* _Nullable l1_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
     float (* _Nullable l2_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
@@ -155,6 +157,8 @@ typedef struct BrainStormNet {
     
     // Funcion pointer to routine for kernel matrices update
     void (* _Nullable kernel_mat_update)(void * _Nonnull self);
+    
+    //void (* _Nullable conv_mat_update)(void * _Nonnull self);
     
 } BrainStormNet;
 

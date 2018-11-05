@@ -53,6 +53,10 @@ static void new_network_common(void * _Nonnull neural) {
     
     nn->constructor = allocateConstructor();
     
+    for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
+         nn->kernelInitializers[i] = NULL;
+    }
+    
     nn->genesis = genesis;
     nn->finale = finale;
     nn->tensor = tensor_create;

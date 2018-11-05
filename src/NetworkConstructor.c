@@ -51,12 +51,12 @@ static void set_activation_function(activation_functions activationFunctionsRef[
     }
 }
 
-static void set_kernel_initializer(void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, void * _Nonnull kernel,  int l, int offset),
+static void set_kernel_initializer(void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val),
                                    layer_dict layer_dict, unsigned int idx) {
     
     if (layer_dict.kernel_initializer == NULL) {
         fprintf(stdout, "%s: no initializer given to layer, default to standard nornmal distribution.\n", DEFAULT_CONSOLE_WRITER);
-        kernelInitializers[idx] = standard_normal_initializer;
+        kernelInitializers[idx] = xavier_initializer;
     } else {
         kernelInitializers[idx] = layer_dict.kernel_initializer;
     }
@@ -123,7 +123,7 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
         set_activation_function(nn->activationFunctionsRef, nn->dense->activationFunctions, nn->dense->activationDerivatives, layer_dict, nn->num_activation_functions);
         
         // The kernel initializer for this layer
-        set_kernel_initializer(nn->dense->kernelInitializers, layer_dict, nn->dense->num_dense_layers);
+        set_kernel_initializer(nn->kernelInitializers, layer_dict, nn->dense->num_dense_layers);
         nn->dense->num_dense_layers++;
       
     } else if (nn->is_conv2d_network) {
@@ -132,7 +132,7 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
         
         set_activation_function(nn->activationFunctionsRef, nn->conv2d->activationFunctions, nn->conv2d->activationDerivatives, layer_dict, nn->num_activation_functions);
         
-        set_kernel_initializer(nn->conv2d->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
+        set_kernel_initializer(nn->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
         nn->conv2d->num_dense_layers++;
         
         // Store the maximum number of nodes in the fully connected layers
@@ -225,7 +225,7 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
     }
     
     // The kernel initializer for this layer
-    set_kernel_initializer(nn->conv2d->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
+    set_kernel_initializer(nn->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
     nn->conv2d->num_conv2d_layers++;
     
     // The activation function for this layer

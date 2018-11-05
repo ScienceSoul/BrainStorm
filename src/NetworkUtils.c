@@ -14,57 +14,54 @@
 
 typedef float (* get_value_func_ptr)(float *val);
 
-float random_func1(float *dummy) {
+static float random_normal(float *dummy) {
     return randn(0.0f, 1.0f);
 }
 
-float random_func2(float *n) {
-    return randn(0.0f, 1.0f) / sqrtf(*n);
+static float variance_scaling_uniform(float *r_sigma) {
+    return random_uniform(-(*r_sigma), *r_sigma);
 }
 
-float constant_func(float *val) {
+static float variance_scaling_normal(float *r_sigma) {
+    return randn(0.0f, *r_sigma);
+}
+
+static float get_func(float *val) {
     return *val;
 }
 
-void set_value(void * _Nonnull object, int l, int offset, float * _Nullable val, get_value_func_ptr func_ptr) {
+void set_value(void * _Nonnull object, int layer, int offset, float * _Nullable val, get_value_func_ptr func_ptr) {
     
     tensor *tensor_object = (tensor *)object;
     
-    // The last two dimensions define the right most increments
-    int indx = tensor_object->rank - 2;
-    int m = tensor_object->shape[l][indx][0];
-    int n = tensor_object->shape[l][indx+1][0];
-    
     float *value = NULL;
-    float nn;
-    if (func_ptr == constant_func) {
+    if (func_ptr == get_func || func_ptr == variance_scaling_uniform || func_ptr == variance_scaling_normal) {
         value = val;
-    } else if (func_ptr == random_func2) {
-        nn = (int)n;
-        value = &nn;
     }
     
-    if (tensor_object->rank == 2) {
+    if (tensor_object->rank == 0) {
+        tensor_object->val[offset] = func_ptr(value);
+    } else if(tensor_object->rank == 1) {
+        int n = tensor_object->shape[layer][0][0];
+        for (int i=0; i<n; i++) {
+            tensor_object->val[offset+i] = func_ptr(value);
+        }
+    } else if (tensor_object->rank == 2) {
+        int m = tensor_object->shape[layer][0][0];
+        int n = tensor_object->shape[layer][0][0];
         for (int i = 0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 tensor_object->val[offset+((i*n)+j)] = func_ptr(value);
             }
         }
-    } else if (tensor_object->rank == 3) {
-        int stride = 0;
-        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
-            for (int i = 0; i<m; i++) {
-                for (int j=0; j<n; j++) {
-                    tensor_object->val[offset+(stride+((i*n)+j))] = func_ptr(value);
-                }
-            }
-            stride = stride + (m * n);
-        }
     } else if (tensor_object->rank == 4) {
+        int m = tensor_object->shape[layer][2][0];
+        int n = tensor_object->shape[layer][3][0];
+        
         int stride1 = 0;
-        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
+        for (int l=0; l<tensor_object->shape[layer][0][0]; l++) {
             int stride2 = 0;
-            for (int ll=0; ll<tensor_object->shape[l][1][0]; ll++) {
+            for (int ll=0; ll<tensor_object->shape[layer][1][0]; ll++) {
                 for (int i = 0; i<m; i++) {
                     for (int j=0; j<n; j++) {
                         tensor_object->val[offset+(stride1+(stride2+((i*n)+j)))] = func_ptr(value);
@@ -72,112 +69,112 @@ void set_value(void * _Nonnull object, int l, int offset, float * _Nullable val,
                 }
                 stride2 = stride2 + (m * n);
             }
-            stride1 = stride1 + (tensor_object->shape[l][1][0] * m * n);
+            stride1 = stride1 + (tensor_object->shape[layer][1][0] * m * n);
         }
     } else if (tensor_object->rank == 5) {
+        int m = tensor_object->shape[layer][2][0];
+        int n = tensor_object->shape[layer][3][0];
+        int q = tensor_object->shape[layer][4][0];
+        
         int stride1 = 0;
-        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
+        for (int l=0; l<tensor_object->shape[l][0][0]; l++) {
             int stride2 = 0;
-            for (int ll=0; ll<tensor_object->shape[l][1][0]; ll++) {
-                int stride3 = 0;
-                for (int ll=0; ll<tensor_object->shape[l][2][0]; ll++) {
-                    for (int i = 0; i<m; i++) {
-                        for (int j=0; j<n; j++) {
-                            tensor_object->val[offset+(stride1+(stride2+(stride3+((i*n)+j))))] = func_ptr(value);
-                        }
-                    }
-                    stride3 = stride3 + (m * n);
-                }
-                stride2 = stride2 + (tensor_object->shape[l][2][0] * m * n);
-            }
-            stride1 = stride1 + (tensor_object->shape[l][1][0] * tensor_object->shape[l][2][0] * m * n);
-        }
-    }
-}
-
-void value_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset, float * _Nullable val) {
-    
-    tensor *tensor_object = (tensor *)object;
-    set_value((void *)tensor_object, l, offset, val, &constant_func);
-}
-
-void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset) {
-
-    tensor *tensor_object = (tensor *)object;
-    set_value((void *)tensor_object, l, offset, NULL, &random_func2);
-}
-
-float standardDeviation(void * _Nonnull neural, int l, int n_inputs, int n_outputs) {
-    
-    float standard_deviation = 0.0f;
-    BrainStormNet *nn = (BrainStormNet *)neural;
-    
-    if (nn->activationFunctionsRef[l] == SIGMOID) {
-        standard_deviation = sqrtf(2.0 / (float)(n_inputs + n_outputs));
-    } else if (nn->activationFunctionsRef[l] == TANH) {
-        standard_deviation = powf((2/(float)(n_inputs + n_outputs)), (1.0/4.0));
-    } else if (nn->activationFunctionsRef[l] == RELU ||
-               nn->activationFunctionsRef[l] == LEAKY_RELU ||
-               nn->activationFunctionsRef[l] == ELU) {
-        standard_deviation = sqrtf(2.0f) * sqrtf(2.0 / (float)(n_inputs + n_outputs));
-    } else {
-        fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only supported for the following activation functions: sigmoid, tanh and ReLU (and its variants).");
-    }
-    
-    return standard_deviation;
-}
-
-void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset) {
-    
-    BrainStormNet *nn = (BrainStormNet *)neural;
-    tensor *tensor_object = (tensor *)object;
-    
-    if (tensor_object->rank == 1 || tensor_object->rank == 3 || tensor_object->rank == 5) {
-        fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization is only available for 2D and 4D tensors (aka fully connected and convolution layers).");
-    }
-    
-    // The last two dimensions define the right most increments
-    int indx = tensor_object->rank - 2;
-    int m = tensor_object->shape[l][indx][0];
-    int n = tensor_object->shape[l][indx+1][0];
-    
-    if (tensor_object->rank == 2) {
-        float standard_deviation = 0.0f;
-        int n_inputs = 1;
-        for (int i=0; i<tensor_object->rank; i++) {
-            n_inputs =  n_inputs * tensor_object->shape[l][i][0];
-        }
-        int n_outputs = 1;
-        for (int i=0; i<tensor_object->rank; i++) {
-            n_outputs =  n_outputs * tensor_object->shape[l+1][i][0];
-        }
-        standard_deviation = standardDeviation((void *)nn, l, n_inputs, n_outputs);
-        for (int i = 0; i<m; i++) {
-            for (int j=0; j<n; j++) {
-                tensor_object->val[offset+((i*n)+j)] = randn(0.0f, standard_deviation);
-            }
-        }
-    } else if (tensor_object->rank == 4) {
-        int stride1 = 0;
-        for (int k=0; k<tensor_object->shape[l][0][0]; k++) {
-            int stride2 = 0;
-            for (int ll=0; ll<tensor_object->shape[l][1][0]; ll++) {
-                float standard_deviation = 0.0f;
-                int n_inputs = tensor_object->shape[l][0][0] * tensor_object->shape[l][1][0];
-                int n_outputs = tensor_object->shape[l][1][0];
-                standard_deviation = standardDeviation((void *)nn, l, n_inputs, n_outputs);
+            for (int ll=0; ll<tensor_object->shape[layer][1][0]; ll++) {
                 for (int i = 0; i<m; i++) {
                     for (int j=0; j<n; j++) {
-                        tensor_object->val[offset+(stride1+(stride2+((i*n)+j)))] = randn(0.0f, standard_deviation);
+                        for(int k=0; k<q; k++) {
+                            tensor_object->val[offset+(stride1+(stride2+((i*n*q)+(j*q)+k)))] = func_ptr(value);
+                        }
                     }
                 }
-                stride2 = stride2 + (m * n);
+                stride2 = stride2 + (m * n * q);
             }
-            stride1 = stride1 + (tensor_object->shape[l][1][0] * m * n);
+            stride1 = stride1 + (tensor_object->shape[layer][1][0] * m * n * q);
         }
-    } else {
-        fatal(DEFAULT_CONSOLE_WRITER, "Xavier-He initialization only for 2D and 4D tensors.");
     }
+}
+
+void variance_scaling_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val) {
+    
+    tensor *tensor_object = (tensor *)object;
+    
+    if (mode == NULL) fatal(DEFAULT_CONSOLE_WRITER, " initializer mode is NULL");
+    
+    float FACTOR = 2.0f;
+    if (factor != NULL) FACTOR = *factor;
+    
+    float fan_in = 0.0f;
+    float fan_out = 0.0f;
+    if (tensor_object->rank > 0) {
+        if (tensor_object->rank > 1) {
+            if (tensor_object->rank == 2) {
+                fan_in = (float)tensor_object->shape[layer][1][0];
+                fan_out = (float)tensor_object->shape[layer][0][0];
+            } else {
+                fan_in = (float)tensor_object->shape[layer][0][0];
+                fan_out = (float)tensor_object->shape[layer][1][0];
+            }
+        } else {
+            fan_in = (float)tensor_object->shape[layer][0][0];
+            fan_out = (float)tensor_object->shape[layer][0][0];
+        }
+        
+        if (tensor_object->rank > 2) {
+            for (int i=2; i<tensor_object->rank; i++) {
+                fan_in *= (float)tensor_object->shape[layer][i][0];
+                fan_out *= (float)tensor_object->shape[layer][i][0];
+            }
+        }
+        
+    } else {
+        fan_in = 1.0f;
+        fan_out = 1.0f;
+    }
+    
+    float n = 0.0f;
+    if (strcmp(mode, "FAN_IN") == 0) {
+        // Count only number of input connections
+        n = fan_in;
+    } else if (strcmp(mode, "FAN_OUT") == 0) {
+        // Count only number of output connections
+        n = fan_out;
+    } else if (strcmp(mode, "FAN_AVG") == 0) {
+        // Average number of inputs and output connections.
+        n = (fan_out + fan_out) / 2.0f;
+    } else {
+        fatal(DEFAULT_CONSOLE_WRITER, "unrecognized mode in initializer");
+    }
+    
+    get_value_func_ptr func_prt = NULL;
+    float r_sigma = 0.0f;
+    if (*uniform) {
+        r_sigma = sqrtf(3.0f * FACTOR / n);
+        func_prt = variance_scaling_uniform;
+    } else {
+        r_sigma = sqrtf(FACTOR / n);
+        func_prt = variance_scaling_normal;
+    }
+    
+    set_value((void *)tensor_object, layer, offset, &r_sigma, func_prt);
+}
+
+void xavier_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val) {
+    
+    float fac = 1.0f;
+    bool uni_distribution = true;
+    variance_scaling_initializer(object, &fac, "FAN_AVG", &uni_distribution, layer, offset, NULL);
+}
+
+void random_normal_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val) {
+    
+    tensor *tensor_object = (tensor *)object;
+    set_value((void *)tensor_object, layer, offset, NULL, &random_normal);
+}
+
+void value_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val) {
+    
+    tensor *tensor_object = (tensor *)object;
+    set_value((void *)tensor_object, layer, offset, val, &get_func);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,6 +208,10 @@ void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
         tensor_length = tensor_length + dim;
     }
     
+    if (tensor_length == 0) {
+        fatal(DEFAULT_CONSOLE_WRITER, "tensor allocation error. Tensor size is zero.");
+    }
+    
     tensor_object->val = (float *)malloc(tensor_length*sizeof(float));
     if (tensor_object->val == NULL) {
         return NULL;
@@ -219,40 +220,8 @@ void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
     tensor_object->rank = tensor_dict.rank;
     fprintf(stdout, "%s: tensor allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)tensor_length*sizeof(float))/(float)(1024*1024));
     
-    if (tensor_object->rank == 1) {
-        if (tensor_dict.init_neural_params || tensor_dict.init_with_value) {
-            
-            get_value_func_ptr func_ptr = NULL;
-            float *value = NULL;
-            if (tensor_dict.init_neural_params) {
-                func_ptr = random_func1;
-            } else {
-                func_ptr = constant_func;
-                value = &tensor_dict.init_value;
-            }
-            
-            int stride = 0;
-            for (int l=0; l<tensor_dict.flattening_length; l++) {
-                // One single tensor step
-                int step = 1;
-                for (int i=0; i<tensor_object->rank; i++) {
-                    step = step * tensor_dict.shape[l][i][0];
-                }
-                
-                int n = tensor_object->shape[l][0][0];
-                for (int i=0; i<n; i++) {
-                    tensor_object->val[stride+i] = func_ptr(value);
-                }
-                stride = stride + step;
-            }
-        } else {
-            memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));
-        }
-        return (void *)tensor_object;
-    }
-    
     if (tensor_dict.init_neural_params) {
-        int stride = 0;
+        int offset = 0;
         for (int l=0; l<tensor_dict.flattening_length; l++) {
             // One single tensor step
             int step = 1;
@@ -260,23 +229,27 @@ void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
                 step = step * tensor_dict.shape[l][i][0];
             }
             
-            if (nn->is_dense_network) {
-                nn->dense->kernelInitializers[l](self, (void *)tensor_object, l, stride);
-            } else if (nn->is_conv2d_network) {
-                nn->conv2d->kernelInitializers[l](self, (void *)tensor_object, l, stride);
+            if (nn->kernelInitializers[l] == xavier_initializer) {
+                nn->kernelInitializers[l]((void *)tensor_object, NULL, NULL, NULL, l, offset, NULL);
+            } else if (nn->kernelInitializers[l] == variance_scaling_initializer) {
+                bool uniform = false;
+                nn->kernelInitializers[l]((void *)tensor_object, NULL, "FAN_IN", &uniform, l, offset, NULL);
+            } else if (nn->kernelInitializers[l] == random_normal_initializer) {
+                nn->kernelInitializers[l]((void *)tensor_object, NULL, NULL, NULL, l, offset, NULL);
             }
-            stride = stride + step;
+            
+            offset = offset + step;
         }
     } else if (tensor_dict.init_with_value) {
-        int stride = 0;
+        int offset = 0;
         for (int l=0; l<tensor_dict.flattening_length; l++) {
             int step = 1;
              for (int i=0; i<tensor_object->rank; i++) {
                  step = step * tensor_dict.shape[l][i][0];
              }
             
-            value_initializer(self, (void *)tensor_object, l, stride, &tensor_dict.init_value);
-            stride = stride + step;
+            value_initializer((void *)tensor_object, NULL, NULL, NULL, l, offset, &tensor_dict.init_value);
+            offset = offset + step;
         }
     } else {
         memset(tensor_object->val, 0.0f, tensor_length*sizeof(float));

@@ -42,6 +42,7 @@ void __attribute__ ((overloadable))parseArgument(const char * _Nonnull argument,
 
 
 float randn(float mu, float sigma);
+float random_uniform(float r1, float r2);
 
 int __attribute__((overloadable)) max(int x, int y);
 int __attribute__((overloadable)) max(int x, int y, int z);

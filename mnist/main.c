@@ -121,16 +121,16 @@ void api_fully_connected_net(void) {
     
     // Fully hidden connected layers
     neural->constructor->layer_dense((void *)neural,
-                                     (layer_dict){.num_neurons=300, .activation=RELU, .kernel_initializer=standard_normal_initializer},
+                                     (layer_dict){.num_neurons=300, .activation=RELU, .kernel_initializer=xavier_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
     
     neural->constructor->layer_dense((void *)neural,
-                                     (layer_dict){.num_neurons=100, .activation=RELU, .kernel_initializer=standard_normal_initializer},
+                                     (layer_dict){.num_neurons=100, .activation=RELU, .kernel_initializer=xavier_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
     
     // Output layer
     neural->constructor->layer_dense((void *)neural,
-                                     (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=standard_normal_initializer},
+                                     (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=xavier_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
     
     neural->constructor->training_data((void *)neural, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/train-images-idx3-ubyte");
@@ -175,18 +175,17 @@ void api_convolutional_net(void) {
     neural->constructor->feed((void *)neural, (layer_dict){.filters=1, .dimension=2,
         .shape=28, .channels=&channels});
 
-    neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=20, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=standard_normal_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
+    neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=20, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
     neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=20, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
 //-----
-    //neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=20, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=standard_normal_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
+    //neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=24, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
-    //neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=20, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
+    //neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=24, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
 //----
-    neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=100, .activation=RELU, .kernel_initializer=standard_normal_initializer},
-        &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
+    neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=100, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
-    neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=standard_normal_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
+    neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
     neural->constructor->training_data((void *)neural,  "/Users/hakimeseddik/Documents/ESPRIT/MNIST/train-images-idx3-ubyte");
     neural->constructor->split((void *)neural, 55000, 5000);
@@ -195,7 +194,9 @@ void api_convolutional_net(void) {
     neural->constructor->classification((void *)neural, vector, 10);
     
     // The optimizer
+    
     MomentumOptimizer *optimizer = (MomentumOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
+    //GradientDescentOptimizer *optimizer = (GradientDescentOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="gradient descent", .learning_rate=0.01f});
     //AdaGradOptimizer *optimizer = (AdaGradOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adagrad", .learning_rate=0.01f, .delta=1.0e-7});
     //RMSPropOptimizer *optimizer = (RMSPropOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="rmsprop", .learning_rate=0.01f, .decay_rate1=0.9f, .delta=1.0e-6});
     //AdamOptimizer *optimizer = (AdamOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adam", .step_size=0.001f, .decay_rate1=0.9f, .decay_rate2=0.999f, .delta=1.0e-8});

@@ -36,6 +36,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
 void flipKernels(void * _Nonnull neural);
 void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned int fh, unsigned int fw);
 void kernelMatUpdate(void * _Nonnull neural);
+//void convMatUpdate(void * _Nonnull neural);
 
 // Only used when loading a network from a param file
 void trainLoop(void * _Nonnull  neural);

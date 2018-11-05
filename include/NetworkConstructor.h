@@ -32,7 +32,7 @@ typedef struct layer_dict {
     conv2d_padding padding;
     activation_functions activation;
     pooling_ops pooling_op;
-    void (* _Nullable kernel_initializer)(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
+    void (* _Nullable kernel_initializer)(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
     unsigned int * _Nullable channels;
 } layer_dict;
 

@@ -41,9 +41,10 @@ typedef enum pooling_ops {
 } pooling_ops;
 
 typedef struct tensor {
-    float * _Nullable val;
     unsigned int shape[MAX_NUMBER_NETWORK_LAYERS][MAX_TENSOR_RANK][1];
     unsigned int rank;
+    float * _Nullable val;
+    int * _Nullable int32_val;
 } tensor;
 
 typedef struct tensor_dict {
@@ -56,9 +57,16 @@ typedef struct tensor_dict {
     float init_value;
 } tensor_dict;
 
-void value_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset, float * _Nullable val);
-void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
-void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
+void variance_scaling_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
+
+void xavier_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
+
+void random_normal_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
+
+void value_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
+
+//void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
+//void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
 
 void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict);
 
