@@ -33,6 +33,32 @@ static unsigned int offset_dcdb_connected;
 
 static unsigned int activ_idx;
 
+static void update_conv_input(void * _Nonnull neural, unsigned int offset, unsigned int p, unsigned int fh, unsigned int fw, unsigned int ld1, unsigned int ld2, unsigned int kh, unsigned int kw, unsigned int sh, unsigned int sw) {
+    
+    extern tensor *conv_input_matrix;
+    BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    int indx = 0;
+    for (int i=0; i<fh; i++) {
+        for (int j=0; j<fw; j++) {
+            int stride_a = 0;
+            for (int ll=0; ll<p; ll++) {
+                for (int u=0; u<kh; u++) {
+                    for (int v=0; v<kw; v++) {
+                        conv_input_matrix->val[indx] = nn->conv2d->conv_activations->val[offset+(stride_a+(((i*sh+u)*ld2)+(j*sw+v)))];
+                        indx++;
+                    }
+                }
+                stride_a = stride_a + (ld1 * ld2);
+            }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------
+// ---- Unrolled back-propagation.
+// ---- nabla_X = nabla_Y * trans(W) (Chellapilla et al, 2006)
+// -----------------------------------------------------------------------
 static void transpose_convolution_op(void * _Nonnull neural, unsigned int op,  int * _Nullable advance2) {
     
     extern tensor * propag_buffer;
@@ -105,6 +131,12 @@ void transpose_convolution(void * _Nonnull neural, unsigned int op,  int * _Null
     transpose_convolution_op(neural, op, advance2);
 }
 
+
+// -----------------------------------------------------------------------
+// ---- Forward-propagation. Processing in each convolutional layer using
+// ---- unrolled convolution (matrix-patrix product)
+// ---- Y = X * W (Chellapilla et al, 2006)
+// -----------------------------------------------------------------------
 void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullable advance) {
     
     extern tensor *conv_input_matrix;
@@ -177,21 +209,7 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
     int cols_a = nn->conv2d->conv_activations->shape[*advance][2][0];
     
     // Update the input matrix for the convolution operation
-    int indx = 0;
-    for (int i=0; i<fh; i++) {
-        for (int j=0; j<fw; j++) {
-            int stride_a = 0;
-            for (int ll=0; ll<p; ll++) {
-                for (int u=0; u<kh; u++) {
-                    for (int v=0; v<kw; v++) {
-                        conv_input_matrix->val[indx] = nn->conv2d->conv_activations->val[offset_a+(stride_a+(((i*sh+u)*cols_a)+(j*sw+v)))];
-                        indx++;
-                    }
-                }
-                stride_a = stride_a + (rows_a * cols_a);
-            }
-        }
-    }
+    update_conv_input(neural, offset_a, p, fh, fw, rows_a, cols_a, kh, kw, sh, sw);
     
     float C[fh*fw][q];
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, fh*fw, q, p*kh*kw, 1.0f, conv_input_matrix->val, p*kh*kw, nn->conv2d->kernel_matrices->val+offset_km, q, 0.0f, *C, q);
@@ -730,12 +748,15 @@ static void backpropag_pooling_after_convolution(void * _Nonnull neural, unsigne
     //    }
 }
 
-//
-// This routine computes the dela_{l} at the current convolution layer and updates
-// the derivatives of the cost function with respect to the convolution weights and biases
-//
+// ------------------------------------------------------------------------------
+// ---- This routine computes the delta_{l} at the current convolution layer and
+// ---- updates the derivatives of the cost function with respect to the weights
+// ---- and biases using the unrolled convolution.
+// ---- nabla_W = trans(X) * nabla_Y (Chellapilla et al, 2006)
+// ------------------------------------------------------------------------------
 void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullable advance1, int * _Nullable advance2, int  * _Nullable advance3) {
     
+    extern tensor *conv_input_matrix;
     extern tensor * propag_buffer;
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -874,40 +895,52 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         offset_b = offset_b + step;
     }
     
-    // Update dC/dw by using a convolution (cross-correlation) operation.
+    // Update dC/dw using convolutions (cross-correlations)
+    // implemented with a matrix-matrix operation
     
-    int stride_a = 0;
-    int stride1_m = 0;
-    for (int k=0; k<p; k++) {
-        int stride = 0;
-        int stride2_m = 0;
-        for (int l=0; l<q; l++) {
-            for (int u=0; u<kh; u++) {
-                for (int v=0; v<kw; v++) {
-                    float sum_w = 0.0f;
-                    for (int i=0; i<fh; i++) {
-                        for (int j=0; j<fw; j++) {
-                            sum_w = sum_w + propag_buffer->val[stride+(i*fw+j)] * nn->conv2d->conv_activations->val[offset_a+(stride_a+((i*sh+u)*fw_p+(j*sw+v)))];
-                        }
-                    }
-                    nn->conv2d->conv_batchCostWeightDeriv->val[offset_w+(stride1_m+(stride2_m+(u*kw+v)))] = sum_w;
-                }
-            }
-            stride = stride + (fh * fw);
-            stride2_m = stride2_m + (kh * kw);
-        }
-        stride_a = stride_a + (fh_p * fw_p);
-        stride1_m = stride1_m + (q * kh * kw);
-    }
+    float C[p*(kh*kw)][q];
+    float B[fh*fw][q];
+    update_conv_input(neural, offset_a, p, fh, fw, fh_p, fw_p, kh, kw, sh, sw);
     
     int stride = 0;
+    for (int k=0; k<q; k++) {
+        int m = 0;
+        for (int i=0; i<fh*fw; i++) {
+            B[m][k] = propag_buffer->val[stride+i];
+            m++;
+        }
+        stride = stride + (fh * fw);
+    }
+    
+    cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, p*(kh*kw), q, fh*fw, 1.0f,  conv_input_matrix->val, p*(kh*kw), *B, q, 0.0f, *C, q);
+    
+    // Recover the dC/dw from the matrix-matrix operation
+    int stride2 = 0;
+    for (int k=0; k<q; k++) {
+        int stride1 = 0;
+        int indx = 0;
+        for (int ll=0; ll<p; ll++) {
+            for (int i=0; i<kh*kw; i++) {
+                nn->conv2d->conv_batchCostWeightDeriv->val[offset_w+(stride1+(stride2+i))] = C[indx][k];
+                indx++;
+            }
+             stride1 = stride1 + (q * kh * kw);
+        }
+        stride2 = stride2 + (kh * kw);
+    }
+    
+    // Update dC/db
+    
+    stride = 0;
     for (int l=0; l<q; l++) {
         float sum_b = 0.0f;
-        for (int i=0; i<fh; i++) {
-            for (int j=0; j<fw; j++) {
-                sum_b = sum_b + nn->conv2d->deltas_buffer->val[stride+(i*fw+j)];
-            }
+#ifdef __APPLE__
+        vDSP_sve(nn->conv2d->deltas_buffer->val+stride, 1, &sum_b, fh*fw);
+#else
+        for (int i=0; i<fh*fw; i++) {
+            sum_b = sum_b + nn->conv2d->deltas_buffer->val[stride+i];
         }
+#endif
         nn->conv2d->conv_batchCostBiasDeriv->val[offset_b+l] = sum_b;
         stride = stride + (fh * fw);
     }

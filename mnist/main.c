@@ -179,9 +179,9 @@ void api_convolutional_net(void) {
     
     neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=20, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
 //-----
-    //neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=24, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
+    //neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=40, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
-    //neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=24, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
+    //neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=40, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
 //----
     neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=100, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     

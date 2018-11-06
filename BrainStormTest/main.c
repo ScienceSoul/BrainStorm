@@ -1267,6 +1267,7 @@ bool test_transpose_convolution_1(void * _Nonnull neural) {
             return false;
         }
     }
+    fprintf(stdout, ">>>>>>> Test: transpose convolution 1: success...\n");
     
     free(nn->conv2d->conv_weights->val);
     free(nn->conv2d->conv_weights);
@@ -1474,6 +1475,7 @@ bool test_transpose_convolution_2(void * _Nonnull neural) {
             return false;
         }
     }
+    fprintf(stdout, ">>>>>>> Test: transpose convolution 2: success...\n");
     
     free(nn->conv2d->conv_weights->val);
     free(nn->conv2d->conv_weights);
@@ -1960,7 +1962,7 @@ int main(int argc, const char * argv[]) {
     // Test the transpose convolution
     neural = new_conv2d_net();
     if (!test_transpose_convolution_1(neural)) {
-        fprintf(stderr, "Test: transpose convolution: failed.\n");
+        fprintf(stderr, "Test: transpose convolution 1: failed.\n");
         return -1;
     }
     free(neural);
