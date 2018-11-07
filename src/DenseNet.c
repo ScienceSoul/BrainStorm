@@ -90,10 +90,10 @@ void dense_net_genesis(void * _Nonnull self) {
             dict->shape[l][1][0] = nn->dense->parameters->topology[l];
         }
         dict->flattening_length = nn->network_num_layers-1;
-        dict->init_neural_params = true;
+        dict->init_weights = true;
         nn->dense->weights = (tensor *)nn->tensor(self, *dict);
         
-        dict->init_neural_params = false;
+        dict->init_weights = false;
         if (nn->dense->costWeightDerivatives == NULL)
             nn->dense->costWeightDerivatives = (tensor *)nn->tensor(self, *dict);
         
@@ -134,10 +134,20 @@ void dense_net_genesis(void * _Nonnull self) {
             dict->shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict->flattening_length = nn->network_num_layers-1;
-        dict->init_neural_params = true;
+        dict->init_weights = false;
         nn->dense->biases = (tensor *)nn->tensor(self, *dict);
+        if (nn->init_biases) {
+            int offset = 0;
+            for (int l=0; l<nn->network_num_layers-1; l++) {
+                int step = 1;
+                for (int i=0; i<nn->dense->biases->rank; i++) {
+                    step = step * nn->dense->biases->shape[l][i][0];
+                }
+                random_normal_initializer(nn->dense->biases, NULL, NULL, NULL, l, offset, NULL);
+                offset = offset + step;
+            }
+        }
         
-        dict->init_neural_params = false;
         if (nn->dense->costBiasDerivatives == NULL)
             nn->dense->costBiasDerivatives = (tensor *)nn->tensor(self, *dict);
         
@@ -178,7 +188,6 @@ void dense_net_genesis(void * _Nonnull self) {
             dict->shape[l][0][0] = nn->dense->parameters->topology[l];
         }
         dict->flattening_length = nn->network_num_layers;
-        dict->init_neural_params = false;
         nn->dense->activations = (tensor *)nn->tensor(self, *dict);
     }
     
@@ -188,7 +197,6 @@ void dense_net_genesis(void * _Nonnull self) {
             dict->shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict->flattening_length = nn->network_num_layers-1;
-        dict->init_neural_params = false;
         nn->dense->affineTransformations = (tensor *)nn->tensor(self, *dict);
     }
     

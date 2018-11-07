@@ -268,10 +268,10 @@ void conv2d_net_genesis(void * _Nonnull self) {
         // fw: is the width of the receptive field
         
         dict->rank = 4;
-        dict->init_neural_params = true;
+        dict->init_weights = true;
         nn->conv2d->conv_weights = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, true);
         
-        dict->init_neural_params = false;
+        dict->init_weights = false;
         if (nn->conv2d->conv_costWeightDerivatives == NULL)
             nn->conv2d->conv_costWeightDerivatives = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, false);
         
@@ -316,8 +316,19 @@ void conv2d_net_genesis(void * _Nonnull self) {
         // fn: is the number of feature maps at the layer l
         
         dict->rank = 1;
-        dict->init_neural_params = false;
+        dict->init_weights = false;
         nn->conv2d->conv_biases = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, true);
+        if (nn->init_biases) {
+            int offset = 0;
+            for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
+                int step = 1;
+                for (int i=0; i<nn->conv2d->conv_biases->rank; i++) {
+                    step = step * nn->conv2d->conv_biases->shape[l][i][0];
+                }
+                random_normal_initializer(nn->conv2d->conv_biases, NULL, NULL, NULL, l, offset, NULL);
+                offset = offset + step;
+            }
+        }
         
         if (nn->conv2d->conv_costBiasDerivatives == NULL)
             nn->conv2d->conv_costBiasDerivatives = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
@@ -378,10 +389,10 @@ void conv2d_net_genesis(void * _Nonnull self) {
     
     if (nn->conv2d->dense_weights == NULL) {
         dict->rank = 2;
-        dict->init_neural_params = true;
+        dict->init_weights = true;
         nn->conv2d->dense_weights =  (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, true);
         
-        dict->init_neural_params = false;
+        dict->init_weights = false;
         if (nn->conv2d->dense_costWeightDerivatives == NULL)
             nn->conv2d->dense_costWeightDerivatives = (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, false);
         
@@ -422,8 +433,19 @@ void conv2d_net_genesis(void * _Nonnull self) {
     
     if (nn->conv2d->dense_biases == NULL) {
         dict->rank = 1;
-        dict->init_neural_params = false;
+        dict->init_weights = false;
         nn->conv2d->dense_biases = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, true);
+        if (nn->init_biases) {
+            int offset = 0;
+            for (int l=0; l<nn->conv2d->num_dense_layers; l++) {
+                int step = 1;
+                for (int i=0; i<nn->conv2d->dense_biases->rank; i++) {
+                    step = step * nn->conv2d->dense_biases->shape[l][i][0];
+                }
+                random_normal_initializer(nn->conv2d->dense_biases, NULL, NULL, NULL, l, offset, NULL);
+                offset = offset + step;
+            }
+        }
         
         if (nn->conv2d->dense_costBiasDerivatives == NULL)
             nn->conv2d->dense_costBiasDerivatives = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
@@ -484,7 +506,7 @@ void conv2d_net_genesis(void * _Nonnull self) {
     dict->rank = 1;
     dict->shape[0][0][0] = size;
     dict->flattening_length = 1;
-    dict->init_neural_params = false;
+    dict->init_weights = false;
     nn->conv2d->deltas_buffer = (tensor *)nn->tensor(self, *dict);
     memset(nn->conv2d->deltas_buffer->val, 0.0f, size*sizeof(float));
     
@@ -503,7 +525,7 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
     }
     dict->flattening_length = nn->conv2d->num_conv2d_layers;
-    dict->init_neural_params = false;
+    dict->init_weights = false;
     nn->conv2d->flipped_weights = (tensor *)nn->tensor(self, *dict);
     
 

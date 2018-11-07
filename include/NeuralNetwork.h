@@ -122,6 +122,7 @@ typedef struct BrainStormNet {
     
     bool is_dense_network;
     bool is_conv2d_network;
+    bool init_biases;
     
     char dataPath[MAX_LONG_STRING_LENGTH], dataName[MAX_LONG_STRING_LENGTH];
     

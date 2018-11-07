@@ -220,7 +220,7 @@ void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
     tensor_object->rank = tensor_dict.rank;
     fprintf(stdout, "%s: tensor allocation: allocate %f (MB)\n", DEFAULT_CONSOLE_WRITER, ((float)tensor_length*sizeof(float))/(float)(1024*1024));
     
-    if (tensor_dict.init_neural_params) {
+    if (tensor_dict.init_weights) {
         int offset = 0;
         for (int l=0; l<tensor_dict.flattening_length; l++) {
             // One single tensor step
@@ -262,7 +262,7 @@ tensor_dict * _Nonnull init_tensor_dict(void) {
     
     tensor_dict *dict = (tensor_dict *)malloc(sizeof(tensor_dict));
     
-    *(dict) = (tensor_dict){.init_neural_params=false, .init_with_value=false, .full_connected=false, .flattening_length=1, .rank =0, .init_value=0.0f};
+    *(dict) = (tensor_dict){.init_weights=false, .init_with_value=false, .full_connected=false, .flattening_length=1, .rank =0, .init_value=0.0f};
     memset(**dict->shape, 0, (MAX_NUMBER_NETWORK_LAYERS*MAX_TENSOR_RANK)*sizeof(int));
     return dict;
 }

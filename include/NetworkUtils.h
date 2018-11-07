@@ -48,7 +48,7 @@ typedef struct tensor {
 } tensor;
 
 typedef struct tensor_dict {
-    bool init_neural_params;
+    bool init_weights;
     bool init_with_value;
     bool full_connected;
     unsigned int flattening_length;

@@ -78,7 +78,8 @@ static void new_network_common(void * _Nonnull neural) {
 BrainStormNet * _Nonnull new_dense_net(void) {
     
     BrainStormNet *nn = (BrainStormNet *)malloc(sizeof(BrainStormNet));
-    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false};
+    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false,
+        .init_biases=true};
     
     create_dense_net((void *)nn);
     new_network_common((void *)nn);
@@ -96,7 +97,8 @@ BrainStormNet * _Nonnull new_dense_net(void) {
 BrainStormNet * _Nonnull new_conv2d_net(void) {
     
     BrainStormNet *nn = (BrainStormNet *)malloc(sizeof(BrainStormNet));
-    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=false, .is_conv2d_network=true};
+    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=false, .is_conv2d_network=true,
+        .init_biases=true};
     
     create_conv2d_net((void *)nn);
     new_network_common((void *)nn);
