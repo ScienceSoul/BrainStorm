@@ -227,20 +227,16 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
                    +offset_b+k, nn->conv2d->conv_affineTransformations->val+offset_z+stride_z, 1, (fh*fw));
 #else
         int indx = 0;
-        for (int i=0; i<fh; i++) {
-            for (int j=0; j<fw; j++) {
-                nn->conv2d->conv_affineTransformations->val[offset_z+(stride_z+(i*fw+j))] = C[indx][k] + nn->conv2d->conv_biases->val[offset_b+k];
-                indx++;
-            }
+        for (int i=0; i<fh*fw; i++) {
+            nn->conv2d->conv_affineTransformations->val[offset_z+(stride_z+i)] = C[indx][k] + nn->conv2d->conv_biases->val[offset_b+k];
+            indx++;
         }
 #endif
         
-        for (int i=0; i<fh; i++) {
-            for (int j=0; j<fw; j++) {
-                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+((i*fw)+j))] = nn->conv2d->activationFunctions[local_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride_z+(i*fw+j))], NULL, NULL);
-            }
+        for (int i=0; i<fh*fw; i++) {
+                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+i)] = nn->conv2d->activationFunctions[local_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride_z+i)], NULL, NULL);
         }
-        nanToNum( nn->conv2d->conv_activations->val+offset_a_compute+stride_a_compute, (fh*fw));
+        nanToNum(nn->conv2d->conv_activations->val+offset_a_compute+stride_a_compute, (fh*fw));
         
         stride_a_compute = stride_a_compute + (fh * fw);
         stride_z = stride_z + (fh * fw);
@@ -786,10 +782,8 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         backpropag__after_fully_connected(neural, op);
         int stride = 0;
         for (int k=0; k<q; k++) {
-            for (int i=0; i<fh; i++) {
-                for (int j=0; j<fw; j++) {
-                    nn->conv2d->deltas_buffer->val[stride+(i*fw+j)] = propag_buffer->val[stride+(i*fw+j)] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+(i*fw+j))]);
-                }
+            for (int i=0; i<fh*fw; i++) {
+                 nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -799,10 +793,8 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         // upsampled from a pooling layer
         int stride = 0;
         for (int k=0; k<q; k++) {
-            for (int i=0; i<fh; i++) {
-                for (int j=0; j<fw; j++) {
-                    nn->conv2d->deltas_buffer->val[stride+(i*fw+j)] = nn->conv2d->deltas_buffer->val[stride+(i*fw+j)] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+(i*fw+j))]);
-                }
+            for (int i=0; i<fh*fw; i++) {
+                 nn->conv2d->deltas_buffer->val[stride+i] = nn->conv2d->deltas_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -853,10 +845,8 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
 //
         int stride = 0;
         for (int k=0; k<p; k++) {
-            for (int i=0; i<fh; i++) {
-                for (int j=0; j<fw; j++) {
-                    nn->conv2d->deltas_buffer->val[stride+(i*fw+j)] = propag_buffer->val[stride+(i*fw+j)] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+(i*fw+j))]);
-                }
+            for (int i=0; i<fh*fw; i++) {
+                nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -987,11 +977,9 @@ void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, int * _N
     memset(nn->conv2d->deltas_buffer->val, 0.0f, nn->conv2d->deltas_buffer->shape[0][0][0]*sizeof(float));
     int stride = 0;
     for (int k=0; k<q; k++) {
-        for (int i=0; i<fh; i++) {
-            for (int j=0; j<fw; j++) {
-                int idx = nn->conv2d->max_pool_indexes->int32_val[offset+(stride+((i*fw)+j))];
-                nn->conv2d->deltas_buffer->val[idx] = propag_buffer->val[stride+((i*fw)+j)];
-            }
+        for (int i=0; i<fh*fw; i++) {
+            int idx = nn->conv2d->max_pool_indexes->int32_val[offset+(stride+i)];
+            nn->conv2d->deltas_buffer->val[idx] = propag_buffer->val[stride+i];
         }
         stride = stride + (fh * fw);
     }
