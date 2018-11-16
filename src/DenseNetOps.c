@@ -62,9 +62,6 @@ void backpropag_in_dense_net(void * _Nonnull neural,
     BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Activations at the input layer
-//    for (int i=0; i<nn->num_channels; i++) {
-//        nn->dense->activations->val[i] = nn->batch[nn->example_idx][i];
-//    }
     int stride = nn->example_idx * nn->dense->parameters->topology[0];
     memcpy(nn->dense->activations->val,  nn->batch_inputs->val+stride, (nn->dense->parameters->topology[0])*sizeof(float));
     
@@ -94,7 +91,6 @@ void backpropag_in_dense_net(void * _Nonnull neural,
     // Compute delta
     int k = (int)nn->num_channels;
     for (int i=0; i<nn->dense->activations->shape[nn->network_num_layers-1][0][0]; i++) {
-        //delta[i] = nn->dense->activations->val[stride2+i] - nn->batch[nn->example_idx][k];
         delta[i] = nn->dense->activations->val[stride2+i] - nn->batch_labels->val[nn->label_step*nn->example_idx+i];
         k++;
     }

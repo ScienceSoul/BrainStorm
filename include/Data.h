@@ -12,24 +12,18 @@
 #include <stdbool.h>
 
 typedef struct training {
-    float * _Nullable *_Nullable set;
-    void * _Nullable set_t;
+    void * _Nullable set;
     void * _Nullable labels;
-    unsigned int m, n;
     float * _Nullable * _Nullable (* _Nullable reader)(const char * _Nonnull fileName, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels);
 } training;
 typedef struct test {
-    float * _Nullable *_Nullable set;
-    void * _Nullable set_t;
+    void * _Nullable set;
     void * _Nullable labels;
-    unsigned int m, n;
     float * _Nullable * _Nullable (* _Nullable reader)(const char * _Nonnull fileName, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels);
 } test;
 typedef struct validation {
-    float * _Nullable *_Nullable set;
-    void * _Nullable set_t;
+    void * _Nullable set;
     void * _Nullable labels;
-    unsigned int m, n;
 } validation;
 
 typedef struct data {

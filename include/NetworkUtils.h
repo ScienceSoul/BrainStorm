@@ -65,9 +65,6 @@ void random_normal_initializer(void * _Nonnull object, float * _Nullable factor,
 
 void value_initializer(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
 
-//void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
-//void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
-
 void * _Nullable tensor_create(void * _Nullable self, tensor_dict tensor_dict);
 
 tensor_dict * _Nonnull init_tensor_dict(void);

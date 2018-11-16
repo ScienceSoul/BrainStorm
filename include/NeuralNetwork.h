@@ -21,10 +21,8 @@ typedef struct Train {
     AdaGradOptimizer * _Nullable ada_grad;
     RMSPropOptimizer * _Nullable rms_prop;
     AdamOptimizer * _Nullable adam;
-    void (* _Nullable next_batch)(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, unsigned int batchSize);
-    void (* _Nullable next_batch_t)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize);
+    void (* _Nullable next_batch)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize);
     int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize);
-    int (* _Nullable batch_range_t)(void * _Nonnull neural, unsigned int batchSize);
     void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
 } Train;
 
@@ -115,7 +113,7 @@ typedef struct BrainStormNet {
     conv2d_network * _Nullable conv2d;
     
     MetalCompute * _Nullable gpu;
-    float * _Nullable * _Nullable batch;
+
     tensor * _Nullable batch_inputs;
     tensor * _Nullable batch_labels;
     int label_step;

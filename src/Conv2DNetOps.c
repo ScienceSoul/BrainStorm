@@ -618,7 +618,6 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
         // Compute delta
         int k = (int)nn->num_channels;
         for (int i=0; i<nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]; i++) {
-            //propag_buffer->val[i] = nn->conv2d->dense_activations->val[offset_a_connected+i] - nn->batch[nn->example_idx][k];
             propag_buffer->val[i] = nn->conv2d->dense_activations->val[offset_a_connected+i] - nn->batch_labels->val[nn->label_step*nn->example_idx+i];
             k++;
         }
@@ -1050,30 +1049,12 @@ void backpropag_in_conv2d_net(void * _Nonnull neural,
     BrainStormNet *nn = (BrainStormNet *)neural;
     
     // Activations at the input layer
-    // TODO: it would be maybe better to have the batch being
-    // defined as a 4D tensor of shape [mini-batch size, height, width, channels]
-    // Note that inputs with multi-channels are not supported yet
-//    for (int i=0; i<nn->num_channels; i++) {
-//        nn->conv2d->conv_activations->val[i] = nn->batch[nn->example_idx][i];
-//    }
-    
+    //TODO: channels > 1?
     int fh = nn->batch_inputs->shape[0][1][0];
     int fw = nn->batch_inputs->shape[0][2][0];
     int channels = nn->batch_inputs->shape[0][3][0];
     int stride1 = nn->example_idx * (fh * fw * channels);
     memcpy(nn->conv2d->conv_activations->val, nn->batch_inputs->val+stride1, (fh*fw*channels)*sizeof(float));
-    
-//    int stride2 = 0;
-//    int indx = 0;
-//    for (int i=0; i<fh; i++) {
-//        for (int j=0; j<fw; j++) {
-//            for (int k=0; k<channels; k++) {
-//                nn->conv2d->conv_activations->val[indx] = nn->batch_inputs->val[stride1+(stride2+(j*channels+k))];
-//                indx++;
-//            }
-//        }
-//         stride2 = stride2 + (fw * channels);
-//    }
     
     // Inference (forward pass)
     ptr_inference_func(neural);

@@ -23,10 +23,8 @@ typedef void (* _Nullable ptr_batch_accumul_func)(void * _Nonnull self);
 void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
                    ptr_inference_func inference, ptr_backpropag_func backpropagation, ptr_batch_accumul_func batch_accumulation);
 
-void nextBatch(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, unsigned int batchSize);
-void nextBatch_t(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize);
+void nextBatch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize);
 int batchRange(void * _Nonnull neural, unsigned int batchSize);
-int batchRange_t(void * _Nonnull neural, unsigned int batchSize);
 
 void progression(void * _Nonnull neural, progress_dict progress_dict);
 

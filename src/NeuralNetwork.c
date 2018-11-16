@@ -18,7 +18,9 @@ static void initNeuralData(void * _Nonnull self);
 
 static void genesis(void * _Nonnull self);
 static void finale(void * _Nonnull self);
+#ifdef GPU_WORKING
 static void gpu_alloc(void * _Nonnull self);
+#endif
 
 static void initNeuralData(void * _Nonnull self) {
     
@@ -26,26 +28,17 @@ static void initNeuralData(void * _Nonnull self) {
     
     nn->data->training = (training *)malloc(sizeof(training));
     nn->data->training->set = NULL;
-    nn->data->training->set_t = NULL;
     nn->data->training->labels = NULL;
     nn->data->training->reader = NULL;
-    nn->data->training->m = 0;
-    nn->data->training->n = 0;
     
     nn->data->test = (test *)malloc(sizeof(test));
     nn->data->test->set = NULL;
-    nn->data->test->set_t = NULL;
     nn->data->test->labels = NULL;
     nn->data->test->reader = NULL;
-    nn->data->test->m = 0;
-    nn->data->test->n = 0;
     
     nn->data->validation = (validation *)malloc(sizeof(validation));
     nn->data->validation->set = NULL;
-    nn->data->validation->set_t = NULL;
     nn->data->validation->labels = NULL;
-    nn->data->validation->m = 0;
-    nn->data->validation->n = 0;
 }
 
 static void new_network_common(void * _Nonnull neural) {
@@ -66,7 +59,9 @@ static void new_network_common(void * _Nonnull neural) {
     nn->genesis = genesis;
     nn->finale = finale;
     nn->tensor = tensor_create;
+#ifdef GPU_WORKING
     nn->gpu_alloc = gpu_alloc;
+#endif
     
     nn->l0_regularizer = l0_regularizer;
     nn->l1_regularizer = l1_regularizer;
@@ -204,13 +199,10 @@ static void finale(void * _Nonnull self) {
     
     BrainStormNet *nn = (BrainStormNet *)self;
     
-    free_fmatrix(nn->data->training->set, 0, nn->data->training->m, 0, nn->data->training->n);
-    free_fmatrix(nn->data->test->set, 0, nn->data->test->m, 0, nn->data->test->n);
-    
-    if (nn->data->training->set_t != NULL) {
-        tensor *t = (tensor *)nn->data->training->set_t;
+    if (nn->data->training->set != NULL) {
+        tensor *t = (tensor *)nn->data->training->set;
         free(t->val);
-        free(nn->data->training->set_t);
+        free(nn->data->training->set);
     }
     if (nn->data->training->labels != NULL) {
         tensor *t = (tensor *)nn->data->training->labels;
@@ -218,10 +210,10 @@ static void finale(void * _Nonnull self) {
         free(nn->data->training->labels);
     }
     
-    if (nn->data->test->set_t != NULL) {
-        tensor *t = (tensor *)nn->data->test->set_t;
+    if (nn->data->test->set != NULL) {
+        tensor *t = (tensor *)nn->data->test->set;
         free(t->val);
-        free(nn->data->test->set_t);
+        free(nn->data->test->set);
     }
     if (nn->data->test->labels != NULL) {
         tensor *t = (tensor *)nn->data->test->labels;
@@ -230,18 +222,14 @@ static void finale(void * _Nonnull self) {
     }
     
     if (nn->data->validation->set != NULL) {
-        free_fmatrix(nn->data->validation->set, 0, nn->data->validation->m, 0, nn->data->validation->n);
-        
-        if (nn->data->validation->set_t != NULL) {
-            tensor *t = (tensor *)nn->data->validation->set_t;
-            free(t->val);
-            free(nn->data->validation->set_t);
-        }
-        if (nn->data->validation->labels != NULL) {
-            tensor *t = (tensor *)nn->data->validation->labels;
-            free(t->val);
-            free(nn->data->validation->labels);
-        }
+        tensor *t = (tensor *)nn->data->validation->set;
+        free(t->val);
+        free(nn->data->validation->set);
+    }
+    if (nn->data->validation->labels != NULL) {
+        tensor *t = (tensor *)nn->data->validation->labels;
+        free(t->val);
+        free(nn->data->validation->labels);
     }
     free(nn->data->training);
     free(nn->data->test);
@@ -265,9 +253,11 @@ static void finale(void * _Nonnull self) {
     }
 }
 
+#ifdef GPU_WORKING
 static void gpu_alloc(void * _Nonnull self) {
     
     BrainStormNet *nn = (BrainStormNet *)self;
     
     nn->gpu = metalCompute();
 }
+#endif

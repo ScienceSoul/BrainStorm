@@ -6,6 +6,8 @@
 //  Copyright © 2018 ScienceSoul. All rights reserved.
 //
 
+#ifdef GPU_WORKING
+
 #include <Foundation/Foundation.h>
 #include <Metal/Metal.h>
 #include <sys/stat.h>
@@ -278,4 +280,7 @@ MetalCompute * _Nonnull metalCompute(void) {
     
     return metalComppute;
 }
+
+#endif
+
 

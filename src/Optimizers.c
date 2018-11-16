@@ -936,7 +936,7 @@ static void set_func_ptr(void * _Nonnull neural, optimizer optimizer) {
     }
 }
 
-void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void gradientDescentOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool  firstTime = true;
     
@@ -959,7 +959,6 @@ void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnul
         firstTime = false;
     }
     
-    nn->batch = mini_batch;
     nn->batch_inputs = batch_features;
     nn->batch_labels = batch_labels;
     
@@ -968,7 +967,7 @@ void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnul
     ptr_gradient_descent_update_func((void *)nn, batch_size);
 }
 
-void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void momentumOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -991,7 +990,6 @@ void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini
         firstTime = false;
     }
     
-    nn->batch = mini_batch;
     nn->batch_inputs = batch_features;
     nn->batch_labels = batch_labels;
     
@@ -1000,7 +998,7 @@ void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini
     ptr_momentum_update_func((void *)nn, batch_size);
 }
 
-void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void adaGradOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
  
     static bool firstTime = true;
     
@@ -1023,7 +1021,6 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
         firstTime = false;
     }
     
-    nn->batch = mini_batch;
     nn->batch_inputs = batch_features;
     nn->batch_labels = batch_labels;
     
@@ -1032,7 +1029,7 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     ptr_ada_grad_update_func((void *)neural, batch_size);
 }
 
-void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void rmsPropOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -1055,7 +1052,6 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
         firstTime = false;
     }
     
-    nn->batch = mini_batch;
     nn->batch_inputs = batch_features;
     nn->batch_labels = batch_labels;
     
@@ -1064,7 +1060,7 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     ptr_rms_prop_update_func((void *)nn, batch_size);
 }
 
-void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void adamOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -1087,7 +1083,6 @@ void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_bat
         firstTime = false;
     }
     
-    nn->batch = mini_batch;
     nn->batch_inputs = batch_features;
     nn->batch_labels = batch_labels;
     

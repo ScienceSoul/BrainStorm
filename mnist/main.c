@@ -14,10 +14,6 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
     
-    float **miniBatch = floatmatrix(0, batch_size-1, 0, neural->data->training->n-1);
-    float out_test[neural->data->test->m];
-    float out_validation[neural->data->validation->m];
-    
     tensor_dict *dict = init_tensor_dict();
     dict->rank = 1;
     dict->shape[0][0][0] = batch_size * neural->dense->parameters->topology[0];
@@ -27,18 +23,21 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     dict->shape[0][0][0] = batch_size * neural->dense->parameters->numberOfClassifications;
     tensor *labels = (tensor *)neural->tensor(NULL, *dict);
     
+    tensor *t1 = (tensor *)neural->data->test->set;
+    tensor *t2 = (tensor *)neural->data->validation->set;
+    float out_test[t1->shape[0][0][0]/neural->dense->parameters->topology[0]];
+    float out_validation[t2->shape[0][0][0]/neural->dense->parameters->topology[0]];
+    
     for (int k=1; k<=n_epochs; k++) {
-        //shuffle(neural->data->training->set, neural->data->training->m, neural->data->training->n);
         int num_inputs = neural->dense->parameters->topology[0];
-        shuffle(neural->data->training->set_t, neural->data->training->labels, neural->dense->parameters->numberOfClassifications, &num_inputs);
+        shuffle(neural->data->training->set, neural->data->training->labels, neural->dense->parameters->numberOfClassifications, &num_inputs);
         
         fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
         double train_time = 0.0;
-        for (int l=1; l<=neural->dense->train->batch_range_t((void *)neural, batch_size); l++) {
-            neural->dense->train->next_batch((void *)neural, miniBatch, batch_size);
-            neural->dense->train->next_batch_t((void *)neural, features, labels, batch_size);
+        for (int l=1; l<=neural->dense->train->batch_range((void *)neural, batch_size); l++) {
+            neural->dense->train->next_batch((void *)neural, features, labels, batch_size);
             double rt = realtime();
-            optimizer->minimize((void *)neural, miniBatch, features, labels,  batch_size);
+            optimizer->minimize((void *)neural, features, labels,  batch_size);
             rt = realtime() - rt;
             train_time += rt;
             neural->dense->train->progression((void *)neural, (progress_dict){.batch_size=batch_size,
@@ -48,15 +47,14 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         
         
         neural->eval_prediction((void *)neural, "validation", out_validation, false);
-        float acc_valid =  neural->math_ops(out_validation, neural->data->validation->m, "reduce sum");
+        float acc_valid =  neural->math_ops(out_validation, t2->shape[0][0][0]/neural->dense->parameters->topology[0], "reduce sum");
         
         neural->eval_prediction((void *)neural, "test", out_test, false);
-        float acc_test = neural->math_ops(out_test, neural->data->test->m, "reduce sum");
+        float acc_test = neural->math_ops(out_test, t1->shape[0][0][0]/neural->dense->parameters->topology[0], "reduce sum");
         
         fprintf(stdout, "{%d/%d}: Val accuracy: %d / Test accuracy: %d.\n", k, n_epochs, (int)acc_valid, (int)acc_test);
         fprintf(stdout, "\n");
     }
-    free_fmatrix(miniBatch, 0, batch_size-1, 0, neural->data->training->n-1);
     
     free(features->val);
     free(features);
@@ -72,11 +70,7 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
     
-    float **miniBatch = floatmatrix(0, batch_size-1, 0, neural->data->training->n-1);
-    float out_test[neural->data->test->m];
-    float out_validation[neural->data->validation->m];
-    
-    tensor *t1 = (tensor *)neural->data->training->set_t;
+    tensor *t1 = (tensor *)neural->data->training->set;
     
     tensor_dict *dict = init_tensor_dict();
     dict->rank = 4;
@@ -90,17 +84,20 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     dict->shape[0][0][0] = batch_size * neural->conv2d->parameters->numberOfClassifications;
     tensor *labels = (tensor *)neural->tensor(NULL, *dict);
     
+    tensor *t2 = (tensor *)neural->data->test->set;
+    tensor *t3 = (tensor *)neural->data->validation->set;
+    float out_test[t2->shape[0][0][0]];
+    float out_validation[t3->shape[0][0][0]];
+    
     for (int k=1; k<=n_epochs; k++) {
-        //shuffle(neural->data->training->set, neural->data->training->m, neural->data->training->n);
-        shuffle(neural->data->training->set_t, neural->data->training->labels, neural->conv2d->parameters->numberOfClassifications, NULL);
+        shuffle(neural->data->training->set, neural->data->training->labels, neural->conv2d->parameters->numberOfClassifications, NULL);
         
         fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
         double train_time = 0.0;
-        for (int l=1; l<=neural->conv2d->train->batch_range_t((void *)neural, batch_size); l++) {
-            //neural->conv2d->train->next_batch((void *)neural, miniBatch, batch_size);
-            neural->conv2d->train->next_batch_t((void *)neural, features, labels, batch_size);
+        for (int l=1; l<=neural->conv2d->train->batch_range((void *)neural, batch_size); l++) {
+            neural->conv2d->train->next_batch((void *)neural, features, labels, batch_size);
             double rt = realtime();
-            optimizer->minimize((void *)neural, miniBatch, features, labels, batch_size);
+            optimizer->minimize((void *)neural, features, labels, batch_size);
             rt = realtime() - rt;
             train_time += rt;
             neural->conv2d->train->progression((void *)neural, (progress_dict){.batch_size=batch_size, .percent=5});
@@ -108,15 +105,14 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         fprintf(stdout, "%s: Training time for epoch {%d} : %f (s)\n", DEFAULT_CONSOLE_WRITER, k, train_time);
         
         neural->eval_prediction((void *)neural, "validation", out_validation, false);
-        float acc_valid = neural->math_ops(out_validation, neural->data->validation->m, "reduce sum");
+        float acc_valid = neural->math_ops(out_validation, t3->shape[0][0][0], "reduce sum");
         
         neural->eval_prediction((void *)neural, "test", out_test, false);
-        float acc_test = neural->math_ops(out_test, neural->data->test->m, "reduce sum");
+        float acc_test = neural->math_ops(out_test, t2->shape[0][0][0], "reduce sum");
         
         fprintf(stdout, "{%d/%d}: Val accuracy: %d / Test accuracy: %d.\n", k, n_epochs, (int)acc_valid, (int)acc_test);
         fprintf(stdout, "\n");
     }
-    free_fmatrix(miniBatch, 0, batch_size-1, 0, neural->data->training->n-1);
     
     free(features->val);
     free(features);
@@ -263,8 +259,8 @@ void api_convolutional_net(void) {
 
 int main(int argc, const char * argv[]) {
     
-    bool dense_net = true;
-    bool conv_net = false;
+    bool dense_net = false;
+    bool conv_net = true;
     
     if (dense_net) {
         api_fully_connected_net();

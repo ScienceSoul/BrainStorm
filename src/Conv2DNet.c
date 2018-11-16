@@ -208,9 +208,7 @@ void create_conv2d_net(void * _Nonnull self) {
     nn->conv2d->train = (Train *)malloc(sizeof(Train));
     *(nn->conv2d->train) = (Train){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
     nn->conv2d->train->next_batch = nextBatch;
-    nn->conv2d->train->next_batch_t = nextBatch_t;
     nn->conv2d->train->batch_range = batchRange;
-    nn->conv2d->train->batch_range_t = batchRange_t;
     nn->conv2d->train->progression = progression;
     
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {

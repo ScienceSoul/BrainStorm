@@ -32,9 +32,7 @@ void create_dense_net(void * _Nonnull self) {
     nn->dense->train = (Train *)malloc(sizeof(Train));
     *(nn->dense->train) = (Train){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
     nn->dense->train->next_batch = nextBatch;
-    nn->dense->train->next_batch_t = nextBatch_t;
     nn->dense->train->batch_range = batchRange;
-    nn->dense->train->batch_range_t = batchRange_t;
     nn->dense->train->progression = progression;
     
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
