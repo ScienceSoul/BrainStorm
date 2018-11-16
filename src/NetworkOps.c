@@ -16,7 +16,7 @@
 #include "Conv2DNetOps.c"
 #include "Memory.h"
 
-typedef void (*eval_net_type)(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out);
+typedef void (*eval_net_type)(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out);
 
 void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
                    ptr_inference_func inference, ptr_backpropag_func backpropagation,
@@ -57,10 +57,83 @@ void nextBatch(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, 
     }
 }
 
+void nextBatch_t(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize) {
+    
+    static bool firstTime = true;
+    static int delta1 = 0;
+    static int delta2 = 0;
+    static int count = 1;
+    
+    BrainStormNet *nn = (BrainStormNet *)neural;
+    
+    tensor *t1 = (tensor *)nn->data->training->set_t;
+    tensor *t2 = (tensor *)nn->data->training->labels;
+    
+    static int dim1 = 0;
+    static int dim2 = 0;
+    static int num_inputs = 0;
+    if (firstTime) {
+        dim2 = 1;
+        if (nn->is_dense_network) {
+            dim1 = nn->dense->parameters->topology[0];
+            if (nn->dense->parameters->numberOfClassifications > 0) {
+                dim2 = nn->dense->parameters->numberOfClassifications;
+            }
+            
+            num_inputs = t1->shape[0][0][0] / dim1;
+            
+        } else if (nn->is_conv2d_network) {
+            dim1 = t1->shape[0][1][0] * t1->shape[0][2][0] * t1->shape[0][3][0];
+            if (nn->conv2d->parameters->numberOfClassifications > 0) {
+                dim2 = nn->conv2d->parameters->numberOfClassifications;
+            }
+            
+            num_inputs = t1->shape[0][0][0];
+        }
+        
+        firstTime = false;
+    }
+    
+    memcpy(features->val, t1->val+delta1, (batchSize*dim1)*sizeof(float));
+    memcpy(labels->val, t2->val+delta2, (batchSize*dim2)*sizeof(float));
+    
+    if (count == (int)ceil(num_inputs/batchSize)) {
+        delta1 = 0;
+        delta2 = 0;
+        count = 1;
+    } else {
+        delta1 = delta1 + (batchSize * dim1);
+        delta2 = delta2 + (batchSize * dim2);
+        count++;
+    }
+}
+
 int batchRange(void * _Nonnull neural, unsigned int batchSize) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     return (int)ceil((int)nn->data->training->m/batchSize);
+}
+
+int batchRange_t(void * _Nonnull neural, unsigned int batchSize) {
+    
+    static bool firstTime = true;
+    
+    BrainStormNet *nn = (BrainStormNet *)neural;
+    tensor *t1 = (tensor *)nn->data->training->set_t;
+    
+    static int num_inputs = 0;
+    if (firstTime) {
+        
+        if (nn->is_dense_network) {
+            num_inputs = t1->shape[0][0][0] / nn->dense->parameters->topology[0];
+        } else if (nn->is_conv2d_network) {
+            num_inputs = t1->shape[0][0][0];
+        }
+        
+        firstTime = false;
+    }
+    
+    return (int)ceil((int)num_inputs/batchSize);
 }
 
 void progression(void * _Nonnull neural, progress_dict progress_dict) {
@@ -107,7 +180,7 @@ float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
     return result;
 }
 
-void eval_dense_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
+void eval_dense_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out) {
  
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -119,16 +192,20 @@ void eval_dense_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, un
     
     for (int k=0; k<data_size; k++) {
         
-        for (int i=0; i<nn->num_channels; i++) {
-            nn->dense->activations->val[i] = data[k][i];
-        }
+//        for (int i=0; i<nn->num_channels; i++) {
+//            nn->dense->activations->val[i] = data[k][i];
+//        }
+        int stride = k * nn->dense->parameters->topology[0];
+        memcpy(nn->dense->activations->val, inputs->val+stride, (nn->dense->parameters->topology[0])*sizeof(float));
+        
         inference_in_dense_net(nn);
         
-        out[k] = (float)argmax(nn->dense->activations->val+offset, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->num_channels];
+        //out[k] = (float)argmax(nn->dense->activations->val+offset, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == data[k][nn->num_channels];
+       out[k] = (float)argmax(nn->dense->activations->val+offset, nn->dense->activations->shape[nn->network_num_layers-1][0][0]) == labels->val[k];
     }
 }
 
-void eval_conv2d_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
+void eval_conv2d_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, unsigned int data_size,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -140,16 +217,23 @@ void eval_conv2d_net(void * _Nonnull neural, float * _Nonnull * _Nonnull data, u
     
     for (int k=0; k<data_size; k++) {
     
-        for (int i=0; i<nn->num_channels; i++) {
-            nn->conv2d->conv_activations->val[i] = data[k][i];
-        }
+//        for (int i=0; i<nn->num_channels; i++) {
+//            nn->conv2d->conv_activations->val[i] = data[k][i];
+//        }
+        int fh = inputs->shape[0][1][0];
+        int fw = inputs->shape[0][2][0];
+        int channels = inputs->shape[0][3][0];
+        int stride1 = k * (fh * fw * channels);
+        memcpy(nn->conv2d->conv_activations->val, inputs->val+stride1, (fh*fw*channels)*sizeof(float));
+        
         inference_in_conv2d_net(nn);
         
-        out[k] = (float)argmax(nn->conv2d->dense_activations->val+offset, nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]) == data[k][nn->num_channels];
+        //out[k] = (float)argmax(nn->conv2d->dense_activations->val+offset, nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]) == data[k][nn->num_channels];
+        out[k] = (float)argmax(nn->conv2d->dense_activations->val+offset, nn->conv2d->dense_activations->shape[nn->conv2d->num_dense_layers-1][0][0]) == labels->val[k];
     }
 }
 
-static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int data_size, float * _Nonnull out) {
+static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigned int data_size, tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out) {
     
     static bool firstTime = true;
     static eval_net_type eval_net = NULL;
@@ -165,7 +249,7 @@ static void eval(void * _Nonnull self, float * _Nonnull * _Nonnull data, unsigne
         firstTime = false;
     }
     
-    eval_net(self, data, data_size, out);
+    eval_net(self, data, data_size, inputs, labels, out);
 }
 
 void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal) {
@@ -177,6 +261,8 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
     
     float **data = NULL;
     unsigned int data_size = 0;
+    tensor *t1 = NULL;
+    tensor *t2 = NULL;
     if (strcmp(dataSet, "validation") == 0) {
         if (!validation_check) {
             if (nn->data->validation->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on validation data but the data do not exist.");
@@ -184,6 +270,10 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
         }
         data = nn->data->validation->set;
         data_size = nn->data->validation->m;
+        
+        t1 = (tensor *)nn->data->validation->set_t;
+        t2 = (tensor *)nn->data->validation->labels;
+        
     } else if (strcmp(dataSet, "test") == 0) {
         if (!test_check) {
             if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on test data but the data do not exist.");
@@ -191,6 +281,9 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
         }
         data = nn->data->test->set;
         data_size = nn->data->test->m;
+        
+        t1 = (tensor *)nn->data->test->set_t;
+        t2 = (tensor *)nn->data->test->labels;
     } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized data set in prediction evaluation.");
     
 #ifdef __APPLE__
@@ -209,10 +302,10 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
         nn->gpu->feedforward((void *)nn, out);
         
     } else {
-        eval(self, data, data_size, out);
+        eval(self, data, data_size, t1, t2, out);
     }
 #else
-    eval(self, data, data_size, out);
+    eval(self, data, data_size, t1, t2, out);
 #endif
 }
 
@@ -473,6 +566,15 @@ void trainLoop(void * _Nonnull  neural) {
     float **miniBatch = floatmatrix(0, nn->dense->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
     float out_test[nn->data->test->m];
     
+    tensor_dict *dict = init_tensor_dict();
+    dict->rank = 1;
+    dict->shape[0][0][0] = nn->dense->parameters->miniBatchSize * nn->dense->parameters->topology[0];
+    tensor *inputs = (tensor *)nn->tensor(NULL, *dict);
+    
+    dict->rank = 1;
+    dict->shape[0][0][0] = nn->dense->parameters->miniBatchSize * nn->dense->parameters->numberOfClassifications;
+    tensor *labels = (tensor *)nn->tensor(NULL, *dict);
+    
     for (int k=1; k<=nn->dense->parameters->epochs; k++) {
         shuffle(nn->data->training->set, nn->data->training->m, nn->data->training->n);
         
@@ -480,15 +582,15 @@ void trainLoop(void * _Nonnull  neural) {
             nn->dense->train->next_batch((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
             
             if (nn->dense->train->gradient_descent != NULL) {
-                nn->dense->train->gradient_descent->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
+                nn->dense->train->gradient_descent->minimize((void *)nn, miniBatch, inputs, labels, nn->dense->parameters->miniBatchSize);
             } else if (nn->dense->train->momentum != NULL) {
-                nn->dense->train->momentum->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
+                nn->dense->train->momentum->minimize((void *)nn, miniBatch, inputs, labels, nn->dense->parameters->miniBatchSize);
             } else if (nn->dense->train->ada_grad != NULL) {
-                nn->dense->train->ada_grad->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
+                nn->dense->train->ada_grad->minimize((void *)nn, miniBatch, inputs, labels, nn->dense->parameters->miniBatchSize);
             } else if (nn->dense->train->rms_prop != NULL) {
-                nn->dense->train->rms_prop->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
+                nn->dense->train->rms_prop->minimize((void *)nn, miniBatch, inputs, labels, nn->dense->parameters->miniBatchSize);
             }  else if (nn->dense->train->adam != NULL) {
-                nn->dense->train->adam->minimize((void *)nn, miniBatch, nn->dense->parameters->miniBatchSize);
+                nn->dense->train->adam->minimize((void *)nn, miniBatch, inputs, labels, nn->dense->parameters->miniBatchSize);
             }
         }
         
@@ -500,4 +602,12 @@ void trainLoop(void * _Nonnull  neural) {
     }
     
     free_fmatrix(miniBatch, 0, nn->dense->parameters->miniBatchSize-1, 0, nn->data->training->n-1);
+    
+    free(inputs->val);
+    free(inputs);
+    
+    free(labels->val);
+    free(labels);
+    
+    free(dict);
 }

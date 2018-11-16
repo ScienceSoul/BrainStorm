@@ -22,7 +22,9 @@ typedef struct Train {
     RMSPropOptimizer * _Nullable rms_prop;
     AdamOptimizer * _Nullable adam;
     void (* _Nullable next_batch)(void * _Nonnull neural, float * _Nonnull * _Nonnull placeholder, unsigned int batchSize);
+    void (* _Nullable next_batch_t)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize);
     int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize);
+    int (* _Nullable batch_range_t)(void * _Nonnull neural, unsigned int batchSize);
     void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
 } Train;
 
@@ -114,6 +116,9 @@ typedef struct BrainStormNet {
     
     MetalCompute * _Nullable gpu;
     float * _Nullable * _Nullable batch;
+    tensor * _Nullable batch_inputs;
+    tensor * _Nullable batch_labels;
+    int label_step;
     
     unsigned int network_num_layers;       // Total number of layers in the network from input to output
     unsigned int num_activation_functions; // Number of activation functions used by the network
@@ -130,7 +135,7 @@ typedef struct BrainStormNet {
     
     void (* _Nullable genesis)(void * _Nonnull self);
     void (* _Nullable finale)(void * _Nonnull self);
-    void * _Nonnull (* _Nullable tensor)(void * _Nonnull self, tensor_dict tensor_dict);
+    void * _Nonnull (* _Nullable tensor)(void * _Nullable self, tensor_dict tensor_dict);
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
     

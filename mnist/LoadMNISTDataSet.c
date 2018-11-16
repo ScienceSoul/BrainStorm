@@ -15,7 +15,7 @@ void endianSwap(unsigned int *x) {
     *x = (*x>>24)|((*x<<8)&0x00FF0000)|((*x>>8)&0x0000FF00)|(*x<<24);
 }
 
-float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, bool testData) {
+float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels, bool testData) {
     
     FILE *fimage = fopen(file, "rb");
     FILE *flabel = NULL;
@@ -88,6 +88,7 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
     // Return a design matrix of the data set
     *len1 = num;
     *len2 = row*col + 1; // Number of features plus the ground-truth label
+    *num_channels = 1;
     float **dataSet = floatmatrix(0, *len1-1, 0, *len2-1);
     memset(*dataSet, 0.0f, (*len1*(*len2))*sizeof(float));
     int idx;
@@ -122,9 +123,9 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
     return dataSet;
 }
 
-float * _Nonnull * _Nonnull loadMnist(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2) {
+float * _Nonnull * _Nonnull loadMnist(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels) {
     
-    float **dataSet = readBinaryFile(file, len1, len2, false);
+    float **dataSet = readBinaryFile(file, len1, len2, num_channels, false);
     if (dataSet == NULL) {
         fatal(DEFAULT_CONSOLE_WRITER, "problem reading MNIST data set.");
     } else fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
@@ -132,9 +133,9 @@ float * _Nonnull * _Nonnull loadMnist(const char * _Nonnull file, unsigned int *
     return dataSet;
 }
 
-float * _Nonnull * _Nonnull loadMnistTest(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2) {
+float * _Nonnull * _Nonnull loadMnistTest(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels) {
     
-    float **dataSet = readBinaryFile(file, len1, len2, true);
+    float **dataSet = readBinaryFile(file, len1, len2, num_channels, true);
     if (dataSet == NULL) {
         fatal(DEFAULT_CONSOLE_WRITER, "problem reading the MNIST test data set ");
     } else fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);

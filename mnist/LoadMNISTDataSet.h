@@ -9,7 +9,7 @@
 #ifndef LoadMNISTDataSet_h
 #define LoadMNISTDataSet_h
 
-float * _Nonnull * _Nonnull loadMnist(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2);
-float * _Nonnull * _Nonnull loadMnistTest(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2);
+float * _Nonnull * _Nonnull loadMnist(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels);
+float * _Nonnull * _Nonnull loadMnistTest(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels);
 
 #endif /* LoadMNISTDataSet_h */

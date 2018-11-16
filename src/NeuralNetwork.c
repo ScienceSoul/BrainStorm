@@ -26,18 +26,24 @@ static void initNeuralData(void * _Nonnull self) {
     
     nn->data->training = (training *)malloc(sizeof(training));
     nn->data->training->set = NULL;
+    nn->data->training->set_t = NULL;
+    nn->data->training->labels = NULL;
     nn->data->training->reader = NULL;
     nn->data->training->m = 0;
     nn->data->training->n = 0;
     
     nn->data->test = (test *)malloc(sizeof(test));
     nn->data->test->set = NULL;
+    nn->data->test->set_t = NULL;
+    nn->data->test->labels = NULL;
     nn->data->test->reader = NULL;
     nn->data->test->m = 0;
     nn->data->test->n = 0;
     
     nn->data->validation = (validation *)malloc(sizeof(validation));
     nn->data->validation->set = NULL;
+    nn->data->validation->set_t = NULL;
+    nn->data->validation->labels = NULL;
     nn->data->validation->m = 0;
     nn->data->validation->n = 0;
 }
@@ -200,7 +206,43 @@ static void finale(void * _Nonnull self) {
     
     free_fmatrix(nn->data->training->set, 0, nn->data->training->m, 0, nn->data->training->n);
     free_fmatrix(nn->data->test->set, 0, nn->data->test->m, 0, nn->data->test->n);
-    if (nn->data->validation->set != NULL) free_fmatrix(nn->data->validation->set, 0, nn->data->validation->m, 0, nn->data->validation->n);
+    
+    if (nn->data->training->set_t != NULL) {
+        tensor *t = (tensor *)nn->data->training->set_t;
+        free(t->val);
+        free(nn->data->training->set_t);
+    }
+    if (nn->data->training->labels != NULL) {
+        tensor *t = (tensor *)nn->data->training->labels;
+        free(t->val);
+        free(nn->data->training->labels);
+    }
+    
+    if (nn->data->test->set_t != NULL) {
+        tensor *t = (tensor *)nn->data->test->set_t;
+        free(t->val);
+        free(nn->data->test->set_t);
+    }
+    if (nn->data->test->labels != NULL) {
+        tensor *t = (tensor *)nn->data->test->labels;
+        free(t->val);
+        free(nn->data->test->labels);
+    }
+    
+    if (nn->data->validation->set != NULL) {
+        free_fmatrix(nn->data->validation->set, 0, nn->data->validation->m, 0, nn->data->validation->n);
+        
+        if (nn->data->validation->set_t != NULL) {
+            tensor *t = (tensor *)nn->data->validation->set_t;
+            free(t->val);
+            free(nn->data->validation->set_t);
+        }
+        if (nn->data->validation->labels != NULL) {
+            tensor *t = (tensor *)nn->data->validation->labels;
+            free(t->val);
+            free(nn->data->validation->labels);
+        }
+    }
     free(nn->data->training);
     free(nn->data->test);
     free(nn->data->validation);

@@ -936,7 +936,7 @@ static void set_func_ptr(void * _Nonnull neural, optimizer optimizer) {
     }
 }
 
-void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool  firstTime = true;
     
@@ -945,16 +945,30 @@ void gradientDescentOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnul
     optimizer optimizer = GRADIENT_DESCENT;
     if (firstTime) {
         set_func_ptr(neural, optimizer);
+        
+        if (nn->is_dense_network) {
+            if (nn->dense->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        } else if (nn->is_conv2d_network) {
+            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        }
+        
         firstTime = false;
     }
     
     nn->batch = mini_batch;
+    nn->batch_inputs = batch_features;
+    nn->batch_labels = batch_labels;
+    
     ptr_init_func((void *)nn);
     miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_gradient_descent_update_func((void *)nn, batch_size);
 }
 
-void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -963,16 +977,30 @@ void momentumOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini
     optimizer optimizer = MOMENTUM;
     if (firstTime) {
         set_func_ptr(neural, optimizer);
+        
+        if (nn->is_dense_network) {
+            if (nn->dense->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        } else if (nn->is_conv2d_network) {
+            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        }
+        
         firstTime = false;
     }
     
     nn->batch = mini_batch;
+    nn->batch_inputs = batch_features;
+    nn->batch_labels = batch_labels;
+    
     ptr_init_func((void *)nn);
     miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_momentum_update_func((void *)nn, batch_size);
 }
 
-void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
  
     static bool firstTime = true;
     
@@ -981,16 +1009,30 @@ void adaGradOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     optimizer optimizer = ADAGRAD;
     if (firstTime) {
         set_func_ptr(neural, optimizer);
+        
+        if (nn->is_dense_network) {
+            if (nn->dense->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        } else if (nn->is_conv2d_network) {
+            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        }
+        
         firstTime = false;
     }
     
     nn->batch = mini_batch;
+    nn->batch_inputs = batch_features;
+    nn->batch_labels = batch_labels;
+    
     ptr_init_func((void *)nn);
     miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_ada_grad_update_func((void *)neural, batch_size);
 }
 
-void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -999,16 +1041,30 @@ void rmsPropOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_
     optimizer optimizer = RMSPROP;
     if (firstTime) {
         set_func_ptr(neural, optimizer);
+        
+        if (nn->is_dense_network) {
+            if (nn->dense->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        } else if (nn->is_conv2d_network) {
+            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        }
+        
         firstTime = false;
     }
     
     nn->batch = mini_batch;
+    nn->batch_inputs = batch_features;
+    nn->batch_labels = batch_labels;
+    
     ptr_init_func((void *)nn);
     miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_rms_prop_update_func((void *)nn, batch_size);
 }
 
-void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, unsigned int batch_size) {
+void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_batch, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -1017,10 +1073,24 @@ void adamOptimizer(void * _Nonnull neural, float * _Nonnull * _Nonnull  mini_bat
     optimizer optimizer = ADAM;
     if (firstTime) {
         set_func_ptr(neural, optimizer);
+        
+        if (nn->is_dense_network) {
+            if (nn->dense->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        } else if (nn->is_conv2d_network) {
+            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
+                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            } else nn->label_step = 1;
+        }
+        
         firstTime = false;
     }
     
     nn->batch = mini_batch;
+    nn->batch_inputs = batch_features;
+    nn->batch_labels = batch_labels;
+    
     ptr_init_func((void *)nn);
     miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_adam_update_func((void *)nn, batch_size);

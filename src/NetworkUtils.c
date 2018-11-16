@@ -185,9 +185,12 @@ void value_initializer(void * _Nonnull object, float * _Nullable factor, char * 
 //      The tensor shape, rank and the flattening length are given inside the tensor_dict structure.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict) {
+void * _Nullable tensor_create(void * _Nullable self, tensor_dict tensor_dict) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    BrainStormNet *nn = NULL;
+    if (self != NULL) {
+        nn = (BrainStormNet *)self;
+    }
     
     if (tensor_dict.rank > MAX_TENSOR_RANK) {
         fatal(DEFAULT_CONSOLE_WRITER, "tensors with rank > 5 are not supported.");
@@ -266,6 +269,77 @@ tensor_dict * _Nonnull init_tensor_dict(void) {
     memset(**dict->shape, 0, (MAX_NUMBER_NETWORK_LAYERS*MAX_TENSOR_RANK)*sizeof(int));
     return dict;
 }
+
+// ----------------------------------------------
+// Special function to shuffle inputs and labels
+// ----------------------------------------------
+void __attribute__((overloadable))shuffle(void * _Nonnull features, void * _Nullable labels, int num_classifications, int * _Nullable num_features) {
+    
+    static bool firstTime = true;
+    
+    tensor *input1 = (tensor *)features;
+    tensor *input2 = (tensor *)labels;
+    
+    static int dim1 = 1;
+    static int dim2 = 0;
+    static int num_inputs = 0;
+    if (firstTime) {
+        
+        if (input1->rank == 4) {
+            for (int i=1; i<input1->rank; i++) {
+                dim1 = dim1 * input1->shape[0][i][0];
+            }
+            num_inputs = input1->shape[0][0][0];
+        } else if (input1->rank == 1) {
+            if (num_features == NULL) fatal(DEFAULT_CONSOLE_WRITER, "missing argument for the number of inputs in shuffle routine.");
+            dim1 = *num_features;
+            num_inputs = input1->shape[0][0][0] / *num_features;
+        } else fatal(DEFAULT_CONSOLE_WRITER, "shuffle routine only for 1D and 4D tensors.");
+        
+        if (num_classifications > 0) {
+            dim2 = num_classifications;
+        } else dim2 = 1;
+        
+        firstTime = false;
+    }
+    
+    float t1[dim1];
+    float t2[dim2];
+    
+    if (num_inputs> 1) {
+        int stride1 = 0;
+        int stride2 = 0;
+        for (int i=0; i<num_inputs-1; i++) {
+            int j = i + rand() / (RAND_MAX / (num_inputs - i) + 1);
+            int jump1 = max((j-1),0) * dim1;
+            int jump2 = max((j-1),0) * dim2;
+            for (int k=0; k<dim1; k++) {
+                t1[k] = input1->val[jump1+k];
+            }
+            for (int k=0; k<dim2; k++) {
+                t2[k] = input2->val[jump2+k];
+            }
+            
+            for (int k=0; k<dim1; k++) {
+                input1->val[jump1+k] = input1->val[stride1+k];
+            }
+            for (int k=0; k<dim2; k++) {
+                input2->val[jump2+k] = input2->val[stride2+k];
+            }
+            
+            for (int k=0; k<dim1; k++) {
+                input1->val[stride1+k] = t1[k];
+            }
+            for (int k=0; k<dim2; k++) {
+                input2->val[stride2+k] = t2[k];
+            }
+            
+            stride1 = stride1 + dim1;
+            stride2 = stride2 + dim2;
+        }
+    }
+}
+
 
 int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile) {
     

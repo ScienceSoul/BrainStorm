@@ -18,15 +18,27 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     float out_test[neural->data->test->m];
     float out_validation[neural->data->validation->m];
     
+    tensor_dict *dict = init_tensor_dict();
+    dict->rank = 1;
+    dict->shape[0][0][0] = batch_size * neural->dense->parameters->topology[0];
+    tensor *features = (tensor *)neural->tensor(NULL, *dict);
+    
+    dict->rank = 1;
+    dict->shape[0][0][0] = batch_size * neural->dense->parameters->numberOfClassifications;
+    tensor *labels = (tensor *)neural->tensor(NULL, *dict);
+    
     for (int k=1; k<=n_epochs; k++) {
-        shuffle(neural->data->training->set, neural->data->training->m, neural->data->training->n);
+        //shuffle(neural->data->training->set, neural->data->training->m, neural->data->training->n);
+        int num_inputs = neural->dense->parameters->topology[0];
+        shuffle(neural->data->training->set_t, neural->data->training->labels, neural->dense->parameters->numberOfClassifications, &num_inputs);
         
         fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
         double train_time = 0.0;
-        for (int l=1; l<=neural->dense->train->batch_range((void *)neural, batch_size); l++) {
+        for (int l=1; l<=neural->dense->train->batch_range_t((void *)neural, batch_size); l++) {
             neural->dense->train->next_batch((void *)neural, miniBatch, batch_size);
+            neural->dense->train->next_batch_t((void *)neural, features, labels, batch_size);
             double rt = realtime();
-            optimizer->minimize((void *)neural, miniBatch, batch_size);
+            optimizer->minimize((void *)neural, miniBatch, features, labels,  batch_size);
             rt = realtime() - rt;
             train_time += rt;
             neural->dense->train->progression((void *)neural, (progress_dict){.batch_size=batch_size,
@@ -45,6 +57,14 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         fprintf(stdout, "\n");
     }
     free_fmatrix(miniBatch, 0, batch_size-1, 0, neural->data->training->n-1);
+    
+    free(features->val);
+    free(features);
+    
+    free(labels->val);
+    free(labels);
+    
+    free(dict);
 }
 
 void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
@@ -56,15 +76,31 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     float out_test[neural->data->test->m];
     float out_validation[neural->data->validation->m];
     
+    tensor *t1 = (tensor *)neural->data->training->set_t;
+    
+    tensor_dict *dict = init_tensor_dict();
+    dict->rank = 4;
+    dict->shape[0][0][0] = batch_size;
+    dict->shape[0][1][0] = t1->shape[0][1][0];
+    dict->shape[0][2][0] = t1->shape[0][2][0];
+    dict->shape[0][3][0] = t1->shape[0][3][0];
+    tensor *features = (tensor *)neural->tensor(NULL, *dict);
+    
+    dict->rank = 1;
+    dict->shape[0][0][0] = batch_size * neural->conv2d->parameters->numberOfClassifications;
+    tensor *labels = (tensor *)neural->tensor(NULL, *dict);
+    
     for (int k=1; k<=n_epochs; k++) {
-        shuffle(neural->data->training->set, neural->data->training->m, neural->data->training->n);
+        //shuffle(neural->data->training->set, neural->data->training->m, neural->data->training->n);
+        shuffle(neural->data->training->set_t, neural->data->training->labels, neural->conv2d->parameters->numberOfClassifications, NULL);
         
         fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
         double train_time = 0.0;
-        for (int l=1; l<=neural->conv2d->train->batch_range((void *)neural, batch_size); l++) {
-            neural->conv2d->train->next_batch((void *)neural, miniBatch, batch_size);
+        for (int l=1; l<=neural->conv2d->train->batch_range_t((void *)neural, batch_size); l++) {
+            //neural->conv2d->train->next_batch((void *)neural, miniBatch, batch_size);
+            neural->conv2d->train->next_batch_t((void *)neural, features, labels, batch_size);
             double rt = realtime();
-            optimizer->minimize((void *)neural, miniBatch, batch_size);
+            optimizer->minimize((void *)neural, miniBatch, features, labels, batch_size);
             rt = realtime() - rt;
             train_time += rt;
             neural->conv2d->train->progression((void *)neural, (progress_dict){.batch_size=batch_size, .percent=5});
@@ -81,6 +117,14 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         fprintf(stdout, "\n");
     }
     free_fmatrix(miniBatch, 0, batch_size-1, 0, neural->data->training->n-1);
+    
+    free(features->val);
+    free(features);
+    
+    free(labels->val);
+    free(labels);
+    
+    free(dict);
 }
 
 void file_input_net(void) {
@@ -102,7 +146,7 @@ void file_input_net(void) {
     neural->data->test->reader = loadMnistTest;
     
     // Load training/test data
-    neural->data->load((void *)neural, neural->dataName, neural->dataPath, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true);
+    neural->data->load((void *)neural, neural->dataName, neural->dataPath, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true, true);
     
     neural->train_loop((void *)neural);
     neural->finale((void *)neural);
@@ -153,7 +197,7 @@ void api_fully_connected_net(void) {
     neural->data->test->reader = loadMnistTest;
     
     // Load training/test data
-    neural->data->load((void *)neural, "mnist", neural->dataPath, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true);
+    neural->data->load((void *)neural, "mnist", neural->dataPath, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true, true);
     
     // Train the network
     train_dense(neural, optimizer);
@@ -208,7 +252,7 @@ void api_convolutional_net(void) {
     neural->data->training->reader = loadMnist;
     neural->data->test->reader = loadMnistTest;
     
-    neural->data->load((void *)neural, "minsit", neural->dataPath,  "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true);
+    neural->data->load((void *)neural, "minsit", neural->dataPath,  "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true, true);
     
     //Train the network
     train_conv2d(neural, optimizer);
@@ -219,8 +263,8 @@ void api_convolutional_net(void) {
 
 int main(int argc, const char * argv[]) {
     
-    bool dense_net = false;
-    bool conv_net = true;
+    bool dense_net = true;
+    bool conv_net = false;
     
     if (dense_net) {
         api_fully_connected_net();

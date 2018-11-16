@@ -11,6 +11,7 @@
 
 #include "Utils.h"
 #include "Memory.h"
+#include "NetworkUtils.h"
 
 static int formatType;
 void format(char * _Nullable head, char * _Nullable message, int * _Nullable iValue, double * _Nullable dValue, char * _Nullable str);
@@ -84,7 +85,10 @@ void format(char * _Nullable head, char * _Nullable message, int * _Nullable iVa
     exit(-1);
 }
 
-void shuffle(float * _Nonnull * _Nonnull array, unsigned int len1, unsigned int len2) {
+// ---------------------------------------
+// Shuffle a 2D array of the form arr[][]
+// ---------------------------------------
+void __attribute__((overloadable)) shuffle(float * _Nonnull * _Nonnull array, unsigned int len1, unsigned int len2) {
     
     float t[len2];
     
@@ -102,6 +106,38 @@ void shuffle(float * _Nonnull * _Nonnull array, unsigned int len1, unsigned int 
             for (int k=0; k<len2; k++) {
                 array[i][k] = t[k];
             }
+        }
+    }
+}
+
+// --------------------------
+// Shuffle a 4D input tensor
+// --------------------------
+void __attribute__((overloadable))shuffle(void * _Nonnull object) {
+    
+    tensor *input = (tensor *)object;
+    
+    unsigned int dim = 1;
+    for (int i=1; i<input->rank; i++) {
+        dim = dim * input->shape[0][i][0];
+    }
+    float t1[dim];
+    
+    if (input->shape[0][0][0] > 1) {
+        int stride1 = 0;
+        for (int i=0; i<input->shape[0][0][0]-1; i++) {
+            int j = i + rand() / (RAND_MAX / (input->shape[0][0][0] - i) + 1);
+            int jump1 = max((j-1),0) * dim;
+            for (int k=0; k<dim; k++) {
+                t1[k] = input->val[jump1+k];
+            }
+            for (int k=0; k<dim; k++) {
+                input->val[jump1+k] = input->val[stride1+k];
+            }
+            for (int k=0; k<dim; k++) {
+                input->val[stride1+k] = t1[k];
+            }
+            stride1 = stride1 + dim;
         }
     }
 }

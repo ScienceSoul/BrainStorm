@@ -68,10 +68,12 @@ void value_initializer(void * _Nonnull object, float * _Nullable factor, char * 
 //void standard_normal_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
 //void xavier_he_initializer(void * _Nonnull neural, void * _Nonnull object, int l, int offset);
 
-void * _Nullable tensor_create(void * _Nonnull self, tensor_dict tensor_dict);
-
-int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
+void * _Nullable tensor_create(void * _Nullable self, tensor_dict tensor_dict);
 
 tensor_dict * _Nonnull init_tensor_dict(void);
+
+void __attribute__((overloadable))shuffle(void * _Nonnull features, void * _Nullable labels, int num_classifications, int * _Nullable num_features);
+
+int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
 
 #endif /* NetworkUtils_h */

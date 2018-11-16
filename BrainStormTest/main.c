@@ -543,6 +543,83 @@ bool test_create_tensors(void * _Nonnull neural) {
     return true;
 }
 
+bool test_shuffle_tensor(void) {
+    
+    tensor *input = NULL;
+    
+    tensor_dict * dict = init_tensor_dict();
+    dict->shape[0][0][0] = 6;
+    dict->shape[0][1][0] = 2;
+    dict->shape[0][2][0] = 2;
+    dict->shape[0][3][0] = 1;
+    dict->rank = 4;
+    input = tensor_create(NULL, *dict);
+    if (input == NULL) {
+        fprintf(stderr, "input tensor is NULL.");
+        return false;
+    }
+    
+    int dim = input->shape[0][1][0] * input->shape[0][2][0] * input->shape[0][3][0];
+    for (int i=0; i<input->shape[0][0][0]*dim; i++) {
+        input->val[i] = randn(0, 1);
+    }
+    
+    fprintf(stdout, "Original tensor:\n");
+    int stride = 0;
+    for (int i=0; i<input->shape[0][0][0]; i++) {
+        for (int j=0; j<dim; j++) {
+            printf("%f ", input->val[stride+j]);
+        }
+        printf("\n");
+        stride = stride + dim;
+    }
+    
+    float buffer[input->shape[0][0][0]*dim];
+    memcpy(buffer, input->val, (input->shape[0][0][0]*dim)*sizeof(float));
+    
+    shuffle((void *)input);
+    
+    stride = 0;
+    for (int i=0; i<input->shape[0][0][0]; i++) {
+        int stride2 = 0;
+        bool found = false;
+        for (int ii=0; ii<input->shape[0][0][0]; ii++) {
+            int count = 0;
+            for (int j=0; j<dim; j++) {
+                if (input->val[stride+j] == buffer[stride2+j]) {
+                    count++;
+                }
+            }
+            if (count == dim) {
+                found = true;
+                break;
+            }
+            stride2 = stride2 + dim;
+        }
+        if (!found) {
+            return false;
+        }
+        stride = stride + dim;
+    }
+    
+    printf("\n");
+    fprintf(stdout, "Shuffled tensor:\n");
+    stride = 0;
+    for (int i=0; i<input->shape[0][0][0]; i++) {
+        for (int j=0; j<dim; j++) {
+            printf("%f ", input->val[stride+j]);
+        }
+        printf("\n");
+        stride = stride + dim;
+    }
+    
+    free(input->val);
+    free(input);
+    free(dict);
+    
+    return true;
+}
+
 bool test_kernels_flipping(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
@@ -1910,6 +1987,12 @@ int main(int argc, const char * argv[]) {
         return -1;
     }
     free(neural);
+    
+    // Test tensor shuffle
+    if(!test_shuffle_tensor()) {
+        fprintf(stderr, "Test: tensor shuffle: failed.\n");
+        return -1;
+    };
     
     // Test kernels flipping
     neural = new_conv2d_net();
