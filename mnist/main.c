@@ -173,7 +173,7 @@ void api_fully_connected_net(void) {
                                      (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=xavier_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
     
-    neural->constructor->training_data((void *)neural, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/train-images-idx3-ubyte");
+    neural->constructor->training_data((void *)neural, "../Data/train-images-idx3-ubyte");
     neural->constructor->split((void *)neural, 55000, 5000);
     
     int vector[10] = {0,1,2,3,4,5,6,7,8,9};
@@ -193,7 +193,7 @@ void api_fully_connected_net(void) {
     neural->data->test->reader = loadMnistTest;
     
     // Load training/test data
-    neural->data->load((void *)neural, "mnist", neural->dataPath, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true, true);
+    neural->data->load((void *)neural, "mnist", neural->dataPath, "../Data/t10k-images-idx3-ubyte", true, true);
     
     // Train the network
     train_dense(neural, optimizer);
@@ -227,7 +227,7 @@ void api_convolutional_net(void) {
     
     neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
-    neural->constructor->training_data((void *)neural,  "/Users/hakimeseddik/Documents/ESPRIT/MNIST/train-images-idx3-ubyte");
+    neural->constructor->training_data((void *)neural,  "../Data/train-images-idx3-ubyte");
     neural->constructor->split((void *)neural, 55000, 5000);
     
     int vector[10] = {0,1,2,3,4,5,6,7,8,9};
@@ -248,7 +248,7 @@ void api_convolutional_net(void) {
     neural->data->training->reader = loadMnist;
     neural->data->test->reader = loadMnistTest;
     
-    neural->data->load((void *)neural, "minsit", neural->dataPath,  "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true, true);
+    neural->data->load((void *)neural, "minsit", neural->dataPath,  "../Data/t10k-images-idx3-ubyte", true, true);
     
     //Train the network
     train_conv2d(neural, optimizer);

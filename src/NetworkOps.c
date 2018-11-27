@@ -13,7 +13,7 @@
 #include "NeuralNetwork.h"
 #include "NetworkOps.h"
 #include "DenseNetOps.h"
-#include "Conv2DNetOps.c"
+#include "Conv2DNetOps.h"
 #include "Memory.h"
 
 typedef void (*eval_net_type)(void * _Nonnull neural,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out);
@@ -160,13 +160,32 @@ float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
     float result = 0.0f;
     
     if (strcmp(op, "reduce mean") == 0) {
+#ifdef __APPLE__
         vDSP_meanv(vector, 1, &result, n);
+#else
+        result = meanv(vector, n);
+#endif
+        
     } else if (strcmp(op, "reduce sum") == 0) {
+#ifdef __APPLE__
         vDSP_sve(vector, 1, &result, n);
+#else
+        result = sve(vector, n);
+#endif
+
     } else if (strcmp(op, "reduce max") == 0) {
+#ifdef __APPLE__
         vDSP_maxv(vector, 1, &result, n);
+#else
+        result = maxv(vector, n);
+#endif
+        
     } else if (strcmp(op, "reduce min") == 0) {
+#ifdef _APPLE__
         vDSP_minv(vector, 1, &result, n);
+#else
+        result = minv(vector, n);
+#endif
     } else fatal(DEFAULT_CONSOLE_WRITER, "unrecognized math operation.");
     
     return result;

@@ -58,11 +58,15 @@ int __attribute__((overloadable)) min(int w, int x, int y, int z);
 float __attribute__((overloadable)) min(float x, float y);
 float __attribute__((overloadable)) min(float x, float y, float z);
 
-int __attribute__((overloadable)) min_array(int * _Nonnull a, unsigned int num_elements);
-float __attribute__((overloadable)) min_array(float * _Nonnull a, unsigned int num_elements);
+int __attribute__((overloadable)) minv(int * _Nonnull a, unsigned int num_elements);
+float __attribute__((overloadable)) minv(float * _Nonnull a, unsigned int num_elements);
 
-int __attribute__((overloadable)) max_array(int * _Nonnull a, unsigned int num_elements);
-float __attribute__((overloadable)) max_array(float * _Nonnull a, unsigned int num_elements);
+int __attribute__((overloadable)) maxv(int * _Nonnull a, unsigned int num_elements);
+float __attribute__((overloadable)) maxv(float * _Nonnull a, unsigned int num_elements);
+
+float __attribute__((overloadable)) meanv(float * _Nonnull a, unsigned int num_elements);
+
+float __attribute__((overloadable)) sve(float * _Nonnull a, unsigned int num_elements);
 
 int __attribute__((overloadable)) argmax(int * _Nonnull a, unsigned int num_elements);
 int __attribute__((overloadable)) argmax(float * _Nonnull a, unsigned int num_elements);

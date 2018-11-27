@@ -163,6 +163,8 @@
 		016175A320F73DDB00FC40FF /* Optimizers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Optimizers.c; sourceTree = "<group>"; };
 		016175A820FF105C00FC40FF /* NetworkOps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkOps.h; path = include/NetworkOps.h; sourceTree = SOURCE_ROOT; };
 		016175A920FF107600FC40FF /* NetworkOps.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = NetworkOps.c; sourceTree = "<group>"; };
+		0176B81321AB8E380060C1CB /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		0176B81421ACC1460060C1CB /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		01DD2F912150996300082198 /* mnist */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mnist; sourceTree = BUILT_PRODUCTS_DIR; };
 		01DD2F932150996300082198 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		01DD2F982150999C00082198 /* LoadMNISTDataSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoadMNISTDataSet.h; sourceTree = "<group>"; };
@@ -282,6 +284,7 @@
 		0161753320EDE03800FC40FF /* src */ = {
 			isa = PBXGroup;
 			children = (
+				0176B81321AB8E380060C1CB /* Makefile */,
 				014B2356211960E8008E46AC /* Conv2DNet.c */,
 				014B235F21217175008E46AC /* Conv2DNetOps.c */,
 				0161753520EDE04F00FC40FF /* Data.c */,
@@ -306,6 +309,7 @@
 		01DD2F922150996300082198 /* mnist */ = {
 			isa = PBXGroup;
 			children = (
+				0176B81421ACC1460060C1CB /* Makefile */,
 				01DD2F932150996300082198 /* main.c */,
 				01DD2F982150999C00082198 /* LoadMNISTDataSet.h */,
 				01DD2F99215099CE00082198 /* LoadMNISTDataSet.c */,
@@ -416,6 +420,7 @@
 				01DD2F8D2150996300082198 /* Sources */,
 				01DD2F8E2150996300082198 /* Frameworks */,
 				01DD2F8F2150996300082198 /* CopyFiles */,
+				0176B81521ACE6380060C1CB /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -513,7 +518,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/myLibs'\npath=$path1$path2$path3\n\nif test -d $path ; then\nrm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/libBrainStorm.a $path\ncp -r ${BUILT_PRODUCTS_DIR}/usr $path\n";
+			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/myLibs'\npath=$path1$path2$path3\n\nif test -d $path ; then\nrm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/libBrainStorm.a $path\ncp -r ${BUILT_PRODUCTS_DIR}/usr $path\n\ncp /Users/hakimeseddik/Documents/BrainStorm/src/*.c /Users/hakimeseddik/Desktop/MNIST/BrainStorm/src\ncp /Users/hakimeseddik/Documents/BrainStorm/include/*.h /Users/hakimeseddik/Desktop/MNIST/BrainStorm/include\n";
+		};
+		0176B81521ACE6380060C1CB /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp /Users/hakimeseddik/Documents/BrainStorm/mnist/*.c /Users/hakimeseddik/Desktop/MNIST/mnist\ncp /Users/hakimeseddik/Documents/BrainStorm/mnist/*.h /Users/hakimeseddik/Desktop/MNIST/mnist\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

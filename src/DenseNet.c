@@ -75,7 +75,7 @@ void dense_net_genesis(void * _Nonnull self) {
     
     BrainStormNet *nn = (BrainStormNet *)self;
     
-    nn->dense->parameters->max_number_nodes_in_layer = max_array(nn->dense->parameters->topology, nn->network_num_layers);
+    nn->dense->parameters->max_number_nodes_in_layer = maxv(nn->dense->parameters->topology, nn->network_num_layers);
     
     if (nn->dense->parameters->split[0] == 0 || nn->dense->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
     

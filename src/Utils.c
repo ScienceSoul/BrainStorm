@@ -9,6 +9,10 @@
     #include <Accelerate/Accelerate.h>
 #endif
 
+#ifdef __linux__
+    #include <bsd/stdlib.h>
+#endif
+
 #include "Utils.h"
 #include "Memory.h"
 #include "NetworkUtils.h"
@@ -448,7 +452,7 @@ float __attribute__((overloadable)) min(float x, float y, float z) {
     return (z < m) ? z : m;
 }
 
-int __attribute__((overloadable)) min_array(int * _Nonnull a, unsigned int num_elements) {
+int __attribute__((overloadable)) minv(int * _Nonnull a, unsigned int num_elements) {
     
     int min = INT_MAX;
     for (int i=0; i<num_elements; i++) {
@@ -460,7 +464,7 @@ int __attribute__((overloadable)) min_array(int * _Nonnull a, unsigned int num_e
     return min;
 }
 
-float __attribute__((overloadable)) min_array(float * _Nonnull a, unsigned int num_elements) {
+float __attribute__((overloadable)) minv(float * _Nonnull a, unsigned int num_elements) {
     
     float min = HUGE_VALF;
     for (int i=0; i<num_elements; i++) {
@@ -472,7 +476,7 @@ float __attribute__((overloadable)) min_array(float * _Nonnull a, unsigned int n
     return min;
 }
 
-int __attribute__((overloadable)) max_array(int * _Nonnull a, unsigned int num_elements)
+int __attribute__((overloadable)) maxv(int * _Nonnull a, unsigned int num_elements)
 {
     int max = -INT_MAX;
     for (int i=0; i<num_elements; i++) {
@@ -484,7 +488,7 @@ int __attribute__((overloadable)) max_array(int * _Nonnull a, unsigned int num_e
     return max;
 }
 
-float __attribute__((overloadable)) max_array(float * _Nonnull a, unsigned int num_elements) {
+float __attribute__((overloadable)) maxv(float * _Nonnull a, unsigned int num_elements) {
     
     float max = -HUGE_VALF;
     for (int i=0; i<num_elements; i++) {
@@ -494,6 +498,26 @@ float __attribute__((overloadable)) max_array(float * _Nonnull a, unsigned int n
     }
     
     return max;
+}
+
+float __attribute__((overloadable)) meanv(float * _Nonnull a, unsigned int num_elements) {
+    
+    float sum = 0.0f;
+    for (int i=0; i<num_elements; i++) {
+        sum = sum + a[i];
+    }
+    
+    return sum / num_elements;
+}
+
+float __attribute__((overloadable)) sve(float * _Nonnull a, unsigned int num_elements) {
+    
+    float sum = 0.0f;
+    for (int i=0; i<num_elements; i++) {
+        sum = sum + a[i];
+    }
+    
+    return sum;
 }
 
 int __attribute__((overloadable)) argmax(int * _Nonnull a, unsigned int num_elements) {

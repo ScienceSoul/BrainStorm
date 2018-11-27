@@ -496,7 +496,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
 #ifdef __APPLE__
     vDSP_vadd(buffer, 1, nn->conv2d->dense_biases->val+offset_b_connected, 1, nn->conv2d->dense_affineTransformations->val+offset_z_connected, 1, nn->conv2d->dense_biases->shape[local_idx][0][0]);
 #else
-    for (int i=0; i<nn->conv2d->dense_biases->shape[layer_index][0][0]; i++) {
+    for (int i=0; i<nn->conv2d->dense_biases->shape[local_idx][0][0]; i++) {
         nn->conv2d->dense_affineTransformations->val[offset_z_connected+i] = buffer[i] + nn->conv2d->dense_biases->val[offset_b_connected+i];
     }
 #endif
