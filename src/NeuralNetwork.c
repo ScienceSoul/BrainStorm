@@ -47,8 +47,8 @@ static void new_network_common(void * _Nonnull neural) {
     
     nn->num_activation_functions = 0;
     
-    bzero(nn->dataPath, MAX_LONG_STRING_LENGTH);
-    strcpy(nn->dataName, "<empty>");
+    bzero(nn->data_path, MAX_LONG_STRING_LENGTH);
+    strcpy(nn->data_name, "<empty>");
     
     nn->constructor = allocateConstructor();
     
@@ -127,7 +127,7 @@ static void genesis(void * _Nonnull self) {
         
         char testString[MAX_LONG_STRING_LENGTH];
         bzero(testString, MAX_LONG_STRING_LENGTH);
-        if (strcmp(nn->dataPath, testString) == 0) fatal(DEFAULT_CONSOLE_WRITER, "training data not defined. Use a constructor or define it in a parameter file.");
+        if (strcmp(nn->data_path, testString) == 0) fatal(DEFAULT_CONSOLE_WRITER, "training data not defined. Use a constructor or define it in a parameter file.");
     }
     
     fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
@@ -186,6 +186,10 @@ static void genesis(void * _Nonnull self) {
         dict->rank = 2;
         dict->shape[0][0][0] = max[0];
         dict->shape[0][1][0] = max[1];
+        fprintf(stdout, "%s: input matrix dimension: \n", DEFAULT_CONSOLE_WRITER);
+        fprintf(stdout, "{\n");
+        fprintf(stdout, "\t %d x %d\n", dict->shape[0][0][0], dict->shape[0][1][0]);
+        fprintf(stdout, "}\n");
         dict->flattening_length = 1;
         conv_input_matrix = (tensor*)nn->tensor(self, *dict);
         free(dict);

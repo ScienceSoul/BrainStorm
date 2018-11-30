@@ -345,7 +345,7 @@ void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
     BrainStormNet *nn = (BrainStormNet *)neural;
     unsigned int len = (unsigned int)strlen(str);
     if (len >= MAX_LONG_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying string in constructor");
-    memcpy(nn->dataPath, str, len*sizeof(char));
+    memcpy(nn->data_path, str, len*sizeof(char));
 }
 
 void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {

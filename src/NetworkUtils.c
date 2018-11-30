@@ -376,10 +376,10 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
             if (!found) fatal(DEFAULT_CONSOLE_WRITER, "key for parameter not recognized:", field->key);
             
             if (strcmp(field->key, "data_name") == 0) {
-                strcpy(nn->dataName, field->value);
+                strcpy(nn->data_name, field->value);
                 
             } else if (strcmp(field->key, "data") == 0) {
-                strcpy(nn->dataPath, field->value);
+                strcpy(nn->data_path, field->value);
                 FOUND_DATA = 1;
                 
             } else if (strcmp(field->key, "topology") == 0) {

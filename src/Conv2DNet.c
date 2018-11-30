@@ -558,6 +558,12 @@ void conv2d_net_genesis(void * _Nonnull self) {
             idx++;
         }
     }
+    fprintf(stdout, "%s: kernel matrices dimension: \n", DEFAULT_CONSOLE_WRITER);
+    fprintf(stdout, "{\n");
+    for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
+        fprintf(stdout, "\t %d x %d\n", dict->shape[l][0][0], dict->shape[l][1][0]);
+    }
+    fprintf(stdout, "}\n");
     dict->flattening_length = nn->conv2d->num_conv2d_layers;
     nn->conv2d->kernel_matrices = (tensor*)nn->tensor(self, *dict);
     

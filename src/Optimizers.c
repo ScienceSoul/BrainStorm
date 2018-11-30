@@ -344,7 +344,7 @@ static void momentum_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
     }
     
     // -----------------------------------------------------------
-    // Update also the convolution matrices with the new weights
+    // Update also the kernel matrices with the new weights
     // -----------------------------------------------------------
     nn->flip_kernels(neural);
     nn->kernel_mat_update(neural);
@@ -500,7 +500,7 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
     }
     
     // -----------------------------------------------------------
-    // Update also the convolution matrices with the new weights
+    // Update also the kernel matrices with the new weights
     // -----------------------------------------------------------
     nn->flip_kernels(neural);
     nn->kernel_mat_update(neural);
@@ -658,7 +658,7 @@ static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
     }
     
     // -----------------------------------------------------------
-    // Update also the convolution matrices with the new weights
+    // Update also the kernel matrices with the new weights
     // -----------------------------------------------------------
     nn->flip_kernels(neural);
     nn->kernel_mat_update(neural);
@@ -887,7 +887,7 @@ static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch
     }
     
     // -----------------------------------------------------------
-    // Update also the convolution matrices with the new weights
+    // Update also the kernel matrices with the new weights
     // -----------------------------------------------------------
     nn->flip_kernels(neural);
     nn->kernel_mat_update(neural);

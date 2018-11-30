@@ -1,13 +1,13 @@
 //
 //  main.c
-//  mnist
+//  fashion-mnist
 //
-//  Created by Hakime Seddik on 05/07/2018.
+//  Created by Hakime Seddik on 2018/11/29.
 //  Copyright © 2018 Hakime Seddik. All rights reserved.
 //
 
 #include "BrainStorm.h"
-#include "LoadMNISTDataSet.h"
+#include "LoadFashion-MNISTDataSet.h"
 
 void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     
@@ -68,7 +68,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
 void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     
     unsigned int n_epochs = 40;
-    unsigned int batch_size = 512; //50;
+    unsigned int batch_size = 50;
     
     tensor *t1 = (tensor *)neural->data->training->set;
     
@@ -123,32 +123,6 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     free(dict);
 }
 
-void file_input_net(void) {
-    
-    // Instantiate a neural network and load its parameters
-    BrainStormNet *neural = new_dense_net();
-    if (neural->dense->load_params_from_input_file((void *)neural, "./parameters_mnist.dat") != 0 ) {
-        fatal(DEFAULT_CONSOLE_WRITER, "failure in reading input parameters.");
-    }
-    
-    // Create the data structures of the neural network
-    neural->genesis((void *)neural);
-    
-    // Allocate and initialize the network data containers
-    neural->data->init((void *)neural);
-    
-    // Provide the data readers to the network
-    neural->data->training->reader = load_mnist;
-    neural->data->test->reader = load_mnist_test;
-    
-    // Load training/test data
-    neural->data->load((void *)neural, neural->data_name, neural->data_path, "/Users/hakimeseddik/Documents/ESPRIT/MNIST/t10k-images-idx3-ubyte", true, true);
-    
-    neural->train_loop((void *)neural);
-    neural->finale((void *)neural);
-    free(neural);
-}
-
 void api_fully_connected_net(void) {
     
     // Instantiate a fully-connected neural network
@@ -173,7 +147,7 @@ void api_fully_connected_net(void) {
                                      (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=xavier_initializer},
                                      &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l2_regularizer});
     
-    neural->constructor->training_data((void *)neural, "../Data/mnist/train-images-idx3-ubyte");
+    neural->constructor->training_data((void *)neural, "../Data/fashion/train-images-idx3-ubyte");
     neural->constructor->split((void *)neural, 55000, 5000);
     
     int vector[10] = {0,1,2,3,4,5,6,7,8,9};
@@ -189,11 +163,11 @@ void api_fully_connected_net(void) {
     neural->data->init((void *)neural);
     
     // Provide the data readers to the network
-    neural->data->training->reader = load_mnist;
-    neural->data->test->reader = load_mnist_test;
+    neural->data->training->reader = load_fashion_mnist;
+    neural->data->test->reader = load_fashion_mnist_test;
     
     // Load training/test data
-    neural->data->load((void *)neural, "mnist", neural->data_path, "../Data/mnist/t10k-images-idx3-ubyte", true, true);
+    neural->data->load((void *)neural, "fashion-mnist", neural->data_path, "../Data/fashion/t10k-images-idx3-ubyte", true, true);
     
     // Train the network
     train_dense(neural, optimizer);
@@ -214,20 +188,20 @@ void api_convolutional_net(void) {
     unsigned int channels = 1;
     neural->constructor->feed((void *)neural, (layer_dict){.filters=1, .dimension=2,
         .shape=28, .channels=&channels});
-
+    
     neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=20, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
     neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=20, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
-//-----
+    //-----
     //neural->constructor->layer_conv2d((void *)neural, (layer_dict){.filters=40, .kernel_size=5, .stride=1, .padding=VALID, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
     //neural->constructor->layer_pool((void *)neural, (layer_dict){.filters=40, .kernel_size=2, .stride=2, .padding=VALID, .pooling_op=AVERAGE_POOLING});
-//----
+    //----
     neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=100, .activation=RELU, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
     neural->constructor->layer_dense((void *)neural, (layer_dict){.num_neurons=10, .activation=SOFTMAX, .kernel_initializer=xavier_initializer}, &(regularizer_dict){.regularization_factor=regularization_factor, .regularizer_func=neural->l0_regularizer});
     
-    neural->constructor->training_data((void *)neural,  "../Data/mnist/train-images-idx3-ubyte");
+    neural->constructor->training_data((void *)neural,  "../Data/fashion/train-images-idx3-ubyte");
     neural->constructor->split((void *)neural, 55000, 5000);
     
     int vector[10] = {0,1,2,3,4,5,6,7,8,9};
@@ -245,10 +219,10 @@ void api_convolutional_net(void) {
     
     neural->data->init((void *)neural);
     
-    neural->data->training->reader = load_mnist;
-    neural->data->test->reader = load_mnist_test;
+    neural->data->training->reader = load_fashion_mnist;
+    neural->data->test->reader = load_fashion_mnist_test;
     
-    neural->data->load((void *)neural, "minsit", neural->data_path,  "../Data/mnist/t10k-images-idx3-ubyte", true, true);
+    neural->data->load((void *)neural, "fashion-minsit", neural->data_path,  "../Data/fashion/t10k-images-idx3-ubyte", true, true);
     
     //Train the network
     train_conv2d(neural, optimizer);
@@ -271,4 +245,3 @@ int main(int argc, const char * argv[]) {
     
     return 0;
 }
-

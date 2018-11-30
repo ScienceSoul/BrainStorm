@@ -7,7 +7,7 @@
 //
 
 #include <stdio.h>
-#include "LoadMNISTDataSet.h"
+#include "LoadFashion-MNISTDataSet.h"
 #include "Utils.h"
 #include "Memory.h"
 
@@ -37,8 +37,8 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
         char *ptr = strstr(file, word);
         if (ptr != NULL) {
             if (!testData) {
-                fprintf(stdout, "%s: file path to MNIST training images file: %zu characters length.\n", DEFAULT_CONSOLE_WRITER, strlen(file));
-            } else fprintf(stdout, "%s: file path to MNIST test images file: %zu characters length.\n", DEFAULT_CONSOLE_WRITER, strlen(file));
+                fprintf(stdout, "%s: file path to FASHION-MNIST training images file: %zu characters length.\n", DEFAULT_CONSOLE_WRITER, strlen(file));
+            } else fprintf(stdout, "%s: file path to FASHION-MNIST test images file: %zu characters length.\n", DEFAULT_CONSOLE_WRITER, strlen(file));
             size_t firstCopyLength = strlen(file) - strlen(ptr);
             memcpy(labelFile, file, firstCopyLength*sizeof(char));
             if (!testData) {
@@ -46,8 +46,8 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
             } else strcat(labelFile, "t10k-labels-idx1-ubyte");
         } else {
             if (!testData) {
-                fatal(DEFAULT_CONSOLE_WRITER, "MNIST training set images file not valid.");
-            } else fatal(DEFAULT_CONSOLE_WRITER, "MNIST test set images file not valid.");
+                fatal(DEFAULT_CONSOLE_WRITER, "FASHION-MNIST training set images file not valid.");
+            } else fatal(DEFAULT_CONSOLE_WRITER, "FASHION-MNIST test set images file not valid.");
         }
         flabel = fopen(labelFile, "rb");
         if (!flabel) {
@@ -81,8 +81,8 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
     
     fprintf(stdout, "---------------------------------------------------------------------\n");
     if (!testData) {
-        fprintf(stdout, "Sample of the MNIST training data set.\n");
-    } else fprintf(stdout, "Sample of the MNIST test data set.\n");
+        fprintf(stdout, "Sample of the FASHION-MNIST training data set.\n");
+    } else fprintf(stdout, "Sample of the FASHION-MNIST test data set.\n");
     fprintf(stdout, "---------------------------------------------------------------------\n");
     
     // Return a design matrix of the data set
@@ -123,21 +123,21 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
     return dataSet;
 }
 
-float * _Nonnull * _Nonnull load_mnist(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels) {
+float * _Nonnull * _Nonnull load_fashion_mnist(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels) {
     
     float **dataSet = readBinaryFile(file, len1, len2, num_channels, false);
     if (dataSet == NULL) {
-        fatal(DEFAULT_CONSOLE_WRITER, "problem reading MNIST data set.");
+        fatal(DEFAULT_CONSOLE_WRITER, "problem reading FASHION-MNIST data set.");
     } else fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
     
     return dataSet;
 }
 
-float * _Nonnull * _Nonnull load_mnist_test(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels) {
+float * _Nonnull * _Nonnull load_fashion_mnist_test(const char * _Nonnull file, unsigned int * _Nonnull len1, unsigned int * _Nonnull len2, unsigned int * _Nonnull num_channels) {
     
     float **dataSet = readBinaryFile(file, len1, len2, num_channels, true);
     if (dataSet == NULL) {
-        fatal(DEFAULT_CONSOLE_WRITER, "problem reading the MNIST test data set ");
+        fatal(DEFAULT_CONSOLE_WRITER, "problem reading the FASHION-MNIST test data set ");
     } else fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
     
     return dataSet;
