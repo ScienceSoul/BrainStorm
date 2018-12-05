@@ -21,8 +21,8 @@ typedef struct Train {
     AdaGradOptimizer * _Nullable ada_grad;
     RMSPropOptimizer * _Nullable rms_prop;
     AdamOptimizer * _Nullable adam;
-    void (* _Nullable next_batch)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize);
-    int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize);
+    void (* _Nullable next_batch)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder);
+    int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize,  int * _Nullable remainder);
     void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
 } Train;
 

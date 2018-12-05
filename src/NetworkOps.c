@@ -10,12 +10,17 @@
     #include <Accelerate/Accelerate.h>
 #endif
 
+#ifdef __linux__
+    #include <bsd/stdlib.h>
+#endif
+
 #include "NeuralNetwork.h"
 #include "NetworkOps.h"
 #include "DenseNetOps.h"
 #include "Conv2DNetOps.h"
 #include "Memory.h"
 
+static int remainder_offsets[3];
 typedef void (*eval_net_type)(void * _Nonnull neural,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out);
 
 void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
@@ -40,7 +45,7 @@ void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
 #endif
 }
 
-void nextBatch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize) {
+void nextBatch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder) {
     
     static bool firstTime = true;
     static int delta1 = 0;
@@ -74,13 +79,45 @@ void nextBatch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Non
             num_inputs = t1->shape[0][0][0];
         }
         
+        memset(remainder_offsets, 0, sizeof(remainder_offsets));
         firstTime = false;
     }
     
-    memcpy(features->val, t1->val+delta1, (batchSize*dim1)*sizeof(float));
-    memcpy(labels->val, t2->val+delta2, (batchSize*dim2)*sizeof(float));
+    if (do_remainder) {
+        
+        int copy_1 = num_inputs - remainder_offsets[0];
+        int copy_2 = batchSize - copy_1;
+        
+        fprintf(stdout, "%s: remaining %d and will sample %d examples for next mini-batch.\n", DEFAULT_CONSOLE_WRITER, copy_1, copy_2);
+        
+        // Get the remaining inputs
+        memcpy(features->val, t1->val+remainder_offsets[1], (copy_1*dim1)*sizeof(float));
+        memcpy(labels->val, t2->val+remainder_offsets[2], (copy_1*dim2)*sizeof(float));
+        
+        // For the rest of the mini batch, sample randomly from the training set
+        for (int i=0; i<copy_2; i++) {
+            int idx = arc4random_uniform(num_inputs);
+            memcpy(features->val+((copy_1*dim1)+(i*dim1)), t1->val+idx, dim1*sizeof(float));
+            memcpy(labels->val+((copy_1*dim2)+(i*dim2)), t2->val+idx, dim2*sizeof(float));
+        }
+        
+        memset(remainder_offsets, 0, sizeof(remainder_offsets));
+        return;
+        
+    } else {
+        memcpy(features->val, t1->val+delta1, (batchSize*dim1)*sizeof(float));
+        memcpy(labels->val, t2->val+delta2, (batchSize*dim2)*sizeof(float));
+    }
     
     if (count == (int)ceil(num_inputs/batchSize)) {
+        
+        if (remainder != NULL) {
+            if (*remainder != 0) {
+                remainder_offsets[1] = delta1 + (batchSize * dim1);
+                remainder_offsets[2] = delta2 + (batchSize * dim2);
+            }
+        }
+        
         delta1 = 0;
         delta2 = 0;
         count = 1;
@@ -89,9 +126,11 @@ void nextBatch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Non
         delta2 = delta2 + (batchSize * dim2);
         count++;
     }
+    if (!do_remainder && remainder != NULL) remainder_offsets[0] = remainder_offsets[0] + batchSize;
 }
 
-int batchRange(void * _Nonnull neural, unsigned int batchSize) {
+
+int batchRange(void * _Nonnull neural, unsigned int batchSize, int * _Nullable remainder) {
     
     static bool firstTime = true;
     
@@ -110,6 +149,7 @@ int batchRange(void * _Nonnull neural, unsigned int batchSize) {
         firstTime = false;
     }
     
+    if (remainder != NULL) *remainder = num_inputs % batchSize;
     return (int)ceil((int)num_inputs/batchSize);
 }
 
@@ -577,8 +617,8 @@ void trainLoop(void * _Nonnull  neural) {
         int num_inputs = nn->dense->parameters->topology[0];
         shuffle(nn->data->training->set, nn->data->training->labels, nn->dense->parameters->numberOfClassifications, &num_inputs);
         
-        for (int l=1; l<=nn->dense->train->batch_range((void *)neural,  nn->dense->parameters->miniBatchSize); l++) {
-            nn->dense->train->next_batch((void *)neural, features, labels, nn->dense->parameters->miniBatchSize);
+        for (int l=1; l<=nn->dense->train->batch_range((void *)neural,  nn->dense->parameters->miniBatchSize, NULL); l++) {
+            nn->dense->train->next_batch((void *)neural, features, labels, nn->dense->parameters->miniBatchSize, NULL, false);
             
             if (nn->dense->train->gradient_descent != NULL) {
                 nn->dense->train->gradient_descent->minimize((void *)nn, features, labels, nn->dense->parameters->miniBatchSize);

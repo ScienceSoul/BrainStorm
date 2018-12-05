@@ -34,8 +34,9 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         
         fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
         double train_time = 0.0;
-        for (int l=1; l<=neural->dense->train->batch_range((void *)neural, batch_size); l++) {
-            neural->dense->train->next_batch((void *)neural, features, labels, batch_size);
+        int remainder = 0;
+        for (int l=1; l<=neural->conv2d->train->batch_range((void *)neural, batch_size, &remainder); l++) {
+            neural->conv2d->train->next_batch((void *)neural, features, labels, batch_size, &remainder, false);
             double rt = realtime();
             optimizer->minimize((void *)neural, features, labels,  batch_size);
             rt = realtime() - rt;
@@ -43,7 +44,14 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
             neural->dense->train->progression((void *)neural, (progress_dict){.batch_size=batch_size,
                 .percent=5});
         }
-        fprintf(stdout, "%s: Training time for epoch {%d} : %f (s)\n", DEFAULT_CONSOLE_WRITER, k, train_time);
+        if (remainder != 0) {
+            neural->conv2d->train->next_batch((void *)neural, features, labels, batch_size, NULL, true);
+            double rt = realtime();
+            optimizer->minimize((void *)neural, features, labels, batch_size);
+            rt = realtime() - rt;
+            train_time += rt;
+        }
+        fprintf(stdout, "Fashion-MNIST: training time for epoch {%d} : %f (s).\n", k, train_time);
         
         
         neural->eval_prediction((void *)neural, "validation", out_validation, false);
@@ -52,7 +60,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         neural->eval_prediction((void *)neural, "test", out_test, false);
         float acc_test = neural->math_ops(out_test, t1->shape[0][0][0]/neural->dense->parameters->topology[0], "reduce sum");
         
-        fprintf(stdout, "{%d/%d}: Val accuracy: %d / Test accuracy: %d.\n", k, n_epochs, (int)acc_valid, (int)acc_test);
+        fprintf(stdout, "{%d/%d}: val accuracy: %d / test accuracy: %d.\n", k, n_epochs, (int)acc_valid, (int)acc_test);
         fprintf(stdout, "\n");
     }
     
@@ -94,15 +102,23 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         
         fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
         double train_time = 0.0;
-        for (int l=1; l<=neural->conv2d->train->batch_range((void *)neural, batch_size); l++) {
-            neural->conv2d->train->next_batch((void *)neural, features, labels, batch_size);
+        int remainder = 0;
+        for (int l=1; l<=neural->conv2d->train->batch_range((void *)neural, batch_size, &remainder); l++) {
+            neural->conv2d->train->next_batch((void *)neural, features, labels, batch_size, &remainder, false);
             double rt = realtime();
             optimizer->minimize((void *)neural, features, labels, batch_size);
             rt = realtime() - rt;
             train_time += rt;
             neural->conv2d->train->progression((void *)neural, (progress_dict){.batch_size=batch_size, .percent=5});
         }
-        fprintf(stdout, "%s: Training time for epoch {%d} : %f (s)\n", DEFAULT_CONSOLE_WRITER, k, train_time);
+        if (remainder != 0) {
+            neural->conv2d->train->next_batch((void *)neural, features, labels, batch_size, NULL, true);
+            double rt = realtime();
+            optimizer->minimize((void *)neural, features, labels, batch_size);
+            rt = realtime() - rt;
+            train_time += rt;
+        }
+        fprintf(stdout, "Fashion-MNIST: training time for epoch {%d} : %f (s).\n", k, train_time);
         
         neural->eval_prediction((void *)neural, "validation", out_validation, false);
         float acc_valid = neural->math_ops(out_validation, t3->shape[0][0][0], "reduce sum");
@@ -110,7 +126,7 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         neural->eval_prediction((void *)neural, "test", out_test, false);
         float acc_test = neural->math_ops(out_test, t2->shape[0][0][0], "reduce sum");
         
-        fprintf(stdout, "{%d/%d}: Val accuracy: %d / Test accuracy: %d.\n", k, n_epochs, (int)acc_valid, (int)acc_test);
+        fprintf(stdout, "{%d/%d}: val accuracy: %d / test accuracy: %d.\n", k, n_epochs, (int)acc_valid, (int)acc_test);
         fprintf(stdout, "\n");
     }
     
