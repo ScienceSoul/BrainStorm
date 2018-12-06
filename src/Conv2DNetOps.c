@@ -681,8 +681,8 @@ static void backpropag__after_fully_connected(void * _Nonnull neural, unsigned i
     extern tensor * propag_buffer;
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    int length = nn->conv2d->parameters->topology[op][1]*nn->conv2d->parameters->topology[op][2] *
-    nn->conv2d->parameters->topology[op][3];
+    int length = nn->conv2d->parameters->topology[op][1] * nn->conv2d->parameters->topology[op][2] *
+                 nn->conv2d->parameters->topology[op][3];
     
     float buffer[length];
     memset(buffer, 0.0f, sizeof(buffer));
@@ -700,48 +700,6 @@ static void backpropag__after_fully_connected(void * _Nonnull neural, unsigned i
 static void backpropag_pooling_after_convolution(void * _Nonnull neural, unsigned int op,  int * _Nullable advance2) {
     
     transpose_convolution_op(neural, op, advance2);
-    
-    //    extern tensor * propag_buffer;
-    //    BrainStormNet *nn = (BrainStormNet *)neural;
-    //
-    //    unsigned int p = nn->conv2d->parameters->topology[op][1];
-    //    unsigned int q = nn->conv2d->parameters->topology[op+1][1];
-    //
-    //    unsigned int fh = nn->conv2d->parameters->topology[op][2];
-    //    unsigned int fw = nn->conv2d->parameters->topology[op][3];
-    //
-    //    unsigned int offset_m = 0;
-    //    for (int l=0; l<=*advance2; l++) {
-    //        int step = 1;
-    //        for (int i=0; i<nn->conv2d->conv_matrices->rank; i++) {
-    //            step = step * nn->conv2d->conv_matrices->shape[l][i][0];
-    //        }
-    //        offset_m = offset_m + step;
-    //    }
-    //
-    //    int rows_m = nn->conv2d->conv_matrices->shape[*advance2+1][2][0];
-    //    int cols_m = nn->conv2d->conv_matrices->shape[*advance2+1][3][0];
-    //
-    //    int rows_d = nn->conv2d->parameters->topology[op+1][2];
-    //    int cols_d = nn->conv2d->parameters->topology[op+1][3];
-    //
-    //    float vector[fh*fw];
-    //
-    //    int stride1_m = 0;
-    //    int stride_s = 0;
-    //    for (int k=0; k<p; k++) { // Loop accross maps in pooling layer
-    //        int stride_d = 0;
-    //        int stride2_m = 0;
-    //        memset(vector, 0.0f, sizeof(vector));
-    //        for (int l=0; l<q; l++) {
-    //            cblas_sgemv(CblasRowMajor, CblasTrans, rows_m, cols_m, 1.0f, nn->conv2d->conv_matrices->val+offset_m+stride1_m+stride2_m, cols_m, nn->conv2d->deltas_buffer->val+stride_d, 1, 1.0, vector, 1);
-    //            stride2_m = stride2_m + (rows_m * cols_m);
-    //            stride_d = stride_d + (rows_d * cols_d);
-    //        }
-    //        memcpy(propag_buffer->val+stride_s, vector, (fh*fw)*sizeof(float));
-    //        stride1_m = stride1_m + (nn->conv2d->conv_matrices->shape[*advance2+1][1][0] * rows_m * cols_m);
-    //        stride_s = stride_s + (fh * fw);
-    //    }
 }
 
 // ------------------------------------------------------------------------------
@@ -804,45 +762,6 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         
         transpose_convolution_op(neural, op, advance2);
         
-//        unsigned int p = nn->conv2d->parameters->topology[op][1];
-//        unsigned int q = nn->conv2d->parameters->topology[op+1][1];
-//
-//        unsigned int fh = nn->conv2d->parameters->topology[op][2];
-//        unsigned int fw = nn->conv2d->parameters->topology[op][3];
-//
-//        unsigned int offset_m = 0;
-//        for (int l=0; l<=*advance2; l++) {
-//            int step = 1;
-//            for (int i=0; i<nn->conv2d->conv_matrices->rank; i++) {
-//                step = step * nn->conv2d->conv_matrices->shape[l][i][0];
-//            }
-//            offset_m = offset_m + step;
-//        }
-//
-//        int rows_m = nn->conv2d->conv_matrices->shape[*advance2+1][2][0];
-//        int cols_m = nn->conv2d->conv_matrices->shape[*advance2+1][3][0];
-//
-//        int rows_d = nn->conv2d->parameters->topology[op+1][2];
-//        int cols_d = nn->conv2d->parameters->topology[op+1][3];
-//
-//        float vector[fh*fw];
-//
-//        int stride1_m = 0;
-//        int stride_s = 0;
-//        for (int k=0; k<p; k++) { // Loop accross maps in pooling layer
-//            int stride_d = 0;
-//            int stride2_m = 0;
-//            memset(vector, 0.0f, sizeof(vector));
-//            for (int l=0; l<q; l++) {
-//                cblas_sgemv(CblasRowMajor, CblasTrans, rows_m, cols_m, 1.0f, nn->conv2d->conv_matrices->val+offset_m+stride1_m+stride2_m, cols_m, nn->conv2d->deltas_buffer->val+stride_d, 1, 1.0, vector, 1);
-//                stride2_m = stride2_m + (rows_m * cols_m);
-//                stride_d = stride_d + (rows_d * cols_d);
-//            }
-//            memcpy(propag_buffer->val+stride_s, vector, (fh*fw)*sizeof(float));
-//            stride1_m = stride1_m + (nn->conv2d->conv_matrices->shape[*advance2+1][1][0] * rows_m * cols_m);
-//            stride_s = stride_s + (fh * fw);
-//        }
-//
         int stride = 0;
         for (int k=0; k<p; k++) {
             for (int i=0; i<fh*fw; i++) {

@@ -528,22 +528,6 @@ void conv2d_net_genesis(void * _Nonnull self) {
     dict->init_weights = false;
     nn->conv2d->flipped_weights = (tensor *)nn->tensor(self, *dict);
     
-
-//    dict->rank = 4;
-//    idx = 0;
-//    for (int l=0; l<nn->network_num_layers; l++) {
-//        if (nn->conv2d->parameters->topology[l][0] == CONVOLUTION) {
-//            dict->shape[idx][0][0] = nn->conv2d->parameters->topology[l-1][1];
-//            dict->shape[idx][1][0] = nn->conv2d->parameters->topology[l][1];
-//            dict->shape[idx][2][0] = (nn->conv2d->parameters->topology[l][2]*nn->conv2d->parameters->topology[l][3]);
-//            dict->shape[idx][3][0] = (nn->conv2d->parameters->topology[l-1][2]*nn->conv2d->parameters->topology[l-1][3]);
-//            idx++;
-//        }
-//    }
-//    dict->flattening_length = nn->conv2d->num_conv2d_layers;
-//    dict->init_neural_params = false;
-//    nn->conv2d->conv_matrices = (tensor *)nn->tensor(self, *dict);
-    
     // -------------------------------------------------------------------------------------------------
     // ------- The convolution operation is implemented as matrix-matrix product.
     // ------- The following allocates the kernel matrices used during the product
@@ -784,11 +768,6 @@ void conv2d_net_finale(void * _Nonnull self) {
         free(nn->conv2d->flipped_weights->val);
         free(nn->conv2d->flipped_weights);
     }
-    
-//    if (nn->conv2d->conv_matrices != NULL) {
-//        free(nn->conv2d->conv_matrices->val);
-//    }
-//    free(nn->conv2d->conv_matrices);
     
     if (nn->conv2d->kernel_matrices != NULL) {
         free(nn->conv2d->kernel_matrices->val);
