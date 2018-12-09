@@ -944,6 +944,7 @@ void gradientDescentOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_f
     
     optimizer optimizer = GRADIENT_DESCENT;
     if (firstTime) {
+        fprintf(stdout, "%s: training with Gradient Descent optimization...\n", DEFAULT_CONSOLE_WRITER);
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
@@ -975,6 +976,7 @@ void momentumOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features
     
     optimizer optimizer = MOMENTUM;
     if (firstTime) {
+        fprintf(stdout, "%s: training with Momentum optimization...\n", DEFAULT_CONSOLE_WRITER);
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
@@ -1006,6 +1008,7 @@ void adaGradOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features,
     
     optimizer optimizer = ADAGRAD;
     if (firstTime) {
+        fprintf(stdout, "%s: training with AdaGrad optimization...\n", DEFAULT_CONSOLE_WRITER);
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
@@ -1037,6 +1040,7 @@ void rmsPropOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features,
     
     optimizer optimizer = RMSPROP;
     if (firstTime) {
+        fprintf(stdout, "%s: training with RMSProp optimization...\n", DEFAULT_CONSOLE_WRITER);
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
@@ -1068,6 +1072,7 @@ void adamOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, te
     
     optimizer optimizer = ADAM;
     if (firstTime) {
+        fprintf(stdout, "%s: training with Adam optimization...\n", DEFAULT_CONSOLE_WRITER);
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {

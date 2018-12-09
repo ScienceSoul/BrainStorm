@@ -131,7 +131,11 @@ static void genesis(void * _Nonnull self) {
     }
     
     fprintf(stdout, "%s: create the network internal structure...\n", DEFAULT_CONSOLE_WRITER);
-    fprintf(stdout, "%s: full connected network with %d layers.\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
+    if (nn->is_dense_network) {
+        fprintf(stdout, "%s: fully connected network with %d layers\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
+    } else if (nn->is_conv2d_network) {
+        fprintf(stdout, "%s: convolutional network with %d layers\n", DEFAULT_CONSOLE_WRITER, nn->network_num_layers);
+    }
     
     nn->example_idx = 0;
     

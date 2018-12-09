@@ -204,5 +204,5 @@ void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const cha
             nn->data->test->labels = set_labels(self, raw,  nn->conv2d->parameters->split[0],  nn->conv2d->parameters->split[1], NULL, 0, NULL, nn->conv2d->parameters->topology, num_channels, nn->network_num_layers, false);
         }
     }
-    fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
+    fprintf(stdout, "%s: load done.\n", DEFAULT_CONSOLE_WRITER);
 }

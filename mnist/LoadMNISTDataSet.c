@@ -37,8 +37,8 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
         char *ptr = strstr(file, word);
         if (ptr != NULL) {
             if (!testData) {
-                fprintf(stdout, "%s: file path to MNIST training images file: %zu characters length.\n", DEFAULT_CONSOLE_WRITER, strlen(file));
-            } else fprintf(stdout, "%s: file path to MNIST test images file: %zu characters length.\n", DEFAULT_CONSOLE_WRITER, strlen(file));
+                fprintf(stdout, "MNIST: file path to MNIST training images file: %zu characters length.\n", strlen(file));
+            } else fprintf(stdout, "MNIST: file path to MNIST test images file: %zu characters length.\n", strlen(file));
             size_t firstCopyLength = strlen(file) - strlen(ptr);
             memcpy(labelFile, file, firstCopyLength*sizeof(char));
             if (!testData) {
@@ -46,28 +46,28 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
             } else strcat(labelFile, "t10k-labels-idx1-ubyte");
         } else {
             if (!testData) {
-                fatal(DEFAULT_CONSOLE_WRITER, "MNIST training set images file not valid.");
-            } else fatal(DEFAULT_CONSOLE_WRITER, "MNIST test set images file not valid.");
+                fatal("MNIST", "MNIST training set images file not valid.");
+            } else fatal("MNIST", "MNIST test set images file not valid.");
         }
         flabel = fopen(labelFile, "rb");
         if (!flabel) {
             if (!testData) {
-                fatal(DEFAULT_CONSOLE_WRITER, "Can't find the training set labels file \'train-labels-idx1-ubyte\'.");
-            } else fatal(DEFAULT_CONSOLE_WRITER, "Can't find the test set labels file \'t10k-labels-idx1-ubyte\'.");
+                fatal("MNIST", "Can't find the training set labels file \'train-labels-idx1-ubyte\'.");
+            } else fatal("MNIST", "Can't find the test set labels file \'t10k-labels-idx1-ubyte\'.");
         }
         if (!testData) {
-            fprintf(stdout, "%s: got the training set labels.\n", DEFAULT_CONSOLE_WRITER);
-        } else fprintf(stdout, "%s: got the test set labels.\n", DEFAULT_CONSOLE_WRITER);
+            fprintf(stdout, "MNIST: got the training set labels.\n");
+        } else fprintf(stdout, "MNIST: got the test set labels.\n");
         free(labelFile);
     }
     
     unsigned int magic, num, row, col;
     // Check if magic numbers are valid
     fread(&magic, 4, 1, fimage);
-    if (magic != 0x03080000) fatal(DEFAULT_CONSOLE_WRITER, "magic number in traning/test set images file not correct.");
+    if (magic != 0x03080000) fatal("MNIST", "magic number in traning/test set images file not correct.");
     
     fread(&magic, 4, 1, flabel);
-    if (magic != 0x01080000) fatal(DEFAULT_CONSOLE_WRITER, "magic number in traning/test set labels file not correct.");
+    if (magic != 0x01080000) fatal("MNIST", "magic number in traning/test set labels file not correct.");
     
     fread(&num, 4, 1, flabel); // Just advance in this file
     fread(&num, 4, 1, fimage); endianSwap(&num);
@@ -75,9 +75,9 @@ float * _Nullable * _Nullable readBinaryFile(const char * _Nonnull file, unsigne
     fread(&col, 4, 1, fimage); endianSwap(&col);
     
     if (!testData) {
-        fprintf(stdout,"%s: number of examples in MNIST training set: %d\n", DEFAULT_CONSOLE_WRITER, num);
-        fprintf(stdout,"%s: number of features in each MNIST example: %d x %d\n", DEFAULT_CONSOLE_WRITER, col, row);
-    } else fprintf(stdout,"%s: number of examples in MNIST test set: %d\n", DEFAULT_CONSOLE_WRITER, num);
+        fprintf(stdout,"MNIST: number of examples in MNIST training set: %d\n", num);
+        fprintf(stdout,"MNIST: number of features in each MNIST example: %d x %d\n", col, row);
+    } else fprintf(stdout,"MNIST: number of examples in MNIST test set: %d\n", num);
     
     fprintf(stdout, "---------------------------------------------------------------------\n");
     if (!testData) {
@@ -127,8 +127,8 @@ float * _Nonnull * _Nonnull load_mnist(const char * _Nonnull file, unsigned int 
     
     float **dataSet = readBinaryFile(file, len1, len2, num_channels, false);
     if (dataSet == NULL) {
-        fatal(DEFAULT_CONSOLE_WRITER, "problem reading MNIST data set.");
-    } else fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
+        fatal("MNIST", "problem reading MNIST data set.");
+    } else fprintf(stdout, "MNIST: done.\n");
     
     return dataSet;
 }
@@ -137,8 +137,8 @@ float * _Nonnull * _Nonnull load_mnist_test(const char * _Nonnull file, unsigned
     
     float **dataSet = readBinaryFile(file, len1, len2, num_channels, true);
     if (dataSet == NULL) {
-        fatal(DEFAULT_CONSOLE_WRITER, "problem reading the MNIST test data set ");
-    } else fprintf(stdout, "%s: done.\n", DEFAULT_CONSOLE_WRITER);
+        fatal("MNIST", "problem reading the MNIST test data set ");
+    } else fprintf(stdout, "MNIST: done.\n");
     
     return dataSet;
 }

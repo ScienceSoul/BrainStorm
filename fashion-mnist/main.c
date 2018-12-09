@@ -32,7 +32,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
         int num_inputs = neural->dense->parameters->topology[0];
         shuffle(neural->data->training->set, neural->data->training->labels, neural->dense->parameters->numberOfClassifications, &num_inputs);
         
-        fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
+        fprintf(stdout, "Fashion-MNIST: Epoch {%d/%d}:\n", k, n_epochs);
         double train_time = 0.0;
         int remainder = 0;
         for (int l=1; l<=neural->conv2d->train->batch_range((void *)neural, batch_size, &remainder); l++) {
@@ -100,7 +100,7 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     for (int k=1; k<=n_epochs; k++) {
         shuffle(neural->data->training->set, neural->data->training->labels, neural->conv2d->parameters->numberOfClassifications, NULL);
         
-        fprintf(stdout, "%s: Epoch {%d/%d}:\n", DEFAULT_CONSOLE_WRITER, k, n_epochs);
+        fprintf(stdout, "Fashion-MNIST: Epoch {%d/%d}:\n", k, n_epochs);
         double train_time = 0.0;
         int remainder = 0;
         for (int l=1; l<=neural->conv2d->train->batch_range((void *)neural, batch_size, &remainder); l++) {
