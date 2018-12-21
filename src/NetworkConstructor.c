@@ -19,23 +19,27 @@ static void set_activation_function(activation_functions activationFunctionsRef[
     if (layer_dict.activation == SIGMOID) {
         activationFunctionsRef[idx] = SIGMOID;
         activationFunctions[idx] = sigmoid;
-        activationDerivatives[idx] = sigmoidPrime;
+        activationDerivatives[idx] = sigmoid_prime;
     } else if (layer_dict.activation == RELU) {
         activationFunctionsRef[idx] = RELU;
         activationFunctions[idx] = relu;
-        activationDerivatives[idx] = reluPrime;
+        activationDerivatives[idx] = relu_prime;
     } else if (layer_dict.activation == LEAKY_RELU) {
         activationFunctionsRef[idx] = LEAKY_RELU;
         activationFunctions[idx] = leakyrelu;
-        activationDerivatives[idx] = leakyreluPrime;
+        activationDerivatives[idx] = leakyrelu_prime;
     } else if (layer_dict.activation == ELU) {
         activationFunctionsRef[idx] = ELU;
         activationFunctions[idx] = elu;
-        activationDerivatives[idx] = eluPrime;
+        activationDerivatives[idx] = elu_prime;
     } else if (layer_dict.activation == TANH) {
         activationFunctionsRef[idx] = TANH;
         activationFunctions[idx] = tan_h;
-        activationDerivatives[idx] = tanhPrime;
+        activationDerivatives[idx] = tanh_prime;
+    } else if (layer_dict.activation == SOFTPLUS) {
+        activationFunctionsRef[idx] = SOFTPLUS;
+        activationFunctions[idx] = softplus;
+        activationDerivatives[idx] = softplus_prime;
     } else if (layer_dict.activation == SOFTMAX) {
         activationFunctionsRef[idx] = SOFTMAX;
         activationFunctions[idx] = softmax;
@@ -47,7 +51,7 @@ static void set_activation_function(activation_functions activationFunctionsRef[
         fprintf(stdout, "%s: activation function not given, default to sigmoid.\n", DEFAULT_CONSOLE_WRITER);
         activationFunctionsRef[idx] = SIGMOID;
         activationFunctions[idx] = sigmoid;
-        activationDerivatives[idx] = sigmoidPrime;
+        activationDerivatives[idx] = sigmoid_prime;
     }
 }
 

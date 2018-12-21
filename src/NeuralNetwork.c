@@ -120,7 +120,7 @@ static void genesis(void * _Nonnull self) {
         if (nn->num_activation_functions == 0) {
             for (int i=0; i<nn->network_num_layers-1; i++) {
                 nn->dense->activationFunctions[i] = sigmoid;
-                nn->dense->activationDerivatives[i] = sigmoidPrime;
+                nn->dense->activationDerivatives[i] = sigmoid_prime;
             }
         }
         

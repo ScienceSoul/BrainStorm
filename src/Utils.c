@@ -553,7 +553,7 @@ float sigmoid(float z, float * _Nullable vec, unsigned int * _Nullable n) {
 }
 
 // Derivative of the sigmoid function
-float sigmoidPrime(float z) {
+float sigmoid_prime(float z) {
     return sigmoid(z,NULL,NULL) * (1.0f - sigmoid(z,NULL,NULL));
 }
 
@@ -563,40 +563,51 @@ float tan_h(float z, float * _Nullable vec, unsigned int * _Nullable n) {
 }
 
 // Derivative of the tanh function
-float tanhPrime(float z) {
-    return 1.0f - powf(tanhf(z), 2.0f);
+float tanh_prime(float z) {
+    float th = tanhf(z);
+    return 1.0f - (th * th);
 }
 
 // The ReLU function
 float relu(float z, float * _Nullable vec, unsigned int * _Nullable n) {
-    return fmaxf(z, 0.0f);
+    return fmaxf(0.0f,z);
 }
 
 // Derivative of the ReLU function
-float reluPrime(float z) {
-    return (z <= 0) ? 0.0f : 1.0f;
+float relu_prime(float z) {
+    return (z < 0) ? 0.0f : 1.0f;
 }
 
 // The LeakyReLU function
 float leakyrelu(float z, float * _Nullable vec, unsigned int * _Nullable n) {
-    return fmaxf(0.01f*z, z);
+    return (z < 0) ? 0.01f*z : z;
 }
 
 // Derivative of the LeakyReLU function
-float leakyreluPrime(float z) {
-    return (z <= 0) ? 0.01f : 1.0f;
+float leakyrelu_prime(float z) {
+    return (z < 0) ? 0.01f : 1.0f;
 }
 
 // The ELU (exponential linear unit) function
 float elu(float z, float * _Nullable vec, unsigned int * _Nullable n) {
     float alpha = 1.0f;
-    return (z >= 0) ? z : alpha * (expf(z) - 1.0f);
+    return (z < 0) ? alpha * (expf(z) - 1.0f) : z ;
 }
 
 // Derivative of the ELU function
-float eluPrime (float z) {
+float elu_prime (float z) {
     float alpha = 1.0f;
-    return (z >= 0) ? 1 : alpha * expf(z);
+    return (z < 0) ? alpha * expf(z) : 1;
+}
+
+// The softplus function
+float softplus(float z, float * _Nullable vec, unsigned int * _Nullable n) {
+    return logf(1.0f + expf(z));
+}
+
+// Derivative of the softplus function
+float softplus_prime(float z) {
+    return 1.0f / (1.0f + expf(-z));
 }
 
 // The softmax function

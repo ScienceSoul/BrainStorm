@@ -72,19 +72,22 @@ int __attribute__((overloadable)) argmax(int * _Nonnull a, unsigned int num_elem
 int __attribute__((overloadable)) argmax(float * _Nonnull a, unsigned int num_elements);
 
 float sigmoid(float z, float * _Nullable vec, unsigned int * _Nullable n);
-float sigmoidPrime(float z);
+float sigmoid_prime(float z);
 
 float tan_h(float z, float * _Nullable vec, unsigned int * _Nullable n);
-float tanhPrime(float z);
+float tanh_prime(float z);
 
 float relu(float z, float * _Nullable vec, unsigned int * _Nullable n);
-float reluPrime(float z);
+float relu_prime(float z);
 
 float leakyrelu(float z, float * _Nullable vec, unsigned int * _Nullable n);
-float leakyreluPrime(float z);
+float leakyrelu_prime(float z);
 
 float elu(float z, float * _Nullable vec, unsigned int * _Nullable n);
-float eluPrime(float z);
+float elu_prime(float z);
+
+float softplus(float z, float * _Nullable vec, unsigned int * _Nullable n);
+float softplus_prime(float z);
 
 float softmax(float z, float * _Nullable vec, unsigned int * _Nullable n);
 
