@@ -86,7 +86,7 @@ void format(char * _Nullable head, char * _Nullable message, int * _Nullable iVa
     fprintf(stderr, "\n");
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
 }
 
 // ---------------------------------------
