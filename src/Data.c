@@ -167,13 +167,13 @@ void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const cha
     if (nn->is_dense_network) {
         
         nn->data->training->set = set_data(self, raw, 0, nn->dense->parameters->split[0], nn->dense->parameters->topology, NULL, num_channels);
-        nn->data->training->labels = set_labels(self, raw, 0, nn->dense->parameters->split[0], nn->dense->parameters->classifications, nn->dense->parameters->numberOfClassifications, nn->dense->parameters->topology, NULL, num_channels, nn->network_num_layers, binarization);
+        nn->data->training->labels = set_labels(self, raw, 0, nn->dense->parameters->split[0], nn->dense->parameters->classifications, nn->dense->parameters->number_of_classifications, nn->dense->parameters->topology, NULL, num_channels, nn->network_num_layers, binarization);
         
         
     } else if (nn->is_conv2d_network) {
         
         nn->data->training->set = set_data(self, raw, 0, nn->conv2d->parameters->split[0], NULL, nn->conv2d->parameters->topology, num_channels);
-        nn->data->training->labels = set_labels(self, raw, 0, nn->conv2d->parameters->split[0], nn->conv2d->parameters->classifications, nn->conv2d->parameters->numberOfClassifications, NULL, nn->conv2d->parameters->topology, num_channels, nn->network_num_layers, binarization);
+        nn->data->training->labels = set_labels(self, raw, 0, nn->conv2d->parameters->split[0], nn->conv2d->parameters->classifications, nn->conv2d->parameters->number_of_classifications, NULL, nn->conv2d->parameters->topology, num_channels, nn->network_num_layers, binarization);
     }
     
     if (testData) {

@@ -358,10 +358,10 @@ void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
     if (n >= MAX_NUMBER_NETWORK_LAYERS) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying vector in constructor");
     if (nn->is_dense_network) {
         memcpy(nn->dense->parameters->classifications, vector, n*sizeof(int));
-        nn->dense->parameters->numberOfClassifications = n;
+        nn->dense->parameters->number_of_classifications = n;
     } else if (nn->is_conv2d_network) {
         memcpy(nn->conv2d->parameters->classifications, vector, n*sizeof(int));
-        nn->conv2d->parameters->numberOfClassifications = n;
+        nn->conv2d->parameters->number_of_classifications = n;
     }
 }
 
@@ -370,7 +370,7 @@ void set_scalars(void * _Nonnull neural, scalar_dict scalars) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     nn->dense->parameters->epochs = scalars.epochs;
-    nn->dense->parameters->miniBatchSize = scalars.mini_batch_size;
+    nn->dense->parameters->mini_batch_size = scalars.mini_batch_size;
 }
 
 void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {

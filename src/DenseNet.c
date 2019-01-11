@@ -58,10 +58,10 @@ void create_dense_net(void * _Nonnull self) {
     strcpy(nn->dense->parameters->supported_parameters[14], "adam_optimizer");
     
     nn->dense->parameters->epochs = 0;
-    nn->dense->parameters->miniBatchSize = 0;
+    nn->dense->parameters->mini_batch_size = 0;
     nn->dense->parameters->eta = 0.0f;
     nn->dense->parameters->lambda = 0.0f;
-    nn->dense->parameters->numberOfClassifications = 0;
+    nn->dense->parameters->number_of_classifications = 0;
     memset(nn->dense->parameters->topology, 0, sizeof(nn->dense->parameters->topology));
     memset(nn->dense->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
     memset(nn->dense->parameters->split, 0, sizeof(nn->dense->parameters->split));
@@ -79,7 +79,7 @@ void dense_net_genesis(void * _Nonnull self) {
     
     if (nn->dense->parameters->split[0] == 0 || nn->dense->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
     
-    if (nn->dense->parameters->numberOfClassifications == 0) fatal(DEFAULT_CONSOLE_WRITER, "classification not defined. Use a constructor or define it in a parameter file.");
+    if (nn->dense->parameters->number_of_classifications == 0) fatal(DEFAULT_CONSOLE_WRITER, "classification not defined. Use a constructor or define it in a parameter file.");
     
     tensor_dict *dict = init_tensor_dict();
     

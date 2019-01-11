@@ -948,12 +948,12 @@ void gradientDescentOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_f
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
-            if (nn->dense->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            if (nn->dense->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->dense->parameters->number_of_classifications;
             } else nn->label_step = 1;
         } else if (nn->is_conv2d_network) {
-            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            if ( nn->conv2d->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->conv2d->parameters->number_of_classifications;
             } else nn->label_step = 1;
         }
         
@@ -980,12 +980,12 @@ void momentumOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
-            if (nn->dense->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            if (nn->dense->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->dense->parameters->number_of_classifications;
             } else nn->label_step = 1;
         } else if (nn->is_conv2d_network) {
-            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            if ( nn->conv2d->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->conv2d->parameters->number_of_classifications;
             } else nn->label_step = 1;
         }
         
@@ -1012,12 +1012,12 @@ void adaGradOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features,
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
-            if (nn->dense->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            if (nn->dense->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->dense->parameters->number_of_classifications;
             } else nn->label_step = 1;
         } else if (nn->is_conv2d_network) {
-            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            if ( nn->conv2d->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->conv2d->parameters->number_of_classifications;
             } else nn->label_step = 1;
         }
         
@@ -1044,12 +1044,12 @@ void rmsPropOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features,
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
-            if (nn->dense->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            if (nn->dense->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->dense->parameters->number_of_classifications;
             } else nn->label_step = 1;
         } else if (nn->is_conv2d_network) {
-            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            if ( nn->conv2d->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->conv2d->parameters->number_of_classifications;
             } else nn->label_step = 1;
         }
         
@@ -1076,12 +1076,12 @@ void adamOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, te
         set_func_ptr(neural, optimizer);
         
         if (nn->is_dense_network) {
-            if (nn->dense->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->dense->parameters->numberOfClassifications;
+            if (nn->dense->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->dense->parameters->number_of_classifications;
             } else nn->label_step = 1;
         } else if (nn->is_conv2d_network) {
-            if ( nn->conv2d->parameters->numberOfClassifications > 0) {
-                nn->label_step = nn->conv2d->parameters->numberOfClassifications;
+            if ( nn->conv2d->parameters->number_of_classifications > 0) {
+                nn->label_step = nn->conv2d->parameters->number_of_classifications;
             } else nn->label_step = 1;
         }
         

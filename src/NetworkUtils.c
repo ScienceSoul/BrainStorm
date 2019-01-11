@@ -491,14 +491,14 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 
             } else if (strcmp(field->key, "classification") == 0) {
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->dense->parameters->classifications, &nn->dense->parameters->numberOfClassifications, &len);
+                parseArgument(field->value, field->key, nn->dense->parameters->classifications, &nn->dense->parameters->number_of_classifications, &len);
                 FOUND_CLASSIFICATION = 1;
                 
             } else if (strcmp(field->key, "epochs") == 0) {
                 nn->dense->parameters->epochs = atoi(field->value);
                 
             } else if (strcmp(field->key, "batch_size") == 0) {
-                nn->dense->parameters->miniBatchSize = atoi(field->value);
+                nn->dense->parameters->mini_batch_size = atoi(field->value);
                 
             } else if (strcmp(field->key, "learning_rate") == 0) {
                 nn->dense->parameters->eta = strtof(field->value, NULL);
