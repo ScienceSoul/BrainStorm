@@ -363,8 +363,8 @@ static void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int b
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)] =
-                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)]
+                nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated->val[offset+((i*n)+j)] =
+                nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated->val[offset+((i*n)+j)]
                 + ( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)]) );
             }
         }
@@ -372,7 +372,7 @@ static void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int b
             for (int j=0; j<n; j++) {
                 nn->dense->weights->val[offset+((i*n)+j)] =
                 nn->regularizer[l](neural, nn->dense->weights->val, nn->dense->parameters->eta, nn->dense->parameters->lambda, i, j, n, offset, 0, 0) +
-                ( -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)])) )
+                ( -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated->val[offset+((i*n)+j)])) )
                  * ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)] ) );
             }
         }
@@ -385,13 +385,13 @@ static void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int b
         unsigned int n = nn->dense->biases->shape[l][0][0];
         
         for (int i=0; i<n; i++) {
-            nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[offset+i] =
-            nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[offset+i]
+            nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated->val[offset+i] =
+            nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated->val[offset+i]
             + ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[offset+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[offset+i]) );
         }
         for (int i=0; i<n; i++) {
             nn->dense->biases->val[offset+i] = nn->dense->biases->val[offset+i] +
-            ( -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[offset+i])) )
+            ( -( nn->dense->train->ada_grad->learning_rate/(nn->dense->train->ada_grad->delta+sqrtf(nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated->val[offset+i])) )
              * ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[offset+i]) ) );
         }
         offset = offset + n;
@@ -465,8 +465,8 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)] =
-                nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)]
+                nn->conv2d->train->ada_grad->dense->cost_weight_derivative_squared_accumulated->val[offset_w+((i*n)+j)] =
+                nn->conv2d->train->ada_grad->dense->cost_weight_derivative_squared_accumulated->val[offset_w+((i*n)+j)]
                 + ( ((1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)]) );
             }
         }
@@ -474,7 +474,7 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
             for (int j=0; j<n; j++) {
                 nn->conv2d->dense_weights->val[offset_w+((i*n)+j)] =
                 nn->regularizer[idx](neural, nn->conv2d->dense_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, i, j, n, offset_w, 0, 0) +
-                ( -( nn->conv2d->train->ada_grad->learning_rate/(nn->conv2d->train->ada_grad->delta+sqrtf(nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)])) )
+                ( -( nn->conv2d->train->ada_grad->learning_rate/(nn->conv2d->train->ada_grad->delta+sqrtf(nn->conv2d->train->ada_grad->dense->cost_weight_derivative_squared_accumulated->val[offset_w+((i*n)+j)])) )
                  * ( (1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] ) );
             }
         }
@@ -487,13 +487,13 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
         unsigned int n = nn->conv2d->dense_biases->shape[l][0][0];
         
         for (int i=0; i<n; i++) {
-            nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[offset_b+i] =
-            nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[offset_b+i]
+            nn->conv2d->train->ada_grad->dense->cost_bias_derivative_squared_accumulated->val[offset_b+i] =
+            nn->conv2d->train->ada_grad->dense->cost_bias_derivative_squared_accumulated->val[offset_b+i]
             + ( ((1.0f/(float)batch_size)*nn->conv2d->dense_costBiasDerivatives->val[offset_b+i]) * ((1.0f/(float)batch_size)*nn->conv2d->dense_costBiasDerivatives->val[offset_b+i]) );
         }
         for (int i=0; i<n; i++) {
             nn->conv2d->dense_biases->val[offset_b+i] = nn->conv2d->dense_biases->val[offset_b+i] +
-            ( -( nn->conv2d->train->ada_grad->learning_rate/(nn->conv2d->train->ada_grad->delta+sqrtf(nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val[offset_b+i])) )
+            ( -( nn->conv2d->train->ada_grad->learning_rate/(nn->conv2d->train->ada_grad->delta+sqrtf(nn->conv2d->train->ada_grad->dense->cost_bias_derivative_squared_accumulated->val[offset_b+i])) )
              * ( ((1.0f/(float)batch_size)*nn->conv2d->dense_costBiasDerivatives->val[offset_b+i]) ) );
         }
         offset_b = offset_b + n;
@@ -518,15 +518,15 @@ static void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int ba
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)] =
-                (nn->dense->train->rms_prop->decay_rate*nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)])
+                nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated->val[offset+((i*n)+j)] =
+                (nn->dense->train->rms_prop->decay_rate*nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated->val[offset+((i*n)+j)])
                 + (1.0f-nn->dense->train->rms_prop->decay_rate)*( ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)]) );
             }
         }
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                 nn->dense->weights->val[offset+((i*n)+j)] = nn->regularizer[l](neural, nn->dense->weights->val, nn->dense->parameters->eta, nn->dense->parameters->lambda, i, j, n, offset, 0, 0) +
-                (  -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset+((i*n)+j)])) )
+                (  -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated->val[offset+((i*n)+j)])) )
                  * ( (1.0f/(float)batch_size)*nn->dense->costWeightDerivatives->val[offset+((i*n)+j)] ) );
             }
         }
@@ -541,13 +541,13 @@ static void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int ba
         // Adpative learning rate
         
         for (int i=0; i<n; i++) {
-            nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[offset+i] =
-            (nn->dense->train->rms_prop->decay_rate*nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[offset+i])
+            nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated->val[offset+i] =
+            (nn->dense->train->rms_prop->decay_rate*nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated->val[offset+i])
             + (1.0-nn->dense->train->rms_prop->decay_rate)*( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[offset+i]) * ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[offset+i]) );
         }
         for (int i=0; i<n; i++) {
             nn->dense->biases->val[offset+i] = nn->dense->biases->val[offset+i] +
-            ( -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[offset+i])) )
+            ( -( nn->dense->train->rms_prop->learning_rate/(sqrtf(nn->dense->train->rms_prop->delta+nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated->val[offset+i])) )
              * ( ((1.0f/(float)batch_size)*nn->dense->costBiasDerivatives->val[offset+i]) ) );
         }
         
@@ -624,15 +624,14 @@ static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)] =
-                (nn->conv2d->train->rms_prop->decay_rate*nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)])
+                nn->conv2d->train->rms_prop->dense->cost_weight_derivative_squared_accumulated->val[offset_w+((i*n)+j)] = (nn->conv2d->train->rms_prop->decay_rate*nn->conv2d->train->rms_prop->dense->cost_weight_derivative_squared_accumulated->val[offset_w+((i*n)+j)])
                 + (1.0f-nn->conv2d->train->rms_prop->decay_rate)*( ((1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)]) * ((1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)]) );
             }
         }
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
                  nn->conv2d->dense_weights->val[offset_w+((i*n)+j)] = nn->regularizer[idx](neural, nn->conv2d->dense_weights->val, nn->conv2d->parameters->eta, nn->conv2d->parameters->lambda, i, j, n, offset_w, 0, 0) +
-                ( -( nn->conv2d->train->rms_prop->learning_rate/(sqrtf(nn->conv2d->train->rms_prop->delta+nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val[offset_w+((i*n)+j)])) )
+                ( -( nn->conv2d->train->rms_prop->learning_rate/(sqrtf(nn->conv2d->train->rms_prop->delta+nn->conv2d->train->rms_prop->dense->cost_weight_derivative_squared_accumulated->val[offset_w+((i*n)+j)])) )
                  * ( (1.0f/(float)batch_size)*nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] ) );
             }
         }
@@ -645,13 +644,13 @@ static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
         unsigned int n = nn->conv2d->dense_biases->shape[l][0][0];
         
         for (int i=0; i<n; i++) {
-            nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[offset_b+i] =
-            (nn->conv2d->train->rms_prop->decay_rate*nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[offset_b+i])
+            nn->conv2d->train->rms_prop->dense->cost_bias_derivative_squared_accumulated->val[offset_b+i] =
+            (nn->conv2d->train->rms_prop->decay_rate*nn->conv2d->train->rms_prop->dense->cost_bias_derivative_squared_accumulated->val[offset_b+i])
             + (1.0-nn->conv2d->train->rms_prop->decay_rate)*( ((1.0f/(float)batch_size)*nn->conv2d->dense_costBiasDerivatives->val[offset_b+i]) * ((1.0f/(float)batch_size)*nn->conv2d->dense_costBiasDerivatives->val[offset_b+i]) );
         }
         for (int i=0; i<n; i++) {
             nn->conv2d->dense_biases->val[offset_b+i] = nn->conv2d->dense_biases->val[offset_b+i] +
-            ( -( nn->conv2d->train->rms_prop->learning_rate/(sqrtf(nn->conv2d->train->rms_prop->delta+nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val[offset_b+i])) )
+            ( -( nn->conv2d->train->rms_prop->learning_rate/(sqrtf(nn->conv2d->train->rms_prop->delta+nn->conv2d->train->rms_prop->dense->cost_bias_derivative_squared_accumulated->val[offset_b+i])) )
              * ( ((1.0f/(float)batch_size)*nn->conv2d->dense_costBiasDerivatives->val[offset_b+i]) ) );
         }
         offset_b = offset_b + n;

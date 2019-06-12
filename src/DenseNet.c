@@ -107,14 +107,14 @@ void dense_net_genesis(void * _Nonnull self) {
         }
         
         if (nn->dense->train->ada_grad != NULL) {
-            if (nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated == NULL) {
-                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated == NULL) {
+                nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated = (tensor *)nn->tensor(self, *dict);
             }
         }
         
         if (nn->dense->train->rms_prop != NULL) {
-            if (nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated == NULL) {
-                nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated == NULL) {
+                nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated = (tensor *)nn->tensor(self, *dict);
             }
         }
         
@@ -161,14 +161,14 @@ void dense_net_genesis(void * _Nonnull self) {
         }
         
         if (nn->dense->train->ada_grad != NULL) {
-            if (nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated == NULL) {
-                nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated == NULL) {
+                nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated = (tensor *)nn->tensor(self, *dict);
             }
         }
         
         if (nn->dense->train->rms_prop != NULL) {
-            if (nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated == NULL) {
-                nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated == NULL) {
+                nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated = (tensor *)nn->tensor(self, *dict);
             }
         }
         
@@ -264,25 +264,25 @@ void dense_net_finale(void * _Nonnull  self) {
         }
         
         if (nn->dense->train->ada_grad != NULL) {
-            if (nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated != NULL) {
-                free(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated->val);
-                free(nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated);
+            if (nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated != NULL) {
+                free(nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated->val);
+                free(nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated);
             }
-            if (nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated != NULL) {
-                free(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated->val);
-                free(nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated);
+            if (nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated != NULL) {
+                free(nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated->val);
+                free(nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated);
             }
             free(nn->dense->train->ada_grad->dense);
             free(nn->dense->train->ada_grad);
         }
         if (nn->dense->train->rms_prop != NULL) {
-            if (nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated != NULL) {
-                free(nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated->val);
-                free(nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated);
+            if (nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated != NULL) {
+                free(nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated->val);
+                free(nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated);
             }
-            if (nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated != NULL) {
-                free(nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated->val);
-                free(nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated);
+            if (nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated != NULL) {
+                free(nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated->val);
+                free(nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated);
             }
             free(nn->dense->train->rms_prop->dense);
             free(nn->dense->train->rms_prop);

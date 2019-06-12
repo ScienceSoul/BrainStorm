@@ -422,8 +422,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->dense->parameters->eta = optimizer_dict.learning_rate;
             
             nn->dense->train->ada_grad->dense = (dense *)malloc(sizeof(dense));
-            nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = NULL;
-            nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = NULL;
+            nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated = NULL;
+            nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated = NULL;
             nn->dense->train->ada_grad->minimize = ada_grad_optimize;
             optimizer = (void *)nn->dense->train->ada_grad;
         } else if (nn->is_conv2d_network) {
@@ -436,8 +436,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->conv2d->train->ada_grad->dense = (dense *)malloc(sizeof(dense));
             nn->conv2d->train->ada_grad->conv2d->costWeightDerivativeSquaredAccumulated = NULL;
             nn->conv2d->train->ada_grad->conv2d->costBiasDerivativeSquaredAccumulated = NULL;
-            nn->conv2d->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = NULL;
-            nn->conv2d->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = NULL;
+            nn->conv2d->train->ada_grad->dense->cost_weight_derivative_squared_accumulated = NULL;
+            nn->conv2d->train->ada_grad->dense->cost_bias_derivative_squared_accumulated = NULL;
             nn->conv2d->train->ada_grad->minimize = ada_grad_optimize;
             optimizer = (void *)nn->conv2d->train->ada_grad;
         }
@@ -450,8 +450,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->dense->parameters->eta = optimizer_dict.learning_rate;
             
             nn->dense->train->rms_prop->dense = (dense *)malloc(sizeof(dense));
-            nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = NULL;
-            nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = NULL;
+            nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated = NULL;
+            nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated = NULL;
             nn->dense->train->rms_prop->minimize = rms_prop_optimize;
             optimizer = (void *)nn->dense->train->rms_prop;
         } else if (nn->is_conv2d_network) {
@@ -465,8 +465,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->conv2d->train->rms_prop->dense = (dense *)malloc(sizeof(dense));
             nn->conv2d->train->rms_prop->conv2d->costWeightDerivativeSquaredAccumulated = NULL;
             nn->conv2d->train->rms_prop->conv2d->costBiasDerivativeSquaredAccumulated = NULL;
-            nn->conv2d->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = NULL;
-            nn->conv2d->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = NULL;
+            nn->conv2d->train->rms_prop->dense->cost_weight_derivative_squared_accumulated = NULL;
+            nn->conv2d->train->rms_prop->dense->cost_bias_derivative_squared_accumulated = NULL;
             nn->conv2d->train->rms_prop->minimize = rms_prop_optimize;
             optimizer = (void *)nn->conv2d->train->rms_prop;
         }

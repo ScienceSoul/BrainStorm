@@ -549,8 +549,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->ada_grad->learning_rate = result[0];
                 nn->dense->train->ada_grad->delta = result[1];
                 nn->dense->parameters->eta = result[0];
-                nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->ada_grad->dense->cost_weight_derivative_squared_accumulated = NULL;
+                nn->dense->train->ada_grad->dense->cost_bias_derivative_squared_accumulated = NULL;
                 nn->dense->train->ada_grad->minimize = adam_optimize;
                 FOUND_OPTIMIZER = 1;
             
@@ -564,8 +564,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->rms_prop->decay_rate = result[1];
                 nn->dense->train->rms_prop->delta = result[2];
                 nn->dense->parameters->eta = result[0];
-                nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = NULL;
-                nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = NULL;
+                nn->dense->train->rms_prop->dense->cost_weight_derivative_squared_accumulated = NULL;
+                nn->dense->train->rms_prop->dense->cost_bias_derivative_squared_accumulated = NULL;
                 nn->dense->train->rms_prop->minimize = rms_prop_optimize;
                 FOUND_OPTIMIZER = 1;
             
