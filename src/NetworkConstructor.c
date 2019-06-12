@@ -500,8 +500,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->conv2d->train->adam->dense = (dense *)malloc(sizeof(dense));
             nn->conv2d->train->adam->conv2d->weights_biased_first_moment_estimate = NULL;
             nn->conv2d->train->adam->conv2d->weights_biased_second_moment_estimate = NULL;
-            nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate = NULL;
-            nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate = NULL;
+            nn->conv2d->train->adam->conv2d->biases_biased_first_moment_estimate = NULL;
+            nn->conv2d->train->adam->conv2d->biases_biased_second_moment_estimate = NULL;
             nn->conv2d->train->adam->dense->weights_biased_first_moment_estimate = NULL;
             nn->conv2d->train->adam->dense->weights_biased_second_moment_estimate = NULL;
             nn->conv2d->train->adam->dense->biases_biased_first_moment_estimate = NULL;

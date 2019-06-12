@@ -795,19 +795,19 @@ static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch
         float r_hat_b[q];
         for (int ll=0; ll<q; ll++) {
             // Update biased first moment estimate
-            nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate->val[offset_b+ll] =
-            (nn->conv2d->train->adam->decay_rate1*nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate->val[offset_b+ll])
+            nn->conv2d->train->adam->conv2d->biases_biased_first_moment_estimate->val[offset_b+ll] =
+            (nn->conv2d->train->adam->decay_rate1*nn->conv2d->train->adam->conv2d->biases_biased_first_moment_estimate->val[offset_b+ll])
             + (1.0-nn->conv2d->train->adam->decay_rate1)*( ((1.0f/(float)batch_size)*nn->conv2d->conv_costBiasDerivatives->val[offset_b+ll]) );
             
             // Update biased second moment estimate
-            nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate->val[offset_b+ll] =
-            (nn->conv2d->train->adam->decay_rate2*nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate->val[offset_b+ll])
+            nn->conv2d->train->adam->conv2d->biases_biased_second_moment_estimate->val[offset_b+ll] =
+            (nn->conv2d->train->adam->decay_rate2*nn->conv2d->train->adam->conv2d->biases_biased_second_moment_estimate->val[offset_b+ll])
             + (1.0-nn->conv2d->train->adam->decay_rate2)*( ((1.0f/(float)batch_size)*nn->conv2d->conv_costBiasDerivatives->val[offset_b+ll]) * ((1.0f/(float)batch_size)*nn->conv2d->conv_costBiasDerivatives->val[offset_b+ll]) );
             
             // Correct bias in first moment
-            s_hat_b[ll] = nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate->val[offset_b+ll] / (1.0f - powf(nn->conv2d->train->adam->decay_rate1, (float)nn->conv2d->train->adam->time));
+            s_hat_b[ll] = nn->conv2d->train->adam->conv2d->biases_biased_first_moment_estimate->val[offset_b+ll] / (1.0f - powf(nn->conv2d->train->adam->decay_rate1, (float)nn->conv2d->train->adam->time));
             // Correct bias in second moment
-            r_hat_b[ll] = nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate->val[offset_b+ll] / (1.0f - powf(nn->conv2d->train->adam->decay_rate2, (float)nn->conv2d->train->adam->time));
+            r_hat_b[ll] = nn->conv2d->train->adam->conv2d->biases_biased_second_moment_estimate->val[offset_b+ll] / (1.0f - powf(nn->conv2d->train->adam->decay_rate2, (float)nn->conv2d->train->adam->time));
         }
         for (int ll=0; ll<q; ll++) {
             coeff_b[ll] = -nn->conv2d->train->adam->step_size*( s_hat_b[ll] / (sqrtf(r_hat_b[ll]+nn->conv2d->train->adam->delta)) );
