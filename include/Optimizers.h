@@ -25,8 +25,8 @@ typedef struct conv2d {
     tensor * _Nullable cost_weight_derivative_squared_accumulated;
     tensor * _Nullable cost_bias_derivative_squared_accumulated;
     
-    tensor * _Nullable weightsBiasedFirstMomentEstimate;
-    tensor * _Nullable weightsBiasedSecondMomentEstimate;
+    tensor * _Nullable weights_biased_first_moment_estimate;
+    tensor * _Nullable weights_biased_second_moment_estimate;
     tensor * _Nullable biasesBiasedFirstMomentEstimate;
     tensor * _Nullable biasesBiasedSecondMomentEstimate;
 } conv2d;

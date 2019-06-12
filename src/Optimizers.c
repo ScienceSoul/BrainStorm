@@ -764,19 +764,19 @@ static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch
                 for (int u=0; u<kh; u++) {
                     for (int v=0; v<kw; v++) {
                         // Update biased first moment estimate
-                        nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate->val[offset_w+(stride1+(stride2+(u*kw+v)))]
-                        = (nn->conv2d->train->adam->decay_rate1*nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate->val[offset_w+(stride1+(stride2+(u*kw+v)))])
+                        nn->conv2d->train->adam->conv2d->weights_biased_first_moment_estimate->val[offset_w+(stride1+(stride2+(u*kw+v)))]
+                        = (nn->conv2d->train->adam->decay_rate1*nn->conv2d->train->adam->conv2d->weights_biased_first_moment_estimate->val[offset_w+(stride1+(stride2+(u*kw+v)))])
                         + (1.0f-nn->conv2d->train->adam->decay_rate1)*( ((1.0f/(float)batch_size)*nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))]) );
                         
                         // Update biased second moment estimate
-                        nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
-                        (nn->conv2d->train->adam->decay_rate2*nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate->val[offset_w+(stride1+(stride2+(u*kw+v)))])
+                        nn->conv2d->train->adam->conv2d->weights_biased_second_moment_estimate->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
+                        (nn->conv2d->train->adam->decay_rate2*nn->conv2d->train->adam->conv2d->weights_biased_second_moment_estimate->val[offset_w+(stride1+(stride2+(u*kw+v)))])
                         + (1.0f-nn->conv2d->train->adam->decay_rate2)*( ((1.0f/(float)batch_size)*nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))]) * ((1.0f/(float)batch_size)*nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))]) );
                         
                         // Correct bias in first moment
-                        s_hat_w[u][v] = nn->conv2d->train->adam->conv2d->weightsBiasedFirstMomentEstimate->val[offset_w+(stride1+(stride2+(u*kw+v)))] / (1.0f - powf(nn->conv2d->train->adam->decay_rate1, (float)nn->conv2d->train->adam->time));
+                        s_hat_w[u][v] = nn->conv2d->train->adam->conv2d->weights_biased_first_moment_estimate->val[offset_w+(stride1+(stride2+(u*kw+v)))] / (1.0f - powf(nn->conv2d->train->adam->decay_rate1, (float)nn->conv2d->train->adam->time));
                         // Correct bias in second moment
-                        r_hat_w[u][v] = nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate->val[offset_w+(stride1+(stride2+(u*kw+v)))] / (1.0f - powf(nn->conv2d->train->adam->decay_rate2, (float)nn->conv2d->train->adam->time));
+                        r_hat_w[u][v] = nn->conv2d->train->adam->conv2d->weights_biased_second_moment_estimate->val[offset_w+(stride1+(stride2+(u*kw+v)))] / (1.0f - powf(nn->conv2d->train->adam->decay_rate2, (float)nn->conv2d->train->adam->time));
                     }
                 }
                 for (int u=0; u<kh; u++) {
