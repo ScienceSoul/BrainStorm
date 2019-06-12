@@ -180,25 +180,25 @@ void create_conv2d_net(void * _Nonnull self) {
         .num_infer_ops=0,
         .num_backpropag_ops=0,
         .conv_weights=NULL,
-        .conv_weightsVelocity=NULL,
+        .conv_weights_velocity=NULL,
         .conv_biases=NULL,
-        .conv_biasesVelocity=NULL,
+        .conv_biases_velocity=NULL,
         .conv_activations=NULL,
-        .conv_affineTransformations=NULL,
-        .conv_costWeightDerivatives=NULL,
-        .conv_costBiasDerivatives=NULL,
-        .conv_batchCostWeightDeriv=NULL,
-        .conv_batchCostBiasDeriv=NULL,
+        .conv_affine_transforms=NULL,
+        .conv_cost_weight_derivs=NULL,
+        .conv_cost_bias_derivs=NULL,
+        .conv_batch_cost_weight_derivs=NULL,
+        .conv_batch_cost_bias_derivs=NULL,
         .dense_weights=NULL,
-        .dense_weightsVelocity=NULL,
+        .dense_weights_velocity=NULL,
         .dense_biases=NULL,
-        .dense_biasesVelocity=NULL,
+        .dense_biases_velocity=NULL,
         .dense_activations=NULL,
-        .dense_affineTransformations=NULL,
-        .dense_costWeightDerivatives=NULL,
-        .dense_costBiasDerivatives=NULL,
-        .dense_batchCostWeightDeriv=NULL,
-        .dense_batchCostBiasDeriv=NULL,
+        .dense_affine_transforms=NULL,
+        .dense_cost_weight_derivs=NULL,
+        .dense_cost_bias_derivs=NULL,
+        .dense_batch_cost_weight_derivs=NULL,
+        .dense_batch_cost_bias_derivs=NULL,
         .flipped_weights=NULL,
         .kernel_matrices=NULL,
         .max_pool_indexes=NULL,
@@ -272,15 +272,15 @@ void conv2d_net_genesis(void * _Nonnull self) {
         nn->conv2d->conv_weights = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, true);
         
         dict->init_weights = false;
-        if (nn->conv2d->conv_costWeightDerivatives == NULL)
-            nn->conv2d->conv_costWeightDerivatives = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, false);
+        if (nn->conv2d->conv_cost_weight_derivs == NULL)
+            nn->conv2d->conv_cost_weight_derivs = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, false);
         
-        if (nn->conv2d->conv_batchCostWeightDeriv == NULL)
-            nn->conv2d->conv_batchCostWeightDeriv = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, false);
+        if (nn->conv2d->conv_batch_cost_weight_derivs == NULL)
+            nn->conv2d->conv_batch_cost_weight_derivs = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, false);
         
         if (nn->conv2d->train->momentum != NULL) {
-            if (nn->conv2d->conv_weightsVelocity == NULL) {
-                nn->conv2d->conv_weightsVelocity = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, false);
+            if (nn->conv2d->conv_weights_velocity == NULL) {
+                nn->conv2d->conv_weights_velocity = (tensor *)nn->conv2d->conv_weights_alloc(self, (void *)dict, false);
             }
         }
         
@@ -330,15 +330,15 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         
-        if (nn->conv2d->conv_costBiasDerivatives == NULL)
-            nn->conv2d->conv_costBiasDerivatives = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
+        if (nn->conv2d->conv_cost_bias_derivs == NULL)
+            nn->conv2d->conv_cost_bias_derivs = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
         
-        if (nn->conv2d->conv_batchCostBiasDeriv == NULL)
-            nn->conv2d->conv_batchCostBiasDeriv = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
+        if (nn->conv2d->conv_batch_cost_bias_derivs == NULL)
+            nn->conv2d->conv_batch_cost_bias_derivs = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
         
         if (nn->conv2d->train->momentum != NULL) {
-            if (nn->conv2d->conv_biasesVelocity == NULL) {
-                nn->conv2d->conv_biasesVelocity = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
+            if (nn->conv2d->conv_biases_velocity == NULL) {
+                nn->conv2d->conv_biases_velocity = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, false);
             }
         }
         if (nn->conv2d->train->ada_grad != NULL) {
@@ -378,9 +378,9 @@ void conv2d_net_genesis(void * _Nonnull self) {
         nn->conv2d->conv_activations = (tensor *)nn->conv2d->conv_activations_alloc(self, (void *)dict, true);
     }
     
-    if (nn->conv2d->conv_affineTransformations == NULL) {
+    if (nn->conv2d->conv_affine_transforms == NULL) {
         dict->rank = 3;
-        nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, true);
+        nn->conv2d->conv_affine_transforms = (tensor *)nn->conv2d->conv_common_alloc(self, (void *)dict, true);
     }
     
     // ------------------------------------------------------------------------
@@ -393,15 +393,15 @@ void conv2d_net_genesis(void * _Nonnull self) {
         nn->conv2d->dense_weights =  (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, true);
         
         dict->init_weights = false;
-        if (nn->conv2d->dense_costWeightDerivatives == NULL)
-            nn->conv2d->dense_costWeightDerivatives = (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, false);
+        if (nn->conv2d->dense_cost_weight_derivs == NULL)
+            nn->conv2d->dense_cost_weight_derivs = (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, false);
         
-        if (nn->conv2d->dense_batchCostWeightDeriv == NULL)
-            nn->conv2d->dense_batchCostWeightDeriv = (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, false);
+        if (nn->conv2d->dense_batch_cost_weight_derivs == NULL)
+            nn->conv2d->dense_batch_cost_weight_derivs = (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, false);
         
         if (nn->conv2d->train->momentum != NULL) {
-            if (nn->conv2d->dense_weightsVelocity == NULL) {
-                nn->conv2d->dense_weightsVelocity = (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, false);
+            if (nn->conv2d->dense_weights_velocity == NULL) {
+                nn->conv2d->dense_weights_velocity = (tensor *)nn->conv2d->dense_weights_alloc(self, (void *)dict, false);
             }
         }
         
@@ -447,15 +447,15 @@ void conv2d_net_genesis(void * _Nonnull self) {
             }
         }
         
-        if (nn->conv2d->dense_costBiasDerivatives == NULL)
-            nn->conv2d->dense_costBiasDerivatives = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
+        if (nn->conv2d->dense_cost_bias_derivs == NULL)
+            nn->conv2d->dense_cost_bias_derivs = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
         
-        if (nn->conv2d->dense_batchCostBiasDeriv == NULL)
-            nn->conv2d->dense_batchCostBiasDeriv = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
+        if (nn->conv2d->dense_batch_cost_bias_derivs == NULL)
+            nn->conv2d->dense_batch_cost_bias_derivs = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
         
         if (nn->conv2d->train->momentum != NULL) {
-            if (nn->conv2d->dense_biasesVelocity == NULL) {
-                nn->conv2d->dense_biasesVelocity = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
+            if (nn->conv2d->dense_biases_velocity == NULL) {
+                nn->conv2d->dense_biases_velocity = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
             }
         }
         
@@ -490,8 +490,8 @@ void conv2d_net_genesis(void * _Nonnull self) {
         dict->rank = 1;
         nn->conv2d->dense_activations = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, true);
         
-        if (nn->conv2d->dense_affineTransformations == NULL)
-            nn->conv2d->dense_affineTransformations = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
+        if (nn->conv2d->dense_affine_transforms == NULL)
+            nn->conv2d->dense_affine_transforms = (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
     }
     
     // --------------------------------------------------------------------
@@ -589,29 +589,29 @@ void conv2d_net_finale(void * _Nonnull self) {
         free(nn->conv2d->conv_activations);
     }
     
-    if (nn->conv2d->conv_affineTransformations != NULL) {
-        free(nn->conv2d->conv_affineTransformations->val);
-        free(nn->conv2d->conv_affineTransformations);
+    if (nn->conv2d->conv_affine_transforms != NULL) {
+        free(nn->conv2d->conv_affine_transforms->val);
+        free(nn->conv2d->conv_affine_transforms);
     }
     
-    if (nn->conv2d->conv_costWeightDerivatives != NULL) {
-        free(nn->conv2d->conv_costWeightDerivatives->val);
-        free(nn->conv2d->conv_costWeightDerivatives);
+    if (nn->conv2d->conv_cost_weight_derivs != NULL) {
+        free(nn->conv2d->conv_cost_weight_derivs->val);
+        free(nn->conv2d->conv_cost_weight_derivs);
     }
     
-    if (nn->conv2d->conv_costBiasDerivatives != NULL) {
-        free(nn->conv2d->conv_costBiasDerivatives->val);
-        free(nn->conv2d->conv_costBiasDerivatives);
+    if (nn->conv2d->conv_cost_bias_derivs != NULL) {
+        free(nn->conv2d->conv_cost_bias_derivs->val);
+        free(nn->conv2d->conv_cost_bias_derivs);
     }
     
-    if (nn->conv2d->conv_batchCostWeightDeriv != NULL) {
-        free(nn->conv2d->conv_batchCostWeightDeriv->val);
-        free(nn->conv2d->conv_batchCostWeightDeriv);
+    if (nn->conv2d->conv_batch_cost_weight_derivs != NULL) {
+        free(nn->conv2d->conv_batch_cost_weight_derivs->val);
+        free(nn->conv2d->conv_batch_cost_weight_derivs);
     }
     
-    if (nn->conv2d->conv_batchCostBiasDeriv != NULL) {
-        free(nn->conv2d->conv_batchCostBiasDeriv->val);
-        free(nn->conv2d->conv_batchCostBiasDeriv);
+    if (nn->conv2d->conv_batch_cost_bias_derivs != NULL) {
+        free(nn->conv2d->conv_batch_cost_bias_derivs->val);
+        free(nn->conv2d->conv_batch_cost_bias_derivs);
     }
     
     // ------------------------------------------------------------------------
@@ -630,25 +630,25 @@ void conv2d_net_finale(void * _Nonnull self) {
         free(nn->conv2d->dense_activations->val);
         free(nn->conv2d->dense_activations);
     }
-    if (nn->conv2d->dense_affineTransformations != NULL) {
-        free(nn->conv2d->dense_affineTransformations->val);
-        free(nn->conv2d->dense_affineTransformations);
+    if (nn->conv2d->dense_affine_transforms != NULL) {
+        free(nn->conv2d->dense_affine_transforms->val);
+        free(nn->conv2d->dense_affine_transforms);
     }
-    if (nn->conv2d->dense_costWeightDerivatives != NULL) {
-        free(nn->conv2d->dense_costWeightDerivatives->val);
-        free(nn->conv2d->dense_costWeightDerivatives);
+    if (nn->conv2d->dense_cost_weight_derivs != NULL) {
+        free(nn->conv2d->dense_cost_weight_derivs->val);
+        free(nn->conv2d->dense_cost_weight_derivs);
     }
-    if (nn->conv2d->dense_costBiasDerivatives != NULL) {
-        free(nn->conv2d->dense_costBiasDerivatives->val);
-        free(nn->conv2d->dense_costBiasDerivatives);
+    if (nn->conv2d->dense_cost_bias_derivs != NULL) {
+        free(nn->conv2d->dense_cost_bias_derivs->val);
+        free(nn->conv2d->dense_cost_bias_derivs);
     }
-    if (nn->conv2d->dense_batchCostWeightDeriv != NULL) {
-        free(nn->conv2d->dense_batchCostWeightDeriv->val);
-        free(nn->conv2d->dense_batchCostWeightDeriv);
+    if (nn->conv2d->dense_batch_cost_weight_derivs != NULL) {
+        free(nn->conv2d->dense_batch_cost_weight_derivs->val);
+        free(nn->conv2d->dense_batch_cost_weight_derivs);
     }
-    if (nn->conv2d->dense_batchCostBiasDeriv != NULL) {
-        free(nn->conv2d->dense_batchCostBiasDeriv->val);
-        free(nn->conv2d->dense_batchCostBiasDeriv);
+    if (nn->conv2d->dense_batch_cost_bias_derivs != NULL) {
+        free(nn->conv2d->dense_batch_cost_bias_derivs->val);
+        free(nn->conv2d->dense_batch_cost_bias_derivs);
     }
     
     // ------------------------------------------------------------------------
@@ -660,21 +660,21 @@ void conv2d_net_finale(void * _Nonnull self) {
         }
         
         if (nn->conv2d->train->momentum != NULL) {
-            if (nn->conv2d->conv_weightsVelocity != NULL) {
-                free(nn->conv2d->conv_weightsVelocity->val);
-                free(nn->conv2d->conv_weightsVelocity);
+            if (nn->conv2d->conv_weights_velocity != NULL) {
+                free(nn->conv2d->conv_weights_velocity->val);
+                free(nn->conv2d->conv_weights_velocity);
             }
-            if (nn->conv2d->conv_biasesVelocity != NULL) {
-                free(nn->conv2d->conv_biasesVelocity->val);
-                free(nn->conv2d->conv_biasesVelocity);
+            if (nn->conv2d->conv_biases_velocity != NULL) {
+                free(nn->conv2d->conv_biases_velocity->val);
+                free(nn->conv2d->conv_biases_velocity);
             }
-            if (nn->conv2d->dense_weightsVelocity != NULL) {
-                free(nn->conv2d->dense_weightsVelocity->val);
-                free(nn->conv2d->dense_weightsVelocity);
+            if (nn->conv2d->dense_weights_velocity != NULL) {
+                free(nn->conv2d->dense_weights_velocity->val);
+                free(nn->conv2d->dense_weights_velocity);
             }
-            if (nn->conv2d->dense_biasesVelocity != NULL) {
-                free(nn->conv2d->dense_biasesVelocity->val);
-                free(nn->conv2d->dense_biasesVelocity);
+            if (nn->conv2d->dense_biases_velocity != NULL) {
+                free(nn->conv2d->dense_biases_velocity->val);
+                free(nn->conv2d->dense_biases_velocity);
             }
             free(nn->conv2d->train->momentum);
         }

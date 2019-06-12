@@ -57,26 +57,26 @@ typedef struct conv2d_network {
     unsigned int num_backpropag_ops;
     
     tensor * _Nullable conv_weights;
-    tensor * _Nullable conv_weightsVelocity;
+    tensor * _Nullable conv_weights_velocity;
     tensor * _Nullable conv_biases;
-    tensor * _Nullable conv_biasesVelocity;
+    tensor * _Nullable conv_biases_velocity;
     tensor * _Nullable conv_activations;
-    tensor * _Nullable conv_affineTransformations;
-    tensor * _Nullable conv_costWeightDerivatives;
-    tensor * _Nullable conv_costBiasDerivatives;
-    tensor * _Nullable conv_batchCostWeightDeriv;
-    tensor * _Nullable conv_batchCostBiasDeriv;
+    tensor * _Nullable conv_affine_transforms;
+    tensor * _Nullable conv_cost_weight_derivs;
+    tensor * _Nullable conv_cost_bias_derivs;
+    tensor * _Nullable conv_batch_cost_weight_derivs;
+    tensor * _Nullable conv_batch_cost_bias_derivs;
     
     tensor * _Nullable dense_weights;
-    tensor * _Nullable dense_weightsVelocity;
+    tensor * _Nullable dense_weights_velocity;
     tensor * _Nullable dense_biases;
-    tensor * _Nullable dense_biasesVelocity;
+    tensor * _Nullable dense_biases_velocity;
     tensor * _Nullable dense_activations;
-    tensor * _Nullable dense_affineTransformations;
-    tensor * _Nullable dense_costWeightDerivatives;
-    tensor * _Nullable dense_costBiasDerivatives;
-    tensor * _Nullable dense_batchCostWeightDeriv;
-    tensor * _Nullable dense_batchCostBiasDeriv;
+    tensor * _Nullable dense_affine_transforms;
+    tensor * _Nullable dense_cost_weight_derivs;
+    tensor * _Nullable dense_cost_bias_derivs;
+    tensor * _Nullable dense_batch_cost_weight_derivs;
+    tensor * _Nullable dense_batch_cost_bias_derivs;
     
     tensor * _Nullable flipped_weights;
     tensor * _Nullable kernel_matrices;

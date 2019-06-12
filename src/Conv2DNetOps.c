@@ -182,8 +182,8 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
         offset_b = offset_b + step;
         
         step = 1;
-        for (int i=0; i<nn->conv2d->conv_affineTransformations->rank; i++) {
-            step = step * nn->conv2d->conv_affineTransformations->shape[local_idx-1][i][0];
+        for (int i=0; i<nn->conv2d->conv_affine_transforms->rank; i++) {
+            step = step * nn->conv2d->conv_affine_transforms->shape[local_idx-1][i][0];
         }
         offset_z = offset_z + step;
         
@@ -224,7 +224,7 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
     for (int k=0; k<q; k++) {
 #ifdef __APPLE__
         vDSP_vsadd(*C_trans+(k*fh*fw), 1, nn->conv2d->conv_biases->val
-                   +offset_b+k, nn->conv2d->conv_affineTransformations->val+offset_z+stride_z, 1, (fh*fw));
+                   +offset_b+k, nn->conv2d->conv_affine_transforms->val+offset_z+stride_z, 1, (fh*fw));
 #else
         int indx = 0;
         for (int i=0; i<fh*fw; i++) {
@@ -234,7 +234,7 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
 #endif
         
         for (int i=0; i<fh*fw; i++) {
-                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+i)] = nn->conv2d->activationFunctions[local_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride_z+i)], NULL, NULL);
+                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+i)] = nn->conv2d->activationFunctions[local_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride_z+i)], NULL, NULL);
         }
         nanToNum(nn->conv2d->conv_activations->val+offset_a_compute+stride_a_compute, (fh*fw));
         
@@ -483,7 +483,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
              (nn->conv2d->dense_weights->shape[local_idx-1][0][0]*nn->conv2d->dense_weights->shape[local_idx-1][1][0]);
         
         offset_b_connected = offset_b_connected + nn->conv2d->dense_biases->shape[local_idx-1][0][0];
-        offset_z_connected = offset_z_connected + nn->conv2d->dense_affineTransformations->shape[local_idx-1][0][0];
+        offset_z_connected = offset_z_connected + nn->conv2d->dense_affine_transforms->shape[local_idx-1][0][0];
     }
     
     unsigned int m = nn->conv2d->dense_weights->shape[local_idx][0][0];
@@ -494,7 +494,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
     
     cblas_sgemv(CblasRowMajor, CblasNoTrans, (int)m, (int)n, 1.0f, nn->conv2d->dense_weights->val+offset_w_connected, (int)n, ptr_activations->val+*ptr_offset, 1, 0.0f, buffer, 1);
 #ifdef __APPLE__
-    vDSP_vadd(buffer, 1, nn->conv2d->dense_biases->val+offset_b_connected, 1, nn->conv2d->dense_affineTransformations->val+offset_z_connected, 1, nn->conv2d->dense_biases->shape[local_idx][0][0]);
+    vDSP_vadd(buffer, 1, nn->conv2d->dense_biases->val+offset_b_connected, 1, nn->conv2d->dense_affine_transforms->val+offset_z_connected, 1, nn->conv2d->dense_biases->shape[local_idx][0][0]);
 #else
     for (int i=0; i<nn->conv2d->dense_biases->shape[local_idx][0][0]; i++) {
         nn->conv2d->dense_affineTransformations->val[offset_z_connected+i] = buffer[i] + nn->conv2d->dense_biases->val[offset_b_connected+i];
@@ -508,12 +508,12 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
     // (no interleaving between convolution layers) which should be the case for a correctly
     // constructed convolutional network. Otherwise wrong behavior and results!!
     if (nn->activationFunctionsRef[local_idx+nn->conv2d->num_conv2d_layers] == SOFTMAX) {
-        vec = nn->conv2d->dense_affineTransformations->val+offset_z_connected;
-        vec_length = &(nn->conv2d->dense_affineTransformations->shape[local_idx][0][0]);
+        vec = nn->conv2d->dense_affine_transforms->val+offset_z_connected;
+        vec_length = &(nn->conv2d->dense_affine_transforms->shape[local_idx][0][0]);
     }
     for (int i=0; i<nn->conv2d->dense_activations->shape[local_idx][0][0]; i++) {
         nn->conv2d->dense_activations->val[offset_a_connected_compute+i] =
-             nn->conv2d->activationFunctions[local_idx+nn->conv2d->num_conv2d_layers](nn->conv2d->dense_affineTransformations->val[offset_z_connected+i], vec, vec_length);
+             nn->conv2d->activationFunctions[local_idx+nn->conv2d->num_conv2d_layers](nn->conv2d->dense_affine_transforms->val[offset_z_connected+i], vec, vec_length);
     }
     
     nanToNum(nn->conv2d->dense_activations->val+offset_a_connected_compute, nn->conv2d->dense_activations->shape[local_idx][0][0]);
@@ -564,9 +564,9 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
             ptr_offset = &offset_a;
         }
         
-        offset_z_connected = offset_z_connected - nn->conv2d->dense_affineTransformations->shape[local_idx-1][0][0];
-        offset_dcdw_connected = offset_dcdw_connected - (nn->conv2d->dense_batchCostWeightDeriv->shape[local_idx-1][0][0]*nn->conv2d->dense_batchCostWeightDeriv->shape[local_idx-1][1][0]);
-        offset_dcdb_connected = offset_dcdb_connected - nn->conv2d->dense_batchCostBiasDeriv->shape[local_idx-1][0][0];
+        offset_z_connected = offset_z_connected - nn->conv2d->dense_affine_transforms->shape[local_idx-1][0][0];
+        offset_dcdw_connected = offset_dcdw_connected - (nn->conv2d->dense_batch_cost_weight_derivs->shape[local_idx-1][0][0]*nn->conv2d->dense_batch_cost_weight_derivs->shape[local_idx-1][1][0]);
+        offset_dcdb_connected = offset_dcdb_connected - nn->conv2d->dense_batch_cost_bias_derivs->shape[local_idx-1][0][0];
         local_idx--;
         
     } else {
@@ -578,7 +578,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
             offset_dcdb_connected = 0;
             for (int l=0; l<nn->conv2d->num_dense_layers-1; l++) {
                 offset_a_connected = offset_a_connected + nn->conv2d->dense_activations->shape[l][0][0];
-                offset_z_connected = offset_z_connected + nn->conv2d->dense_affineTransformations->shape[l][0][0];
+                offset_z_connected = offset_z_connected + nn->conv2d->dense_affine_transforms->shape[l][0][0];
                 offset_dcdb_connected = offset_dcdb_connected + nn->conv2d->dense_biases->shape[l][0][0];
             }
             // Stride to weights and dc_dw at last layer of fully connected part
@@ -627,43 +627,43 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
             ptr_offset = &offset_a_connected;
         }
         
-        int m = nn->conv2d->dense_batchCostWeightDeriv->shape[nn->conv2d->num_dense_layers-1][0][0];
-        int n = nn->conv2d->dense_batchCostWeightDeriv->shape[nn->conv2d->num_dense_layers-1][1][0];
+        int m = nn->conv2d->dense_batch_cost_weight_derivs->shape[nn->conv2d->num_dense_layers-1][0][0];
+        int n = nn->conv2d->dense_batch_cost_weight_derivs->shape[nn->conv2d->num_dense_layers-1][1][0];
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->conv2d->dense_batchCostWeightDeriv->val[offset_dcdw_connected+((i*n)+j)] = ptr_activations->val[*ptr_offset+j] * propag_buffer->val[i];
+                nn->conv2d->dense_batch_cost_weight_derivs->val[offset_dcdw_connected+((i*n)+j)] = ptr_activations->val[*ptr_offset+j] * propag_buffer->val[i];
             }
         }
-        memcpy(nn->conv2d->dense_batchCostBiasDeriv->val+offset_dcdb_connected, propag_buffer->val, nn->conv2d->dense_batchCostBiasDeriv->shape[nn->conv2d->num_dense_layers-1][0][0]*sizeof(float));
+        memcpy(nn->conv2d->dense_batch_cost_bias_derivs->val+offset_dcdb_connected, propag_buffer->val, nn->conv2d->dense_batch_cost_bias_derivs->shape[nn->conv2d->num_dense_layers-1][0][0]*sizeof(float));
 
     } else { // Otherwise the layers up the fully connected part
         
         float buffer[nn->conv2d->parameters->max_number_nodes_in_dense_layer];
         memset(buffer, 0.0f, sizeof(buffer));
         
-        float sp[nn->conv2d->dense_affineTransformations->shape[local_idx][0][0]];
-        for (int i=0; i<nn->conv2d->dense_affineTransformations->shape[local_idx][0][0]; i++) {
-            sp[i] = nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->dense_affineTransformations->val[offset_z_connected+i]);
+        float sp[nn->conv2d->dense_affine_transforms->shape[local_idx][0][0]];
+        for (int i=0; i<nn->conv2d->dense_affine_transforms->shape[local_idx][0][0]; i++) {
+            sp[i] = nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->dense_affine_transforms->val[offset_z_connected+i]);
         }
         
         cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->conv2d->dense_weights->shape[local_idx+1][0][0], (int)nn->conv2d->dense_weights->shape[local_idx+1][1][0], 1.0, nn->conv2d->dense_weights->val+offset_w_connected, (int)nn->conv2d->dense_weights->shape[local_idx+1][1][0], propag_buffer->val, 1, 0.0, buffer, 1);
         
 #ifdef __APPLE__
-        vDSP_vmul(buffer, 1, sp, 1, propag_buffer->val, 1, nn->conv2d->dense_affineTransformations->shape[local_idx][0][0]);
+        vDSP_vmul(buffer, 1, sp, 1, propag_buffer->val, 1, nn->conv2d->dense_affine_transforms->shape[local_idx][0][0]);
 #else
         for (int i=0; i<nn->conv2d->dense_affineTransformations->shape[local_idx][0][0]; i++) {
             propag_buffer->val[i] = buffer[i] * sp[i];
         }
 #endif
-        int m = nn->conv2d->dense_batchCostWeightDeriv->shape[local_idx][0][0];
-        int n = nn->conv2d->dense_batchCostWeightDeriv->shape[local_idx][1][0];
+        int m = nn->conv2d->dense_batch_cost_weight_derivs->shape[local_idx][0][0];
+        int n = nn->conv2d->dense_batch_cost_weight_derivs->shape[local_idx][1][0];
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->conv2d->dense_batchCostWeightDeriv->val[offset_dcdw_connected+((i*n)+j)] = ptr_activations->val[*ptr_offset+j] * propag_buffer->val[i];
+                nn->conv2d->dense_batch_cost_weight_derivs->val[offset_dcdw_connected+((i*n)+j)] = ptr_activations->val[*ptr_offset+j] * propag_buffer->val[i];
             }
         }
         
-        memcpy(nn->conv2d->dense_batchCostBiasDeriv->val+offset_dcdb_connected, propag_buffer->val, nn->conv2d->dense_batchCostBiasDeriv->shape[local_idx][0][0]*sizeof(float));
+        memcpy(nn->conv2d->dense_batch_cost_bias_derivs->val+offset_dcdb_connected, propag_buffer->val, nn->conv2d->dense_batch_cost_bias_derivs->shape[local_idx][0][0]*sizeof(float));
         
         offset_w_connected = offset_w_connected - (nn->conv2d->dense_weights->shape[local_idx][0][0] * nn->conv2d->dense_weights->shape[local_idx][1][0]);
     }
@@ -729,8 +729,8 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
     int offset_z = 0;
     for (int l=0; l<*advance2; l++) {
         int step = 1;
-        for (int i=0; i<nn->conv2d->conv_affineTransformations->rank; i++) {
-            step = step * nn->conv2d->conv_affineTransformations->shape[l][i][0];
+        for (int i=0; i<nn->conv2d->conv_affine_transforms->rank; i++) {
+            step = step * nn->conv2d->conv_affine_transforms->shape[l][i][0];
         }
         offset_z = offset_z + step;
     }
@@ -741,7 +741,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         int stride = 0;
         for (int k=0; k<q; k++) {
             for (int i=0; i<fh*fw; i++) {
-                 nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+i)]);
+                 nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -752,7 +752,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         int stride = 0;
         for (int k=0; k<q; k++) {
             for (int i=0; i<fh*fw; i++) {
-                 nn->conv2d->deltas_buffer->val[stride+i] = nn->conv2d->deltas_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+i)]);
+                 nn->conv2d->deltas_buffer->val[stride+i] = nn->conv2d->deltas_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -765,7 +765,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         int stride = 0;
         for (int k=0; k<p; k++) {
             for (int i=0; i<fh*fw; i++) {
-                nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affineTransformations->val[offset_z+(stride+i)]);
+                nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -788,8 +788,8 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
     int offset_w = 0;
     for (int l=0; l<*advance2; l++) {
         int step = 1;
-        for (int i=0; i<nn->conv2d->conv_batchCostWeightDeriv->rank; i++) {
-            step = step * nn->conv2d->conv_batchCostWeightDeriv->shape[l][i][0];
+        for (int i=0; i<nn->conv2d->conv_batch_cost_weight_derivs->rank; i++) {
+            step = step * nn->conv2d->conv_batch_cost_weight_derivs->shape[l][i][0];
         }
         offset_w = offset_w + step;
     }
@@ -798,8 +798,8 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
     int offset_b = 0;
     for (int l=0; l<*advance2; l++) {
         int step = 1;
-        for (int i=0; i<nn->conv2d->conv_batchCostBiasDeriv->rank; i++) {
-            step = step * nn->conv2d->conv_batchCostBiasDeriv->shape[l][i][0];
+        for (int i=0; i<nn->conv2d->conv_batch_cost_bias_derivs->rank; i++) {
+            step = step * nn->conv2d->conv_batch_cost_bias_derivs->shape[l][i][0];
         }
         offset_b = offset_b + step;
     }
@@ -830,7 +830,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         int indx = 0;
         for (int ll=0; ll<p; ll++) {
             for (int i=0; i<kh*kw; i++) {
-                nn->conv2d->conv_batchCostWeightDeriv->val[offset_w+(stride1+(stride2+i))] = C[indx][k];
+                nn->conv2d->conv_batch_cost_weight_derivs->val[offset_w+(stride1+(stride2+i))] = C[indx][k];
                 indx++;
             }
              stride1 = stride1 + (q * kh * kw);
@@ -850,7 +850,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
             sum_b = sum_b + nn->conv2d->deltas_buffer->val[stride+i];
         }
 #endif
-        nn->conv2d->conv_batchCostBiasDeriv->val[offset_b+l] = sum_b;
+        nn->conv2d->conv_batch_cost_bias_derivs->val[offset_b+l] = sum_b;
         stride = stride + (fh * fw);
     }
     
@@ -1000,10 +1000,10 @@ void batch_accumulation_in_conv2d_net(void * _Nonnull neural) {
     int offset_b = 0;
     for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
         
-        unsigned int p = nn->conv2d->conv_batchCostWeightDeriv->shape[l][0][0];
-        unsigned int q = nn->conv2d->conv_batchCostWeightDeriv->shape[l][1][0];
-        unsigned int kh = nn->conv2d->conv_batchCostWeightDeriv->shape[l][2][0];
-        unsigned int kw = nn->conv2d->conv_batchCostWeightDeriv->shape[l][3][0];
+        unsigned int p = nn->conv2d->conv_batch_cost_weight_derivs->shape[l][0][0];
+        unsigned int q = nn->conv2d->conv_batch_cost_weight_derivs->shape[l][1][0];
+        unsigned int kh = nn->conv2d->conv_batch_cost_weight_derivs->shape[l][2][0];
+        unsigned int kw = nn->conv2d->conv_batch_cost_weight_derivs->shape[l][3][0];
         
         int stride1 = 0;
         for (int k=0; k<p; k++) {
@@ -1011,9 +1011,9 @@ void batch_accumulation_in_conv2d_net(void * _Nonnull neural) {
             for (int ll=0; ll<q; ll++) {
                 for (int u=0; u<kh; u++) {
                     for (int v=0; v<kw; v++) {
-                        nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
-                          nn->conv2d->conv_costWeightDerivatives->val[offset_w+(stride1+(stride2+(u*kw+v)))] +
-                              nn->conv2d->conv_batchCostWeightDeriv->val[offset_w+(stride1+(stride2+(u*kw+v)))];
+                        nn->conv2d->conv_cost_weight_derivs->val[offset_w+(stride1+(stride2+(u*kw+v)))] =
+                          nn->conv2d->conv_cost_weight_derivs->val[offset_w+(stride1+(stride2+(u*kw+v)))] +
+                              nn->conv2d->conv_batch_cost_weight_derivs->val[offset_w+(stride1+(stride2+(u*kw+v)))];
                     }
                 }
                 stride2 = stride2 + (kh * kw);
@@ -1022,7 +1022,7 @@ void batch_accumulation_in_conv2d_net(void * _Nonnull neural) {
         }
         
         for (int ll=0; ll<q; ll++) {
-            nn->conv2d->conv_costBiasDerivatives->val[offset_b+ll] = nn->conv2d->conv_costBiasDerivatives->val[offset_b+ll] + nn->conv2d->conv_batchCostBiasDeriv->val[offset_b+ll];
+            nn->conv2d->conv_cost_bias_derivs->val[offset_b+ll] = nn->conv2d->conv_cost_bias_derivs->val[offset_b+ll] + nn->conv2d->conv_batch_cost_bias_derivs->val[offset_b+ll];
         }
         
         offset_w = offset_w + (p * q * kh * kw);
@@ -1033,18 +1033,18 @@ void batch_accumulation_in_conv2d_net(void * _Nonnull neural) {
     offset_w = 0;
     offset_b = 0;
     for (int l=0; l<nn->conv2d->num_dense_layers; l++) {
-        unsigned int m = nn->conv2d->dense_costWeightDerivatives->shape[l][0][0];
-        unsigned int n = nn->conv2d->dense_costWeightDerivatives->shape[l][1][0];
+        unsigned int m = nn->conv2d->dense_cost_weight_derivs->shape[l][0][0];
+        unsigned int n = nn->conv2d->dense_cost_weight_derivs->shape[l][1][0];
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] =
-                   nn->conv2d->dense_costWeightDerivatives->val[offset_w+((i*n)+j)] + nn->conv2d->dense_batchCostWeightDeriv->val[offset_w+((i*n)+j)];
+                nn->conv2d->dense_cost_weight_derivs->val[offset_w+((i*n)+j)] =
+                   nn->conv2d->dense_cost_weight_derivs->val[offset_w+((i*n)+j)] + nn->conv2d->dense_batch_cost_weight_derivs->val[offset_w+((i*n)+j)];
             }
         }
         for (int i=0; i<m; i++) {
-            nn->conv2d->dense_costBiasDerivatives->val[offset_b+i] =
-            nn->conv2d->dense_costBiasDerivatives->val[offset_b+i] + nn->conv2d->dense_batchCostBiasDeriv->val[offset_b+i];
+            nn->conv2d->dense_cost_bias_derivs->val[offset_b+i] =
+            nn->conv2d->dense_cost_bias_derivs->val[offset_b+i] + nn->conv2d->dense_batch_cost_bias_derivs->val[offset_b+i];
         }
         
         offset_w = offset_w + (m * n);
