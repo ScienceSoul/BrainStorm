@@ -10,7 +10,7 @@
 #define MetalCompute_h
 
 
-typedef struct MetalCompute {
+typedef struct metal_compute {
     
     void (* _Nullable init)(void);
     void (* _Nullable prepare)(char * _Nonnull operation);
@@ -20,8 +20,8 @@ typedef struct MetalCompute {
     void (* _Nullable format_data)(float * _Nonnull * _Nonnull input, unsigned int m, unsigned int n);
     void (* _Nullable feedforward)(void * _Nonnull neural, float * _Nonnull result);
     
-} MetalCompute;
+} metal_compute;
 
-MetalCompute * _Nonnull metalCompute(void);
+metal_compute * _Nonnull metal_compute_alloc(void);
 
 #endif /* MetalCompute_h */

@@ -52,8 +52,8 @@ typedef struct regularizer_dict {
     float (* _Nullable regularizer_func)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
 } regularizer_dict;
 
-typedef struct networkConstructor {
-    bool networkConstruction;
+typedef struct network_constructor {
+    bool network_construction;
     void (* _Nullable feed)(void * _Nonnull neural,  layer_dict layer_dict);
     void (* _Nullable layer_dense)(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regularizer);
     void (* _Nullable layer_conv2d)(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regularizer);
@@ -65,8 +65,8 @@ typedef struct networkConstructor {
     void (* _Nullable scalars)(void * _Nonnull neural, scalar_dict scalars);
     void * _Nonnull (* _Nullable optimizer)(void * _Nonnull neural, optimizer_dict optimizer_dict);
     
-} networkConstructor;
+} network_constructor;
 
-networkConstructor * _Nonnull allocateConstructor(void);
+network_constructor * _Nonnull allocate_constructor(void);
 
 #endif /* NetworkConstructor_h */

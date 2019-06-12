@@ -266,7 +266,7 @@ void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     memcpy(result, output, nn->data->test->m*sizeof(float));
 }
 
-MetalCompute * _Nonnull metalCompute(void) {
+MetalCompute * _Nonnull metal_compute_alloc(void) {
     
     MetalCompute *metalComppute = (MetalCompute *)malloc(sizeof(MetalCompute));
     

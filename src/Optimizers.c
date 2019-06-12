@@ -963,7 +963,7 @@ void gradient_descent_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_
     nn->batch_labels = batch_labels;
     
     ptr_init_func((void *)nn);
-    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    mini_batch_loop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_gradient_descent_update_func((void *)nn, batch_size);
 }
 
@@ -995,7 +995,7 @@ void momentum_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features
     nn->batch_labels = batch_labels;
     
     ptr_init_func((void *)nn);
-    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    mini_batch_loop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_momentum_update_func((void *)nn, batch_size);
 }
 
@@ -1027,7 +1027,7 @@ void ada_grad_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features
     nn->batch_labels = batch_labels;
     
     ptr_init_func((void *)nn);
-    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    mini_batch_loop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_ada_grad_update_func((void *)neural, batch_size);
 }
 
@@ -1059,7 +1059,7 @@ void rms_prop_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features
     nn->batch_labels = batch_labels;
     
     ptr_init_func((void *)nn);
-    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    mini_batch_loop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_rms_prop_update_func((void *)nn, batch_size);
 }
 
@@ -1091,6 +1091,6 @@ void adam_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, te
     nn->batch_labels = batch_labels;
     
     ptr_init_func((void *)nn);
-    miniBatchLoop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
+    mini_batch_loop((void *)nn, batch_size, inference, backpropagation, batch_accumulation);
     ptr_adam_update_func((void *)nn, batch_size);
 }

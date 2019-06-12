@@ -50,7 +50,7 @@ static void new_network_common(void * _Nonnull neural) {
     bzero(nn->data_path, MAX_LONG_STRING_LENGTH);
     strcpy(nn->data_name, "<empty>");
     
-    nn->constructor = allocateConstructor();
+    nn->constructor = allocate_constructor();
     
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
          nn->kernelInitializers[i] = NULL;
@@ -67,10 +67,10 @@ static void new_network_common(void * _Nonnull neural) {
     nn->l1_regularizer = l1_regularizer;
     nn->l2_regularizer = l2_regularizer;
     
-    nn->math_ops = mathOps;
+    nn->math_ops = math_ops;
     
-    nn->eval_prediction = evalPrediction;
-    nn->eval_cost = evalCost;
+    nn->eval_prediction = eval_prediction;
+    nn->eval_cost = eval_cost;
 }
 
 //
@@ -87,7 +87,7 @@ BrainStormNet * _Nonnull new_dense_net(void) {
     
     // This function is only used when loading a network from a param file
     // This mode is only available for a dense netwotk
-    nn->train_loop = trainLoop;
+    nn->train_loop = train_loop;
     
     return nn;
 }
@@ -114,7 +114,7 @@ static void genesis(void * _Nonnull self) {
     BrainStormNet *nn = (BrainStormNet *)self;
     
     // If the network is constructed with the constructor API, check that all required parameters were defined
-    if (nn->constructor->networkConstruction) {
+    if (nn->constructor->network_construction) {
         if (nn->network_num_layers == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology not defined. Use a constructor or define it in a parameter file.");
         
         if (nn->num_activation_functions == 0) {
@@ -141,7 +141,7 @@ static void genesis(void * _Nonnull self) {
     
     nn->data = (data *)malloc(sizeof(data));
     nn->data->init = initNeuralData;
-    nn->data->load = loadData;
+    nn->data->load = load_data;
     
     if (nn->is_dense_network) {
         dense_net_genesis(self);
@@ -266,6 +266,6 @@ static void gpu_alloc(void * _Nonnull self) {
     
     BrainStormNet *nn = (BrainStormNet *)self;
     
-    nn->gpu = metalCompute();
+    nn->gpu = metal_compute_alloc();
 }
 #endif

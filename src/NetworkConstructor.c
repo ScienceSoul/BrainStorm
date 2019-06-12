@@ -70,7 +70,7 @@ void set_feed(void * _Nonnull neural, layer_dict layer_dict) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
-    nn->constructor->networkConstruction = true;
+    nn->constructor->network_construction = true;
     if (nn->network_num_layers != 0) {
         fatal(DEFAULT_CONSOLE_WRITER, "network topolgy error. The feeding layer must be created first.");
     }
@@ -516,10 +516,10 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
     return optimizer;
 }
 
-networkConstructor * _Nonnull allocateConstructor(void) {
+network_constructor * _Nonnull allocate_constructor(void) {
     
-    networkConstructor *constructor = (networkConstructor *)malloc(sizeof(networkConstructor));
-    constructor->networkConstruction = false;
+    network_constructor *constructor = (network_constructor *)malloc(sizeof(network_constructor));
+    constructor->network_construction = false;
     constructor->feed = set_feed;
     constructor->layer_dense = set_layer_dense;
     constructor->layer_conv2d = set_layer_conv2d;

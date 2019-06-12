@@ -207,8 +207,8 @@ void create_conv2d_net(void * _Nonnull self) {
     
     nn->conv2d->train = (Train *)malloc(sizeof(Train));
     *(nn->conv2d->train) = (Train){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
-    nn->conv2d->train->next_batch = nextBatch;
-    nn->conv2d->train->batch_range = batchRange;
+    nn->conv2d->train->next_batch = next_batch;
+    nn->conv2d->train->batch_range = batch_range;
     nn->conv2d->train->progression = progression;
     
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
@@ -227,9 +227,9 @@ void create_conv2d_net(void * _Nonnull self) {
     memset(nn->conv2d->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
     memset(nn->conv2d->parameters->split, 0, sizeof(nn->dense->parameters->split));
     
-    nn->flip_kernels = flipKernels;
-    nn->flip_deltas = flipDeltas;
-    nn->kernel_mat_update = kernelMatUpdate;
+    nn->flip_kernels = flip_kernels;
+    nn->flip_deltas = flip_deltas;
+    nn->kernel_mat_update = kernel_mat_update;
     //nn->conv_mat_update = convMatUpdate;
     
     nn->conv2d->conv_weights_alloc = conv_weights_alloc;

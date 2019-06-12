@@ -23,7 +23,7 @@
 static int remainder_offsets[3];
 typedef void (*eval_net_type)(void * _Nonnull neural,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out);
 
-void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
+void mini_batch_loop(void * _Nonnull neural, unsigned int batch_size,
                    ptr_inference_func inference, ptr_backpropag_func backpropagation,
                    ptr_batch_accumul_func batch_accumulation) {
     
@@ -45,7 +45,7 @@ void miniBatchLoop(void * _Nonnull neural, unsigned int batch_size,
 #endif
 }
 
-void nextBatch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder) {
+void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder) {
     
     static bool firstTime = true;
     static int delta1 = 0;
@@ -130,7 +130,7 @@ void nextBatch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Non
 }
 
 
-int batchRange(void * _Nonnull neural, unsigned int batchSize, int * _Nullable remainder) {
+int batch_range(void * _Nonnull neural, unsigned int batchSize, int * _Nullable remainder) {
     
     static bool firstTime = true;
     
@@ -195,7 +195,7 @@ void progression(void * _Nonnull neural, progress_dict progress_dict) {
     } else count++;
 }
 
-float mathOps(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
+float math_ops(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
     
     float result = 0.0f;
     
@@ -296,7 +296,7 @@ static void eval(void * _Nonnull self, tensor * _Nonnull inputs, tensor * _Nonnu
     eval_net(self, inputs, labels, out);
 }
 
-void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal) {
+void eval_prediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal) {
     
     static bool test_check = false;
     static bool validation_check = false;
@@ -350,7 +350,7 @@ void evalPrediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonn
 //
 //  Compute the total cost function using a cross-entropy formulation
 //
-float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization) {
+float eval_cost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization) {
     
     static bool test_check = false;
     static bool validation_check = false;
@@ -442,7 +442,7 @@ float evalCost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization)
 // This routine flips horizontally and vertically the
 // kernels accross all convolution layers
 //
-void flipKernels(void * _Nonnull neural) {
+void flip_kernels(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -477,7 +477,7 @@ void flipKernels(void * _Nonnull neural) {
 // This routine flips horizontally and vertically the deltas (errors) at a given convolutional layer.
 // It operates on the latest updated values in deltas_buffer and stores the result in propag_buffer
 //
-void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned fh, unsigned int fw) {
+void flip_deltas(void * _Nonnull neural, unsigned int q, unsigned fh, unsigned int fw) {
     
     extern tensor *propag_buffer;
     BrainStormNet *nn = (BrainStormNet *)neural;
@@ -497,7 +497,7 @@ void flipDeltas(void * _Nonnull neural, unsigned int q, unsigned fh, unsigned in
 //
 // This routine updates the kernel matrices using the flipped kernels (weights)
 //
-void kernelMatUpdate(void * _Nonnull neural) {
+void kernel_mat_update(void * _Nonnull neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     
@@ -532,7 +532,7 @@ void kernelMatUpdate(void * _Nonnull neural) {
     }
 }
 
-void trainLoop(void * _Nonnull  neural) {
+void train_loop(void * _Nonnull  neural) {
     
     BrainStormNet *nn = (BrainStormNet *)neural;
     

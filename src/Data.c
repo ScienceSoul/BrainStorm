@@ -153,7 +153,7 @@ static void * _Nonnull set_labels(void * _Nonnull self, float * _Nonnull * _Nonn
     return labels;
 }
 
-void loadData(void * _Nonnull self, const char * _Nonnull dataSetName, const char * _Nonnull trainFile, const char * _Nonnull testFile, bool testData, bool binarization) {
+void load_data(void * _Nonnull self, const char * _Nonnull dataSetName, const char * _Nonnull trainFile, const char * _Nonnull testFile, bool testData, bool binarization) {
     
     unsigned int len1=0, len2=0, num_channels;
     float **raw = NULL;

@@ -106,12 +106,12 @@ typedef struct conv2d_network {
 typedef struct BrainStormNet {
     
     data * _Nullable data;
-    networkConstructor * _Nullable constructor;
+    network_constructor * _Nullable constructor;
     
     dense_network * _Nullable dense;
     conv2d_network * _Nullable conv2d;
     
-    MetalCompute * _Nullable gpu;
+    metal_compute * _Nullable gpu;
 
     tensor * _Nullable batch_inputs;
     tensor * _Nullable batch_labels;
