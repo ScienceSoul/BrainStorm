@@ -119,11 +119,11 @@ void dense_net_genesis(void * _Nonnull self) {
         }
         
         if (nn->dense->train->adam != NULL) {
-            if (nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate == NULL) {
-                nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->train->adam->dense->weights_biased_first_moment_estimate == NULL) {
+                nn->dense->train->adam->dense->weights_biased_first_moment_estimate = (tensor *)nn->tensor(self, *dict);
             }
-            if (nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate == NULL) {
-                nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->train->adam->dense->weights_biased_second_moment_estimate == NULL) {
+                nn->dense->train->adam->dense->weights_biased_second_moment_estimate = (tensor *)nn->tensor(self, *dict);
             }
         }
     }
@@ -288,13 +288,13 @@ void dense_net_finale(void * _Nonnull  self) {
             free(nn->dense->train->rms_prop);
         }
         if (nn->dense->train->adam != NULL) {
-            if (nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate != NULL) {
-                free(nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate->val);
-                free(nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate);
+            if (nn->dense->train->adam->dense->weights_biased_first_moment_estimate != NULL) {
+                free(nn->dense->train->adam->dense->weights_biased_first_moment_estimate->val);
+                free(nn->dense->train->adam->dense->weights_biased_first_moment_estimate);
             }
-            if (nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate != NULL) {
-                free(nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate->val);
-                free(nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate);
+            if (nn->dense->train->adam->dense->weights_biased_second_moment_estimate != NULL) {
+                free(nn->dense->train->adam->dense->weights_biased_second_moment_estimate->val);
+                free(nn->dense->train->adam->dense->weights_biased_second_moment_estimate);
             }
             
             if (nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate != NULL) {

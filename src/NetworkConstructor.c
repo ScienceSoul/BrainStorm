@@ -481,8 +481,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->dense->parameters->eta = optimizer_dict.step_size;
             
             nn->dense->train->adam->dense = (dense *)malloc(sizeof(dense));
-            nn->dense->train->adam->dense->weightsBiasedFirstMomentEstimate = NULL;
-            nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate = NULL;
+            nn->dense->train->adam->dense->weights_biased_first_moment_estimate = NULL;
+            nn->dense->train->adam->dense->weights_biased_second_moment_estimate = NULL;
             nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
             nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
             nn->dense->train->adam->minimize = adam_optimize;
@@ -502,8 +502,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->conv2d->train->adam->conv2d->weightsBiasedSecondMomentEstimate = NULL;
             nn->conv2d->train->adam->conv2d->biasesBiasedFirstMomentEstimate = NULL;
             nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate = NULL;
-            nn->conv2d->train->adam->dense->weightsBiasedFirstMomentEstimate = NULL;
-            nn->conv2d->train->adam->dense->weightsBiasedSecondMomentEstimate = NULL;
+            nn->conv2d->train->adam->dense->weights_biased_first_moment_estimate = NULL;
+            nn->conv2d->train->adam->dense->weights_biased_second_moment_estimate = NULL;
             nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
             nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
             nn->conv2d->train->adam->minimize = adam_optimize;
