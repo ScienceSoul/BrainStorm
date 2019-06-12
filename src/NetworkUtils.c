@@ -522,14 +522,14 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     FOUND_REGULARIZATION = 1;
                 }
             } else if (strcmp(field->key, "gradient_descent_optimizer") == 0) {
-                nn->dense->train->gradient_descent = (GradientDescentOptimizer *)malloc(sizeof(GradientDescentOptimizer));
+                nn->dense->train->gradient_descent = (gradient_descent_optimizer *)malloc(sizeof(gradient_descent_optimizer));
                 nn->dense->train->gradient_descent->learning_rate = strtof(field->value, NULL);
                 nn->dense->parameters->eta = strtof(field->value, NULL);
-                nn->dense->train->gradient_descent->minimize = gradientDescentOptimizer;
+                nn->dense->train->gradient_descent->minimize = gradient_descent_optimize;
                 FOUND_OPTIMIZER = 1;
                 
             } else if (strcmp(field->key, "momentum_optimizer") == 0) {
-                nn->dense->train->momentum = (MomentumOptimizer *)malloc(sizeof(MomentumOptimizer));
+                nn->dense->train->momentum = (momentum_optimizer *)malloc(sizeof(momentum_optimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
@@ -537,11 +537,11 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->momentum->learning_rate = result[0];
                 nn->dense->train->momentum->momentum_coefficient = result[1];
                 nn->dense->parameters->eta = result[0];
-                nn->dense->train->momentum->minimize = momentumOptimizer;
+                nn->dense->train->momentum->minimize = momentum_optimize;
                 FOUND_OPTIMIZER = 1;
             
             } else if (strcmp(field->key, "adagrad_optimizer") == 0) {
-                nn->dense->train->ada_grad = (AdaGradOptimizer *)malloc(sizeof(AdaGradOptimizer));
+                nn->dense->train->ada_grad = (ada_grad_optimizer *)malloc(sizeof(ada_grad_optimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
@@ -551,11 +551,11 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->parameters->eta = result[0];
                 nn->dense->train->ada_grad->dense->costWeightDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->ada_grad->dense->costBiasDerivativeSquaredAccumulated = NULL;
-                nn->dense->train->ada_grad->minimize = adamOptimizer;
+                nn->dense->train->ada_grad->minimize = adam_optimize;
                 FOUND_OPTIMIZER = 1;
             
             } else if (strcmp(field->key, "rmsprop_optimizer") == 0) {
-                nn->dense->train->rms_prop = (RMSPropOptimizer *)malloc(sizeof(RMSPropOptimizer));
+                nn->dense->train->rms_prop = (rms_prop_optimizer *)malloc(sizeof(rms_prop_optimizer));
                 float result[3];
                 unsigned int numberOfItems, len = 3;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
@@ -566,11 +566,11 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->parameters->eta = result[0];
                 nn->dense->train->rms_prop->dense->costWeightDerivativeSquaredAccumulated = NULL;
                 nn->dense->train->rms_prop->dense->costBiasDerivativeSquaredAccumulated = NULL;
-                nn->dense->train->rms_prop->minimize = rmsPropOptimizer;
+                nn->dense->train->rms_prop->minimize = rms_prop_optimize;
                 FOUND_OPTIMIZER = 1;
             
             } else if (strcmp(field->key, "adam_optimizer") == 0) {
-                nn->dense->train->adam = (AdamOptimizer *)malloc(sizeof(AdamOptimizer));
+                nn->dense->train->adam = (adam_optimizer *)malloc(sizeof(adam_optimizer));
                 float result[4];
                 unsigned int numberOfItems, len=4;
                 parseArgument(field->value, field->key, result, &numberOfItems, &len);
@@ -585,7 +585,7 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->train->adam->dense->weightsBiasedSecondMomentEstimate = NULL;
                 nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
                 nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
-                nn->dense->train->adam->minimize = adamOptimizer;
+                nn->dense->train->adam->minimize = adam_optimize;
                 FOUND_OPTIMIZER = 1;
             }
             field = field->next;

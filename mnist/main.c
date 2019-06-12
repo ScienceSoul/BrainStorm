@@ -9,7 +9,7 @@
 #include "BrainStorm.h"
 #include "LoadMNISTDataSet.h"
 
-void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
+void train_dense(BrainStormNet *neural, momentum_optimizer *optimizer) {
     
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
@@ -73,7 +73,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     free(dict);
 }
 
-void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
+void train_conv2d(BrainStormNet *neural, momentum_optimizer *optimizer) {
     
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
@@ -196,7 +196,7 @@ void api_fully_connected_net(void) {
     neural->constructor->classification((void *)neural, vector, 10);
     
     // The optimizer
-    MomentumOptimizer *optimizer = (MomentumOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
+    momentum_optimizer *optimizer = (momentum_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
     
     // Create the data structures of the neural network
     neural->genesis((void *)neural);
@@ -251,11 +251,11 @@ void api_convolutional_net(void) {
     
     // The optimizer
     
-    MomentumOptimizer *optimizer = (MomentumOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
-    //GradientDescentOptimizer *optimizer = (GradientDescentOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="gradient descent", .learning_rate=0.1f});
-    //AdaGradOptimizer *optimizer = (AdaGradOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adagrad", .learning_rate=0.01f, .delta=1.0e-7});
-    //RMSPropOptimizer *optimizer = (RMSPropOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="rmsprop", .learning_rate=0.01f, .decay_rate1=0.9f, .delta=1.0e-6});
-    //AdamOptimizer *optimizer = (AdamOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adam", .step_size=0.001f, .decay_rate1=0.9f, .decay_rate2=0.999f, .delta=1.0e-8});
+    momentum_optimizer *optimizer = (momentum_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
+    //gradient_descent_optimizer *optimizer = (gradient_descent_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="gradient descent", .learning_rate=0.1f});
+    //ada_grad_optimizer *optimizer = (ada_grad_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adagrad", .learning_rate=0.01f, .delta=1.0e-7});
+    //rms_prop_optimizer *optimizer = (rms_prop_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="rmsprop", .learning_rate=0.01f, .decay_rate1=0.9f, .delta=1.0e-6});
+    //AdamOptimizer *adam_optimizer = (adam_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adam", .step_size=0.001f, .decay_rate1=0.9f, .decay_rate2=0.999f, .delta=1.0e-8});
     
     neural->genesis((void *)neural);
     

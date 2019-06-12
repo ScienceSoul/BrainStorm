@@ -9,7 +9,7 @@
 #include "BrainStorm.h"
 #include "LoadFashion-MNISTDataSet.h"
 
-void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
+void train_dense(BrainStormNet *neural, momentum_optimizer *optimizer) {
     
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
@@ -20,7 +20,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     tensor *features = (tensor *)neural->tensor(NULL, *dict);
     
     dict->rank = 1;
-    dict->shape[0][0][0] = batch_size * neural->dense->parameters->numberOfClassifications;
+    dict->shape[0][0][0] = batch_size * neural->dense->parameters->number_of_classifications;
     tensor *labels = (tensor *)neural->tensor(NULL, *dict);
     
     tensor *t1 = (tensor *)neural->data->test->set;
@@ -30,7 +30,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     
     for (int k=1; k<=n_epochs; k++) {
         int num_inputs = neural->dense->parameters->topology[0];
-        shuffle(neural->data->training->set, neural->data->training->labels, neural->dense->parameters->numberOfClassifications, &num_inputs);
+        shuffle(neural->data->training->set, neural->data->training->labels, neural->dense->parameters->number_of_classifications, &num_inputs);
         
         fprintf(stdout, "Fashion-MNIST: Epoch {%d/%d}:\n", k, n_epochs);
         double train_time = 0.0;
@@ -73,7 +73,7 @@ void train_dense(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     free(dict);
 }
 
-void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
+void train_conv2d(BrainStormNet *neural, momentum_optimizer *optimizer) {
     
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
@@ -89,7 +89,7 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     tensor *features = (tensor *)neural->tensor(NULL, *dict);
     
     dict->rank = 1;
-    dict->shape[0][0][0] = batch_size * neural->conv2d->parameters->numberOfClassifications;
+    dict->shape[0][0][0] = batch_size * neural->conv2d->parameters->number_of_classifications;
     tensor *labels = (tensor *)neural->tensor(NULL, *dict);
     
     tensor *t2 = (tensor *)neural->data->test->set;
@@ -98,7 +98,7 @@ void train_conv2d(BrainStormNet *neural, MomentumOptimizer *optimizer) {
     float out_validation[t3->shape[0][0][0]];
     
     for (int k=1; k<=n_epochs; k++) {
-        shuffle(neural->data->training->set, neural->data->training->labels, neural->conv2d->parameters->numberOfClassifications, NULL);
+        shuffle(neural->data->training->set, neural->data->training->labels, neural->conv2d->parameters->number_of_classifications, NULL);
         
         fprintf(stdout, "Fashion-MNIST: Epoch {%d/%d}:\n", k, n_epochs);
         double train_time = 0.0;
@@ -170,7 +170,7 @@ void api_fully_connected_net(void) {
     neural->constructor->classification((void *)neural, vector, 10);
     
     // The optimizer
-    MomentumOptimizer *optimizer = (MomentumOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
+    momentum_optimizer *optimizer = (momentum_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
     
     // Create the data structures of the neural network
     neural->genesis((void *)neural);
@@ -225,11 +225,11 @@ void api_convolutional_net(void) {
     
     // The optimizer
     
-    MomentumOptimizer *optimizer = (MomentumOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
-    //GradientDescentOptimizer *optimizer = (GradientDescentOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="gradient descent", .learning_rate=0.1f});
-    //AdaGradOptimizer *optimizer = (AdaGradOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adagrad", .learning_rate=0.01f, .delta=1.0e-7});
-    //RMSPropOptimizer *optimizer = (RMSPropOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="rmsprop", .learning_rate=0.01f, .decay_rate1=0.9f, .delta=1.0e-6});
-    //AdamOptimizer *optimizer = (AdamOptimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adam", .step_size=0.001f, .decay_rate1=0.9f, .decay_rate2=0.999f, .delta=1.0e-8});
+    momentum_optimizer *optimizer = (momentum_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="momentum", .learning_rate=0.01f, .momentum=0.9f});
+    //gradient_descent_optimizer *optimizer = (gradient_descent_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="gradient descent", .learning_rate=0.1f});
+    //ada_grad_optimizer *optimizer = (ada_grad_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adagrad", .learning_rate=0.01f, .delta=1.0e-7});
+    //rms_prop_optimizer *optimizer = (rms_prop_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="rmsprop", .learning_rate=0.01f, .decay_rate1=0.9f, .delta=1.0e-6});
+    //adam_optimizer *optimizer = (adam_optimizer *)neural->constructor->optimizer((void *)neural, (optimizer_dict){.optimizer="adam", .step_size=0.001f, .decay_rate1=0.9f, .decay_rate2=0.999f, .delta=1.0e-8});
     
     neural->genesis((void *)neural);
     

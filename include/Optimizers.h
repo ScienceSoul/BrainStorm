@@ -31,35 +31,35 @@ typedef struct conv2d {
     tensor * _Nullable biasesBiasedSecondMomentEstimate;
 } conv2d;
 
-typedef struct GradientDescentOptimizer {
+typedef struct gradient_descent_optimizer {
     float learning_rate;
     void (* _Nullable minimize)(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-} GradientDescentOptimizer;
+} gradient_descent_optimizer;
 
-typedef struct MomentumOptimizer {
+typedef struct momentum_optimizer {
     float learning_rate;
     float momentum_coefficient;
     void (* _Nullable minimize)(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-} MomentumOptimizer;
+} momentum_optimizer;
 
-typedef struct AdaGradOptimizer {
+typedef struct ada_grad_optimizer {
     float learning_rate;
     float delta;
     dense * _Nullable dense;
     conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-} AdaGradOptimizer;
+} ada_grad_optimizer;
 
-typedef struct RMSPropOptimizer {
+typedef struct rms_prop_optimizer {
     float learning_rate;
     float delta;
     float decay_rate;
     dense * _Nullable dense;
     conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-} RMSPropOptimizer;
+} rms_prop_optimizer;
 
-typedef struct AdamOptimizer {
+typedef struct adam_optimizer {
     unsigned int time;
     float step_size;
     float delta;
@@ -68,12 +68,12 @@ typedef struct AdamOptimizer {
     dense * _Nullable dense;
     conv2d * _Nullable conv2d;
     void (* _Nullable minimize)(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-} AdamOptimizer;
+} adam_optimizer;
 
-void gradientDescentOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-void momentumOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-void adaGradOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-void rmsPropOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
-void adamOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
+void gradient_descent_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
+void momentum_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
+void ada_grad_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
+void rms_prop_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
+void adam_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size);
 
 #endif /* Optimization_h */

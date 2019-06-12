@@ -936,7 +936,7 @@ static void set_func_ptr(void * _Nonnull neural, optimizer optimizer) {
     }
 }
 
-void gradientDescentOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void gradient_descent_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool  firstTime = true;
     
@@ -968,7 +968,7 @@ void gradientDescentOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_f
     ptr_gradient_descent_update_func((void *)nn, batch_size);
 }
 
-void momentumOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void momentum_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -1000,7 +1000,7 @@ void momentumOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features
     ptr_momentum_update_func((void *)nn, batch_size);
 }
 
-void adaGradOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void ada_grad_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
  
     static bool firstTime = true;
     
@@ -1032,7 +1032,7 @@ void adaGradOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features,
     ptr_ada_grad_update_func((void *)neural, batch_size);
 }
 
-void rmsPropOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void rms_prop_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     
@@ -1064,7 +1064,7 @@ void rmsPropOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features,
     ptr_rms_prop_update_func((void *)nn, batch_size);
 }
 
-void adamOptimizer(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
+void adam_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, tensor * _Nonnull batch_labels, unsigned int batch_size) {
     
     static bool firstTime = true;
     

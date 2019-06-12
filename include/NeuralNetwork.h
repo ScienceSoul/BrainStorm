@@ -16,11 +16,11 @@
 #include "NetworkOps.h"
 
 typedef struct Train {
-    GradientDescentOptimizer * _Nullable gradient_descent;
-    MomentumOptimizer * _Nullable momentum;
-    AdaGradOptimizer * _Nullable ada_grad;
-    RMSPropOptimizer * _Nullable rms_prop;
-    AdamOptimizer * _Nullable adam;
+    gradient_descent_optimizer * _Nullable gradient_descent;
+    momentum_optimizer * _Nullable momentum;
+    ada_grad_optimizer * _Nullable ada_grad;
+    rms_prop_optimizer * _Nullable rms_prop;
+    adam_optimizer * _Nullable adam;
     void (* _Nullable next_batch)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder);
     int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize,  int * _Nullable remainder);
     void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
