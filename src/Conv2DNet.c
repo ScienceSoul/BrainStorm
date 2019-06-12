@@ -205,8 +205,8 @@ void create_conv2d_net(void * _Nonnull self) {
         .deltas_buffer=NULL
     };
     
-    nn->conv2d->train = (Train *)malloc(sizeof(Train));
-    *(nn->conv2d->train) = (Train){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
+    nn->conv2d->train = (trainer *)malloc(sizeof(trainer));
+    *(nn->conv2d->train) = (trainer){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
     nn->conv2d->train->next_batch = next_batch;
     nn->conv2d->train->batch_range = batch_range;
     nn->conv2d->train->progression = progression;

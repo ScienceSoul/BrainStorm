@@ -19,25 +19,25 @@ void create_dense_net(void * _Nonnull self) {
     nn->dense = (dense_network *)malloc(sizeof(dense_network));
     *(nn->dense) = (dense_network){.num_dense_layers=0,
         .weights=NULL,
-        .weightsVelocity=NULL,
+        .weights_velocity=NULL,
         .biases=NULL,
-        .biasesVelocity=NULL,
+        .biases_velocity=NULL,
         .activations=NULL,
-        .affineTransformations=NULL,
-        .costWeightDerivatives=NULL,
-        .costBiasDerivatives=NULL,
-        .batchCostWeightDeriv=NULL,
-        .batchCostBiasDeriv=NULL};
+        .affine_transforms=NULL,
+        .cost_weight_derivs=NULL,
+        .cost_bias_derivs=NULL,
+        .batch_cost_weight_derivs=NULL,
+        .batch_cost_bias_derivs=NULL};
     
-    nn->dense->train = (Train *)malloc(sizeof(Train));
-    *(nn->dense->train) = (Train){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
+    nn->dense->train = (trainer *)malloc(sizeof(trainer));
+    *(nn->dense->train) = (trainer){.gradient_descent=NULL, .ada_grad=NULL, .rms_prop=NULL,. adam=NULL};
     nn->dense->train->next_batch = next_batch;
     nn->dense->train->batch_range = batch_range;
     nn->dense->train->progression = progression;
     
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
-        nn->dense->activationFunctions[i] = NULL;
-        nn->dense->activationDerivatives[i] = NULL;
+        nn->dense->activation_functions[i] = NULL;
+        nn->dense->activation_derivatives[i] = NULL;
     }
     
     nn->dense->parameters = (dense_net_parameters *)malloc(sizeof(dense_net_parameters));
@@ -65,7 +65,7 @@ void create_dense_net(void * _Nonnull self) {
     memset(nn->dense->parameters->topology, 0, sizeof(nn->dense->parameters->topology));
     memset(nn->dense->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
     memset(nn->dense->parameters->split, 0, sizeof(nn->dense->parameters->split));
-    nn->dense->load_params_from_input_file = loadParametersFromImputFile;
+    nn->dense->load_params_from_input_file = load_parameters_from_imput_file;
 }
 
 //
@@ -94,15 +94,15 @@ void dense_net_genesis(void * _Nonnull self) {
         nn->dense->weights = (tensor *)nn->tensor(self, *dict);
         
         dict->init_weights = false;
-        if (nn->dense->costWeightDerivatives == NULL)
-            nn->dense->costWeightDerivatives = (tensor *)nn->tensor(self, *dict);
+        if (nn->dense->cost_weight_derivs == NULL)
+            nn->dense->cost_weight_derivs = (tensor *)nn->tensor(self, *dict);
         
-        if (nn->dense->batchCostWeightDeriv == NULL)
-            nn->dense->batchCostWeightDeriv = (tensor *)nn->tensor(self, *dict);
+        if (nn->dense->batch_cost_weight_derivs == NULL)
+            nn->dense->batch_cost_weight_derivs = (tensor *)nn->tensor(self, *dict);
         
         if (nn->dense->train->momentum != NULL) {
-            if (nn->dense->weightsVelocity == NULL) {
-                nn->dense->weightsVelocity = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->weights_velocity == NULL) {
+                nn->dense->weights_velocity = (tensor *)nn->tensor(self, *dict);
             }
         }
         
@@ -148,15 +148,15 @@ void dense_net_genesis(void * _Nonnull self) {
             }
         }
         
-        if (nn->dense->costBiasDerivatives == NULL)
-            nn->dense->costBiasDerivatives = (tensor *)nn->tensor(self, *dict);
+        if (nn->dense->cost_bias_derivs == NULL)
+            nn->dense->cost_bias_derivs = (tensor *)nn->tensor(self, *dict);
         
-        if (nn->dense->batchCostBiasDeriv == NULL)
-            nn->dense->batchCostBiasDeriv = (tensor *)nn->tensor(self, *dict);
+        if (nn->dense->batch_cost_bias_derivs == NULL)
+            nn->dense->batch_cost_bias_derivs = (tensor *)nn->tensor(self, *dict);
         
         if (nn->dense->train->momentum != NULL) {
-            if (nn->dense->biasesVelocity ==  NULL) {
-                nn->dense->biasesVelocity = (tensor *)nn->tensor(self, *dict);
+            if (nn->dense->biases_velocity ==  NULL) {
+                nn->dense->biases_velocity = (tensor *)nn->tensor(self, *dict);
             }
         }
         
@@ -191,13 +191,13 @@ void dense_net_genesis(void * _Nonnull self) {
         nn->dense->activations = (tensor *)nn->tensor(self, *dict);
     }
     
-    if (nn->dense->affineTransformations == NULL) {
+    if (nn->dense->affine_transforms == NULL) {
         dict->rank = 1;
         for (int l=1; l<nn->network_num_layers; l++) {
             dict->shape[l-1][0][0] = nn->dense->parameters->topology[l];
         }
         dict->flattening_length = nn->network_num_layers-1;
-        nn->dense->affineTransformations = (tensor *)nn->tensor(self, *dict);
+        nn->dense->affine_transforms = (tensor *)nn->tensor(self, *dict);
     }
     
     free(dict);
@@ -222,25 +222,25 @@ void dense_net_finale(void * _Nonnull  self) {
         free(nn->dense->activations->val);
         free(nn->dense->activations);
     }
-    if (nn->dense->affineTransformations != NULL) {
-        free(nn->dense->affineTransformations->val);
-        free(nn->dense->affineTransformations);
+    if (nn->dense->affine_transforms != NULL) {
+        free(nn->dense->affine_transforms->val);
+        free(nn->dense->affine_transforms);
     }
-    if (nn->dense->costWeightDerivatives != NULL) {
-        free(nn->dense->costWeightDerivatives->val);
-        free(nn->dense->costWeightDerivatives);
+    if (nn->dense->cost_weight_derivs != NULL) {
+        free(nn->dense->cost_weight_derivs->val);
+        free(nn->dense->cost_weight_derivs);
     }
-    if (nn->dense->costBiasDerivatives != NULL) {
-        free(nn->dense->costBiasDerivatives->val);
-        free(nn->dense->costBiasDerivatives);
+    if (nn->dense->cost_bias_derivs != NULL) {
+        free(nn->dense->cost_bias_derivs->val);
+        free(nn->dense->cost_bias_derivs);
     }
-    if (nn->dense->batchCostWeightDeriv != NULL) {
-        free(nn->dense->batchCostWeightDeriv->val);
-        free(nn->dense->batchCostWeightDeriv);
+    if (nn->dense->batch_cost_weight_derivs != NULL) {
+        free(nn->dense->batch_cost_weight_derivs->val);
+        free(nn->dense->batch_cost_weight_derivs);
     }
-    if (nn->dense->batchCostBiasDeriv != NULL) {
-        free(nn->dense->batchCostBiasDeriv->val);
-        free(nn->dense->batchCostBiasDeriv);
+    if (nn->dense->batch_cost_bias_derivs != NULL) {
+        free(nn->dense->batch_cost_bias_derivs->val);
+        free(nn->dense->batch_cost_bias_derivs);
     }
     
     // ------------------------------------------------------------------------
@@ -252,13 +252,13 @@ void dense_net_finale(void * _Nonnull  self) {
         }
         
         if (nn->dense->train->momentum != NULL) {
-            if (nn->dense->weightsVelocity != NULL) {
-                free(nn->dense->weightsVelocity->val);
-                free(nn->dense->weightsVelocity);
+            if (nn->dense->weights_velocity != NULL) {
+                free(nn->dense->weights_velocity->val);
+                free(nn->dense->weights_velocity);
             }
-            if (nn->dense->biasesVelocity != NULL) {
-                free(nn->dense->biasesVelocity->val);
-                free(nn->dense->biasesVelocity);
+            if (nn->dense->biases_velocity != NULL) {
+                free(nn->dense->biases_velocity->val);
+                free(nn->dense->biases_velocity);
             }
             free(nn->dense->train->momentum);
         }

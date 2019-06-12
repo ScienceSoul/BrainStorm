@@ -124,7 +124,7 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
         nn->dense->parameters->topology[nn->network_num_layers] = layer_dict.num_neurons;
         
         // The activation function for this layer
-        set_activation_function(nn->activationFunctionsRef, nn->dense->activationFunctions, nn->dense->activationDerivatives, layer_dict, nn->num_activation_functions);
+        set_activation_function(nn->activationFunctionsRef, nn->dense->activation_functions, nn->dense->activation_derivatives, layer_dict, nn->num_activation_functions);
         
         // The kernel initializer for this layer
         set_kernel_initializer(nn->kernelInitializers, layer_dict, nn->dense->num_dense_layers);

@@ -15,7 +15,7 @@
 #include "Optimizers.h"
 #include "NetworkOps.h"
 
-typedef struct Train {
+typedef struct trainer {
     gradient_descent_optimizer * _Nullable gradient_descent;
     momentum_optimizer * _Nullable momentum;
     ada_grad_optimizer * _Nullable ada_grad;
@@ -24,28 +24,28 @@ typedef struct Train {
     void (* _Nullable next_batch)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder);
     int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize,  int * _Nullable remainder);
     void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
-} Train;
+} trainer;
 
 typedef struct dense_network {
     unsigned int num_dense_layers;
     
     tensor * _Nullable weights;
-    tensor * _Nullable weightsVelocity;
+    tensor * _Nullable weights_velocity;
     tensor * _Nullable biases;
-    tensor * _Nullable biasesVelocity;
+    tensor * _Nullable biases_velocity;
     tensor * _Nullable activations;
-    tensor * _Nullable affineTransformations;
-    tensor * _Nullable costWeightDerivatives;
-    tensor * _Nullable costBiasDerivatives;
-    tensor * _Nullable batchCostWeightDeriv;
-    tensor * _Nullable batchCostBiasDeriv;
+    tensor * _Nullable affine_transforms;
+    tensor * _Nullable cost_weight_derivs;
+    tensor * _Nullable cost_bias_derivs;
+    tensor * _Nullable batch_cost_weight_derivs;
+    tensor * _Nullable batch_cost_bias_derivs;
     
     dense_net_parameters * _Nullable parameters;
-    Train * _Nullable train;
+    trainer * _Nullable train;
     
     int (* _Nullable load_params_from_input_file)(void * _Nonnull self, const char * _Nonnull paraFile);
-    float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
-    float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
+    float (* _Nonnull activation_functions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
+    float (* _Nonnull activation_derivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
 } dense_network;
 
 typedef struct conv2d_network {
@@ -85,7 +85,7 @@ typedef struct conv2d_network {
     tensor * _Nullable deltas_buffer;
     
     conv2d_net_parameters * _Nullable parameters;
-    Train * _Nullable train;
+    trainer * _Nullable train;
     
     float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
     float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);

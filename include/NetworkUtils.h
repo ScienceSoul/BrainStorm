@@ -72,6 +72,6 @@ tensor_dict * _Nonnull init_tensor_dict(void);
 
 void __attribute__((overloadable))shuffle(void * _Nonnull features, void * _Nullable labels, int num_classifications, int * _Nullable num_features);
 
-int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile);
+int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull paraFile);
 
 #endif /* NetworkUtils_h */

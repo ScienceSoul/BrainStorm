@@ -341,7 +341,7 @@ void __attribute__((overloadable))shuffle(void * _Nonnull features, void * _Null
 }
 
 
-int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull paraFile) {
+int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull paraFile) {
     
     definition *definitions = NULL;
     
@@ -417,64 +417,64 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                     for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(activationFunctionsStr[0], "sigmoid") == 0) {
                             nn->activationFunctionsRef[i] = SIGMOID;
-                            nn->dense->activationFunctions[i] = sigmoid;
-                            nn->dense->activationDerivatives[i] = sigmoid_prime;
+                            nn->dense->activation_functions[i] = sigmoid;
+                            nn->dense->activation_derivatives[i] = sigmoid_prime;
                         } else if (strcmp(activationFunctionsStr[0], "relu") == 0) {
                             nn->activationFunctionsRef[i] = RELU;
-                            nn->dense->activationFunctions[i] = relu;
-                            nn->dense->activationDerivatives[i] = relu_prime;
+                            nn->dense->activation_functions[i] = relu;
+                            nn->dense->activation_derivatives[i] = relu_prime;
                         } else if (strcmp(activationFunctionsStr[0], "leakyrelu") == 0) {
                             nn->activationFunctionsRef[i] = LEAKY_RELU;
-                            nn->dense->activationFunctions[i] = leakyrelu;
-                            nn->dense->activationDerivatives[i] = leakyrelu_prime;
+                            nn->dense->activation_functions[i] = leakyrelu;
+                            nn->dense->activation_derivatives[i] = leakyrelu_prime;
                         } else if (strcmp(activationFunctionsStr[0], "elu") == 0) {
                             nn->activationFunctionsRef[i] = ELU;
-                            nn->dense->activationFunctions[i] = elu;
-                            nn->dense->activationDerivatives[i] = elu_prime;
+                            nn->dense->activation_functions[i] = elu;
+                            nn->dense->activation_derivatives[i] = elu_prime;
                         } else if (strcmp(activationFunctionsStr[0], "tanh") == 0) {
                             nn->activationFunctionsRef[i] = TANH;
-                            nn->dense->activationFunctions[i] = tan_h;
-                            nn->dense->activationDerivatives[i] = tanh_prime;
+                            nn->dense->activation_functions[i] = tan_h;
+                            nn->dense->activation_derivatives[i] = tanh_prime;
                         } else if (strcmp(activationFunctionsStr[0], "softplus") == 0) {
                             nn->activationFunctionsRef[i] = SOFTPLUS;
-                            nn->dense->activationFunctions[i] = softplus;
-                            nn->dense->activationDerivatives[i] = softplus_prime;
+                            nn->dense->activation_functions[i] = softplus;
+                            nn->dense->activation_derivatives[i] = softplus_prime;
                         } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activationFunctionsStr[0]);
                     }
                 } else {
                     for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(activationFunctionsStr[i], "sigmoid") == 0) {
                             nn->activationFunctionsRef[i] = SIGMOID;
-                            nn->dense->activationFunctions[i] = sigmoid;
-                            nn->dense->activationDerivatives[i] = sigmoid_prime;
+                            nn->dense->activation_functions[i] = sigmoid;
+                            nn->dense->activation_derivatives[i] = sigmoid_prime;
                         } else if (strcmp(activationFunctionsStr[i], "relu") == 0) {
                             nn->activationFunctionsRef[i] = RELU;
-                            nn->dense->activationFunctions[i] = relu;
-                            nn->dense->activationDerivatives[i] = relu_prime;
+                            nn->dense->activation_functions[i] = relu;
+                            nn->dense->activation_derivatives[i] = relu_prime;
                         } else if (strcmp(activationFunctionsStr[i], "leakyrelu") == 0) {
                             nn->activationFunctionsRef[i] = LEAKY_RELU;
-                            nn->dense->activationFunctions[i] = leakyrelu;
-                            nn->dense->activationDerivatives[i] = leakyrelu_prime;
+                            nn->dense->activation_functions[i] = leakyrelu;
+                            nn->dense->activation_derivatives[i] = leakyrelu_prime;
                         } else if (strcmp(activationFunctionsStr[i], "elu") == 0) {
                             nn->activationFunctionsRef[i] = ELU;
-                            nn->dense->activationFunctions[i] = elu;
-                            nn->dense->activationDerivatives[i] = elu_prime;
+                            nn->dense->activation_functions[i] = elu;
+                            nn->dense->activation_derivatives[i] = elu_prime;
                         } else if (strcmp(activationFunctionsStr[i], "tanh") == 0) {
                             nn->activationFunctionsRef[i] = TANH;
-                            nn->dense->activationFunctions[i] = tan_h;
-                            nn->dense->activationDerivatives[i] = tanh_prime;
+                            nn->dense->activation_functions[i] = tan_h;
+                            nn->dense->activation_derivatives[i] = tanh_prime;
                         } else if (strcmp(activationFunctionsStr[i], "softplus") == 0) {
                             nn->activationFunctionsRef[i] = SOFTPLUS;
-                            nn->dense->activationFunctions[i] = softplus;
-                            nn->dense->activationDerivatives[i] = softplus_prime;
+                            nn->dense->activation_functions[i] = softplus;
+                            nn->dense->activation_derivatives[i] = softplus_prime;
                         } else if (strcmp(activationFunctionsStr[i], "softmax") == 0) {
                             // The sofmax function is only supported for the output units
                             if (i < nn->network_num_layers-2) {
                                 fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can't be used for the hiden units, only for the output units.");
                             }
                             nn->activationFunctionsRef[i] = SOFTMAX;
-                            nn->dense->activationFunctions[i] = softmax;
-                            nn->dense->activationDerivatives[i] = NULL;
+                            nn->dense->activation_functions[i] = softmax;
+                            nn->dense->activation_derivatives[i] = NULL;
                         } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activationFunctionsStr[i]);
                     }
                 }
@@ -601,8 +601,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
     }
     if (FOUND_ACTIVATIONS == 0) {
         for (int i=0; i<nn->network_num_layers-1; i++) {
-            nn->dense->activationFunctions[i] = sigmoid;
-            nn->dense->activationDerivatives[i] = sigmoid_prime;
+            nn->dense->activation_functions[i] = sigmoid;
+            nn->dense->activation_derivatives[i] = sigmoid_prime;
         }
     }
     if (FOUND_SPLIT == 0) {

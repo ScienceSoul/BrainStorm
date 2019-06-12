@@ -31,7 +31,7 @@ void inference_in_dense_net(void * _Nonnull neural) {
         
         cblas_sgemv(CblasRowMajor, CblasNoTrans, (int)m, (int)n, 1.0, nn->dense->weights->val+stride1, (int)n, nn->dense->activations->val+stride3, 1, 0.0, buffer, 1);
 #ifdef __APPLE__
-        vDSP_vadd(buffer, 1, nn->dense->biases->val+stride2, 1, nn->dense->affineTransformations->val+stride2, 1, nn->dense->biases->shape[l][0][0]);
+        vDSP_vadd(buffer, 1, nn->dense->biases->val+stride2, 1, nn->dense->affine_transforms->val+stride2, 1, nn->dense->biases->shape[l][0][0]);
 #else
         for (int i=0; i<nn->dense->biases->shape[l][0][0]; i++) {
             nn->dense->affineTransformations->val[stride2+i] = buffer[i] + nn->dense->biases->val[stride2+i];
@@ -40,13 +40,13 @@ void inference_in_dense_net(void * _Nonnull neural) {
         float *vec = NULL;
         unsigned int *vec_length = NULL;
         if (nn->activationFunctionsRef[l] == SOFTMAX) {
-            vec = nn->dense->affineTransformations->val+stride2;
-            vec_length = &(nn->dense->affineTransformations->shape[l][0][0]);
+            vec = nn->dense->affine_transforms->val+stride2;
+            vec_length = &(nn->dense->affine_transforms->shape[l][0][0]);
         }
         
         stride3 = stride3 + nn->dense->activations->shape[l][0][0];
         for (int i=0; i<nn->dense->activations->shape[l+1][0][0]; i++) {
-            nn->dense->activations->val[stride3+i] = nn->dense->activationFunctions[l](nn->dense->affineTransformations->val[stride2+i], vec, vec_length);
+            nn->dense->activations->val[stride3+i] = nn->dense->activation_functions[l](nn->dense->affine_transforms->val[stride2+i], vec, vec_length);
         }
         
         nanToNum(nn->dense->activations->val+stride3, nn->dense->activations->shape[l+1][0][0]);
@@ -80,7 +80,7 @@ void backpropag_in_dense_net(void * _Nonnull neural,
     // Stride to affine transformations and dc/db at last layer
     unsigned stride3 = 0;
     for (int l=0; l<nn->network_num_layers-2; l++) {
-        stride3 = stride3 + nn->dense->affineTransformations->shape[l][0][0];
+        stride3 = stride3 + nn->dense->affine_transforms->shape[l][0][0];
     }
     
     float delta[nn->dense->parameters->max_number_nodes_in_layer];
@@ -99,19 +99,19 @@ void backpropag_in_dense_net(void * _Nonnull neural,
     unsigned int stride4 = 0;
     unsigned int m, n;
     for (int l=0; l<nn->network_num_layers-2; l++) {
-        m = nn->dense->batchCostWeightDeriv->shape[l][0][0];
-        n = nn->dense->batchCostWeightDeriv->shape[l][1][0];
+        m = nn->dense->batch_cost_weight_derivs->shape[l][0][0];
+        n = nn->dense->batch_cost_weight_derivs->shape[l][1][0];
         stride4 = stride4 + (m * n);
     }
     
     stride2 = stride2 - nn->dense->activations->shape[nn->network_num_layers-2][0][0];
-    n = nn->dense->batchCostWeightDeriv->shape[nn->network_num_layers-2][1][0];
-    for (int i=0; i<nn->dense->batchCostWeightDeriv->shape[nn->network_num_layers-2][0][0]; i++) {
-        for (int j=0; j<nn->dense->batchCostWeightDeriv->shape[nn->network_num_layers-2][1][0]; j++) {
-            nn->dense->batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
+    n = nn->dense->batch_cost_weight_derivs->shape[nn->network_num_layers-2][1][0];
+    for (int i=0; i<nn->dense->batch_cost_weight_derivs->shape[nn->network_num_layers-2][0][0]; i++) {
+        for (int j=0; j<nn->dense->batch_cost_weight_derivs->shape[nn->network_num_layers-2][1][0]; j++) {
+            nn->dense->batch_cost_weight_derivs->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
         }
     }
-    memcpy(nn->dense->batchCostBiasDeriv->val+stride3, delta, nn->dense->batchCostBiasDeriv->shape[nn->network_num_layers-2][0][0]*sizeof(float));
+    memcpy(nn->dense->batch_cost_bias_derivs->val+stride3, delta, nn->dense->batch_cost_bias_derivs->shape[nn->network_num_layers-2][0][0]*sizeof(float));
     
     // The backward pass loop
     
@@ -125,33 +125,33 @@ void backpropag_in_dense_net(void * _Nonnull neural,
     
     for (int l=nn->network_num_layers-2; l>0; l--) {
         stride2 = stride2 - nn->dense->activations->shape[l-1][0][0];
-        stride3 = stride3 - nn->dense->affineTransformations->shape[l-1][0][0];
-        stride4 = stride4 - (nn->dense->batchCostWeightDeriv->shape[l-1][0][0]*nn->dense->batchCostWeightDeriv->shape[l-1][1][0]);
+        stride3 = stride3 - nn->dense->affine_transforms->shape[l-1][0][0];
+        stride4 = stride4 - (nn->dense->batch_cost_weight_derivs->shape[l-1][0][0]*nn->dense->batch_cost_weight_derivs->shape[l-1][1][0]);
         
-        float sp[nn->dense->affineTransformations->shape[l-1][0][0]];
-        for (int i=0; i<nn->dense->affineTransformations->shape[l-1][0][0]; i++) {
-            sp[i] = nn->dense->activationDerivatives[l-1](nn->dense->affineTransformations->val[stride3+i]);
+        float sp[nn->dense->affine_transforms->shape[l-1][0][0]];
+        for (int i=0; i<nn->dense->affine_transforms->shape[l-1][0][0]; i++) {
+            sp[i] = nn->dense->activation_derivatives[l-1](nn->dense->affine_transforms->val[stride3+i]);
         }
         
         cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->dense->weights->shape[l][0][0], (int)nn->dense->weights->shape[l][1][0], 1.0, nn->dense->weights->val+stride, (int)nn->dense->weights->shape[l][1][0], delta, 1, 0.0, buffer, 1);
 #ifdef __APPLE__
-        vDSP_vmul(buffer, 1, sp, 1, delta, 1, nn->dense->affineTransformations->shape[l-1][0][0]);
+        vDSP_vmul(buffer, 1, sp, 1, delta, 1, nn->dense->affine_transforms->shape[l-1][0][0]);
 #else
         for (int i=0; i<nn->dense->affineTransformations->shape[l-1][0][0]; i++) {
             delta[i] = buffer[i] * sp[i];
         }
 #endif
         // dC/dw at layer l
-        m = nn->dense->batchCostWeightDeriv->shape[l-1][0][0];
-        n = nn->dense->batchCostWeightDeriv->shape[l-1][1][0];
+        m = nn->dense->batch_cost_weight_derivs->shape[l-1][0][0];
+        n = nn->dense->batch_cost_weight_derivs->shape[l-1][1][0];
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense->batchCostWeightDeriv->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
+                nn->dense->batch_cost_weight_derivs->val[stride4+((i*n)+j)] = nn->dense->activations->val[stride2+j] * delta[i];
             }
         }
         
         // dC/db at layer l
-        memcpy(nn->dense->batchCostBiasDeriv->val+stride3, delta, nn->dense->batchCostBiasDeriv->shape[l-1][0][0]*sizeof(float));
+        memcpy(nn->dense->batch_cost_bias_derivs->val+stride3, delta, nn->dense->batch_cost_bias_derivs->shape[l-1][0][0]*sizeof(float));
         stride = stride - (nn->dense->weights->shape[l-1][0][0] * nn->dense->weights->shape[l-1][1][0]);
     }
 }
@@ -165,16 +165,16 @@ void batch_accumulation_in_dense_net(void * _Nonnull neural) {
     int offset_w = 0;
     int offset_b = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
-        unsigned int m = nn->dense->costWeightDerivatives->shape[l][0][0];
-        unsigned int n = nn->dense->costWeightDerivatives->shape[l][1][0];
+        unsigned int m = nn->dense->cost_weight_derivs->shape[l][0][0];
+        unsigned int n = nn->dense->cost_weight_derivs->shape[l][1][0];
         
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
-                nn->dense->costWeightDerivatives->val[offset_w+((i*n)+j)] = nn->dense->costWeightDerivatives->val[offset_w+((i*n)+j)] + nn->dense->batchCostWeightDeriv->val[offset_w+((i*n)+j)];
+                nn->dense->cost_weight_derivs->val[offset_w+((i*n)+j)] = nn->dense->cost_weight_derivs->val[offset_w+((i*n)+j)] + nn->dense->batch_cost_weight_derivs->val[offset_w+((i*n)+j)];
             }
         }
         for (int i=0; i<m; i++) {
-            nn->dense->costBiasDerivatives->val[offset_b+i] = nn->dense->costBiasDerivatives->val[offset_b+i] + nn->dense->batchCostBiasDeriv->val[offset_b+i];
+            nn->dense->cost_bias_derivs->val[offset_b+i] = nn->dense->cost_bias_derivs->val[offset_b+i] + nn->dense->batch_cost_bias_derivs->val[offset_b+i];
         }
         
         offset_w = offset_w + (m * n);
