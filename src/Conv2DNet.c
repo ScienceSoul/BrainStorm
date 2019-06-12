@@ -475,12 +475,12 @@ void conv2d_net_genesis(void * _Nonnull self) {
         }
         
         if (nn->conv2d->train->adam != NULL) {
-            if (nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate == NULL) {
-                nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate =
+            if (nn->conv2d->train->adam->dense->biases_biased_first_moment_estimate == NULL) {
+                nn->conv2d->train->adam->dense->biases_biased_first_moment_estimate =
                                 (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
             }
-            if (nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate == NULL) {
-                nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate =
+            if (nn->conv2d->train->adam->dense->biases_biased_second_moment_estimate == NULL) {
+                nn->conv2d->train->adam->dense->biases_biased_second_moment_estimate =
                                 (tensor *)nn->conv2d->dense_common_alloc(self, (void *)dict, false);
             }
         }
@@ -749,13 +749,13 @@ void conv2d_net_finale(void * _Nonnull self) {
                 free(nn->conv2d->train->adam->dense->weights_biased_second_moment_estimate->val);
                 free(nn->conv2d->train->adam->dense->weights_biased_second_moment_estimate);
             }
-            if (nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate != NULL) {
-                free(nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate->val);
-                free(nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate);
+            if (nn->conv2d->train->adam->dense->biases_biased_first_moment_estimate != NULL) {
+                free(nn->conv2d->train->adam->dense->biases_biased_first_moment_estimate->val);
+                free(nn->conv2d->train->adam->dense->biases_biased_first_moment_estimate);
             }
-            if (nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate != NULL) {
-                free(nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate->val);
-                free(nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate);
+            if (nn->conv2d->train->adam->dense->biases_biased_second_moment_estimate != NULL) {
+                free(nn->conv2d->train->adam->dense->biases_biased_second_moment_estimate->val);
+                free(nn->conv2d->train->adam->dense->biases_biased_second_moment_estimate);
             }
             free(nn->conv2d->train->adam->conv2d);
             free(nn->conv2d->train->adam->dense);

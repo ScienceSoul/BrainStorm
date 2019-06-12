@@ -583,8 +583,8 @@ int loadParametersFromImputFile(void * _Nonnull self, const char * _Nonnull para
                 nn->dense->parameters->eta = result[0];
                 nn->dense->train->adam->dense->weights_biased_first_moment_estimate = NULL;
                 nn->dense->train->adam->dense->weights_biased_second_moment_estimate = NULL;
-                nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
-                nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
+                nn->dense->train->adam->dense->biases_biased_first_moment_estimate = NULL;
+                nn->dense->train->adam->dense->biases_biased_second_moment_estimate = NULL;
                 nn->dense->train->adam->minimize = adam_optimize;
                 FOUND_OPTIMIZER = 1;
             }

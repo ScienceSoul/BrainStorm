@@ -483,8 +483,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->dense->train->adam->dense = (dense *)malloc(sizeof(dense));
             nn->dense->train->adam->dense->weights_biased_first_moment_estimate = NULL;
             nn->dense->train->adam->dense->weights_biased_second_moment_estimate = NULL;
-            nn->dense->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
-            nn->dense->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
+            nn->dense->train->adam->dense->biases_biased_first_moment_estimate = NULL;
+            nn->dense->train->adam->dense->biases_biased_second_moment_estimate = NULL;
             nn->dense->train->adam->minimize = adam_optimize;
             optimizer = (void *)nn->dense->train->adam;
         } else if (nn->is_conv2d_network) {
@@ -504,8 +504,8 @@ void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
             nn->conv2d->train->adam->conv2d->biasesBiasedSecondMomentEstimate = NULL;
             nn->conv2d->train->adam->dense->weights_biased_first_moment_estimate = NULL;
             nn->conv2d->train->adam->dense->weights_biased_second_moment_estimate = NULL;
-            nn->conv2d->train->adam->dense->biasesBiasedFirstMomentEstimate = NULL;
-            nn->conv2d->train->adam->dense->biasesBiasedSecondMomentEstimate = NULL;
+            nn->conv2d->train->adam->dense->biases_biased_first_moment_estimate = NULL;
+            nn->conv2d->train->adam->dense->biases_biased_second_moment_estimate = NULL;
             nn->conv2d->train->adam->minimize = adam_optimize;
             optimizer = (void *)nn->conv2d->train->adam;
         }

@@ -17,8 +17,8 @@ typedef struct dense {
     
     tensor * _Nullable weights_biased_first_moment_estimate;
     tensor * _Nullable weights_biased_second_moment_estimate;
-    tensor * _Nullable biasesBiasedFirstMomentEstimate;
-    tensor * _Nullable biasesBiasedSecondMomentEstimate;
+    tensor * _Nullable biases_biased_first_moment_estimate;
+    tensor * _Nullable biases_biased_second_moment_estimate;
 } dense;
 
 typedef struct conv2d {
