@@ -491,7 +491,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 
             } else if (strcmp(field->key, "classification") == 0) {
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parse_argument(field->value, field->key, nn->dense->parameters->classifications, &nn->dense->parameters->number_of_classifications, &len);
+                parse_argument(field->value, field->key, nn->dense->parameters->classifications, &nn->dense->parameters->num_classifications, &len);
                 FOUND_CLASSIFICATION = 1;
                 
             } else if (strcmp(field->key, "epochs") == 0) {

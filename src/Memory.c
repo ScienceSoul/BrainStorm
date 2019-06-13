@@ -14,8 +14,7 @@
 #define FI_END 1
 #define FREE_ARG void*
 
-int * _Nonnull intvec(long nl, long nh)
-{
+int * _Nonnull intvec(long nl, long nh) {
     int *v;
     
     v = (int *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(int)));
@@ -31,8 +30,7 @@ float * _Nonnull floatvec(long nl, long nh) {
     return v-nl+FI_END;
 }
 
-float * _Nonnull * _Nonnull floatmatrix(long nrl, long nrh, long ncl, long nch)
-{
+float * _Nonnull * _Nonnull floatmatrix(long nrl, long nrh, long ncl, long nch) {
     long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
     float **m;
     
@@ -51,18 +49,15 @@ float * _Nonnull * _Nonnull floatmatrix(long nrl, long nrh, long ncl, long nch)
     return m;
 }
 
-void free_ivector(int * _Nonnull v, long nl, long nh)
-{
+void free_ivector(int * _Nonnull v, long nl, long nh) {
     free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_fvector(float * _Nonnull v, long nl, long nh)
-{
+void free_fvector(float * _Nonnull v, long nl, long nh) {
     free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_fmatrix(float * _Nonnull * _Nonnull m, long nrl, long nrh, long ncl, long nch)
-{
+void free_fmatrix(float * _Nonnull * _Nonnull m, long nrl, long nrh, long ncl, long nch) {
     free((FREE_ARG) (m[nrl]+ncl-FI_END));
     free((FREE_ARG) (m+nrl-FI_END));
 }

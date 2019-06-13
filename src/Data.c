@@ -77,11 +77,11 @@ static void * _Nonnull set_data(void * _Nonnull self, float * _Nonnull * _Nonnul
     return set;
 }
 
-static void * _Nonnull set_labels(void * _Nonnull self, float * _Nonnull * _Nonnull data_set, unsigned int start, unsigned int end, int * _Nullable classifications, unsigned int number_of_classifications, int * _Nullable dense_topo, int conv_topo[_Nullable][9], unsigned int num_channels, unsigned int number_of_layers, bool binarization) {
+static void * _Nonnull set_labels(void * _Nonnull self, float * _Nonnull * _Nonnull data_set, unsigned int start, unsigned int end, int * _Nullable classifications, unsigned int num_classifications, int * _Nullable dense_topo, int conv_topo[_Nullable][9], unsigned int num_channels, unsigned int num_layers, bool binarization) {
     
     brain_storm_net *nn = (brain_storm_net *)self;
     
-    if (number_of_classifications > 0) {
+    if (num_classifications > 0) {
         
         if (classifications == NULL) {
             fatal(DEFAULT_CONSOLE_WRITER, "classifications array is NULL.");
@@ -89,9 +89,9 @@ static void * _Nonnull set_labels(void * _Nonnull self, float * _Nonnull * _Nonn
         
         bool classsification_error = false;
         if (nn->is_dense_network) {
-            if (dense_topo[number_of_layers-1] != number_of_classifications) classsification_error = true;
+            if (dense_topo[num_layers-1] != num_classifications) classsification_error = true;
         } else if (nn->is_conv2d_network) {
-            if (conv_topo[number_of_layers-1][1] != number_of_classifications) classsification_error = true;
+            if (conv_topo[num_layers-1][1] != num_classifications) classsification_error = true;
         }
         if (classsification_error) {
             fatal(DEFAULT_CONSOLE_WRITER, "the number of classifications should be equal to the number of activations at the output layer.");
@@ -108,15 +108,15 @@ static void * _Nonnull set_labels(void * _Nonnull self, float * _Nonnull * _Nonn
     tensor_dict *dict = init_tensor_dict();
     
     void *labels;
-    if (number_of_classifications > 0) {
+    if (num_classifications > 0) {
         dict->rank = 1;
-        dict->shape[0][0][0] = end * number_of_classifications;
+        dict->shape[0][0][0] = end * num_classifications;
         labels = nn->tensor(NULL, *dict);
         tensor *t = (tensor *)labels;
         if (binarization) {
             int indx = 0;
             for (int l=(int)start; l<start+end; l++) {
-                for (int i=0; i<number_of_classifications; i++) {
+                for (int i=0; i<num_classifications; i++) {
                     if (data_set[l][label_indx] == (float)classifications[i]) {
                         t->val[indx] = 1.0f;
                     } else {
@@ -128,7 +128,7 @@ static void * _Nonnull set_labels(void * _Nonnull self, float * _Nonnull * _Nonn
         } else {
             int indx = 0;
             for (int l=(int)start; l<start+end; l++) {
-                for (int i=0; i<number_of_classifications; i++) {
+                for (int i=0; i<num_classifications; i++) {
                     if (data_set[l][label_indx] == (float)classifications[i]) {
                         t->val[indx] = data_set[l][label_indx];
                     }
@@ -167,13 +167,13 @@ void load_data(void * _Nonnull self, const char * _Nonnull data_set_name, const 
     if (nn->is_dense_network) {
         
         nn->data->training->set = set_data(self, raw, 0, nn->dense->parameters->split[0], nn->dense->parameters->topology, NULL, num_channels);
-        nn->data->training->labels = set_labels(self, raw, 0, nn->dense->parameters->split[0], nn->dense->parameters->classifications, nn->dense->parameters->number_of_classifications, nn->dense->parameters->topology, NULL, num_channels, nn->network_num_layers, binarization);
+        nn->data->training->labels = set_labels(self, raw, 0, nn->dense->parameters->split[0], nn->dense->parameters->classifications, nn->dense->parameters->num_classifications, nn->dense->parameters->topology, NULL, num_channels, nn->network_num_layers, binarization);
         
         
     } else if (nn->is_conv2d_network) {
         
         nn->data->training->set = set_data(self, raw, 0, nn->conv2d->parameters->split[0], NULL, nn->conv2d->parameters->topology, num_channels);
-        nn->data->training->labels = set_labels(self, raw, 0, nn->conv2d->parameters->split[0], nn->conv2d->parameters->classifications, nn->conv2d->parameters->number_of_classifications, NULL, nn->conv2d->parameters->topology, num_channels, nn->network_num_layers, binarization);
+        nn->data->training->labels = set_labels(self, raw, 0, nn->conv2d->parameters->split[0], nn->conv2d->parameters->classifications, nn->conv2d->parameters->num_classifications, NULL, nn->conv2d->parameters->topology, num_channels, nn->network_num_layers, binarization);
     }
     
     if (test_data) {

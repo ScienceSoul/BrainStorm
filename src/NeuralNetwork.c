@@ -14,7 +14,7 @@
 tensor * _Nullable propag_buffer = NULL;
 tensor * _Nullable conv_input_matrix = NULL;
 
-static void initNeuralData(void * _Nonnull self);
+static void init_neural_data(void * _Nonnull self);
 
 static void genesis(void * _Nonnull self);
 static void finale(void * _Nonnull self);
@@ -22,7 +22,7 @@ static void finale(void * _Nonnull self);
 static void gpu_alloc(void * _Nonnull self);
 #endif
 
-static void initNeuralData(void * _Nonnull self) {
+static void init_neural_data(void * _Nonnull self) {
     
     brain_storm_net *nn = (brain_storm_net *)self;
     
@@ -140,7 +140,7 @@ static void genesis(void * _Nonnull self) {
     nn->example_idx = 0;
     
     nn->data = (data *)malloc(sizeof(data));
-    nn->data->init = initNeuralData;
+    nn->data->init = init_neural_data;
     nn->data->load = load_data;
     
     if (nn->is_dense_network) {

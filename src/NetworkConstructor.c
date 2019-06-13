@@ -358,10 +358,10 @@ void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
     if (n >= MAX_NUMBER_NETWORK_LAYERS) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying vector in constructor");
     if (nn->is_dense_network) {
         memcpy(nn->dense->parameters->classifications, vector, n*sizeof(int));
-        nn->dense->parameters->number_of_classifications = n;
+        nn->dense->parameters->num_classifications = n;
     } else if (nn->is_conv2d_network) {
         memcpy(nn->conv2d->parameters->classifications, vector, n*sizeof(int));
-        nn->conv2d->parameters->number_of_classifications = n;
+        nn->conv2d->parameters->num_classifications = n;
     }
 }
 

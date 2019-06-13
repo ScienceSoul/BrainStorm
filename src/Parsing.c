@@ -16,7 +16,7 @@
 definition * _Nonnull allocate_definition_node(void) {
     
     definition *r = (definition *)malloc(sizeof(definition));
-    *r = (definition){.def_id=0, .number_of_fields=0, .field=NULL, .next=NULL, .previous=NULL};
+    *r = (definition){.def_id=0, .num_fields=0, .field=NULL, .next=NULL, .previous=NULL};
     return r;
 }
 
@@ -127,7 +127,7 @@ definition * _Nullable get_definitions(void * _Nonnull neural, const char * _Non
                             d_pt->previous = d_pos;
                             d_pos = d_pt;
                         }
-                        total_key_values += d_pt->number_of_fields;
+                        total_key_values += d_pt->num_fields;
                         new_def = false;
                         first_d_node = false;
                         break;
@@ -148,7 +148,7 @@ definition * _Nullable get_definitions(void * _Nonnull neural, const char * _Non
                             field_pt->previous = field_pos;
                             field_pos = field_pt;
                         }
-                        d_pt->number_of_fields++;
+                        d_pt->num_fields++;
                         first_kv_node = false;
                         memset(buff, 0, sizeof(buff));
                         idx = 0;

@@ -240,19 +240,19 @@ void init_feed_activations(void * _Nonnull neural, float *ptr[]) {
     }
 }
 
-void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int number_of_maps, unsigned int kh, unsigned int sh, pooling_ops pooling_ops) {
+void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int num_maps, unsigned int kh, unsigned int sh, pooling_ops pooling_ops) {
     
     brain_storm_net *nn = (brain_storm_net *)neural;
     
     for (int l=0; l<nn->network_num_layers; l++) {
         if (l == 0) {
             nn->conv2d->parameters->topology[l][0] = FEED;
-            nn->conv2d->parameters->topology[l][1] = number_of_maps;
+            nn->conv2d->parameters->topology[l][1] = num_maps;
             nn->conv2d->parameters->topology[l][2] = maps_size[l];
             nn->conv2d->parameters->topology[l][3] = maps_size[l];
         } else {
             nn->conv2d->parameters->topology[l][0] = POOLING;
-            nn->conv2d->parameters->topology[l][1] = number_of_maps;
+            nn->conv2d->parameters->topology[l][1] = num_maps;
             nn->conv2d->parameters->topology[l][2] = maps_size[l];
             nn->conv2d->parameters->topology[l][3] = maps_size[l];
             nn->conv2d->parameters->topology[l][4] = kh;
@@ -265,9 +265,9 @@ void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int numbe
     
     // The activation tensors:
     // Pooling tests:
-    // a1 = shape[number_of_maps,maps_size[l],maps_size[l]] = shape[6,8,8]
-    // a2 = shape[number_of_maps,maps_size[l],maps_size[l]] = shape[6,7,7]
-    // a3 = shape[number_of_maps,maps_size[l],maps_size[l]] = shape[6,6,6]
+    // a1 = shape[num_maps,maps_size[l],maps_size[l]] = shape[6,8,8]
+    // a2 = shape[num_maps,maps_size[l],maps_size[l]] = shape[6,7,7]
+    // a3 = shape[num_maps,maps_size[l],maps_size[l]] = shape[6,6,6]
     //
     // Convolution test:
     // a1 = shape[1,8,8]

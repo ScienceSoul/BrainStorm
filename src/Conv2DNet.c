@@ -221,7 +221,7 @@ void create_conv2d_net(void * _Nonnull self) {
     nn->conv2d->parameters = (conv2d_net_parameters *)malloc(sizeof(conv2d_net_parameters));
     nn->conv2d->parameters->eta = 0.0f;
     nn->conv2d->parameters->lambda = 0.0f;
-    nn->conv2d->parameters->number_of_classifications = 0;
+    nn->conv2d->parameters->num_classifications = 0;
     nn->conv2d->parameters->max_number_nodes_in_dense_layer = 0;
     memset(nn->conv2d->parameters->topology, 0, sizeof(nn->dense->parameters->topology));
     memset(nn->conv2d->parameters->classifications, 0, sizeof(nn->dense->parameters->classifications));
@@ -250,7 +250,7 @@ void conv2d_net_genesis(void * _Nonnull self) {
     
     if (nn->conv2d->parameters->split[0] == 0 || nn->conv2d->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
     
-    if (nn->conv2d->parameters->number_of_classifications == 0)  fatal(DEFAULT_CONSOLE_WRITER, "classification not defined. Use a constructor or define it in a parameter file.");
+    if (nn->conv2d->parameters->num_classifications == 0)  fatal(DEFAULT_CONSOLE_WRITER, "classification not defined. Use a constructor or define it in a parameter file.");
     
     // ------------------------------------------------------------------------
     // ------- The convolutuon layers

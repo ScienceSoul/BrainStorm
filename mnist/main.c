@@ -20,7 +20,7 @@ void train_dense(brain_storm_net *neural, momentum_optimizer *optimizer) {
     tensor *features = (tensor *)neural->tensor(NULL, *dict);
     
     dict->rank = 1;
-    dict->shape[0][0][0] = batch_size * neural->dense->parameters->number_of_classifications;
+    dict->shape[0][0][0] = batch_size * neural->dense->parameters->num_classifications;
     tensor *labels = (tensor *)neural->tensor(NULL, *dict);
     
     tensor *t1 = (tensor *)neural->data->test->set;
@@ -30,7 +30,7 @@ void train_dense(brain_storm_net *neural, momentum_optimizer *optimizer) {
     
     for (int k=1; k<=n_epochs; k++) {
         int num_inputs = neural->dense->parameters->topology[0];
-        shuffle(neural->data->training->set, neural->data->training->labels, neural->dense->parameters->number_of_classifications, &num_inputs);
+        shuffle(neural->data->training->set, neural->data->training->labels, neural->dense->parameters->num_classifications, &num_inputs);
         
         fprintf(stdout, "MNIST: Epoch {%d/%d}:\n", k, n_epochs);
         double train_time = 0.0;
@@ -89,7 +89,7 @@ void train_conv2d(brain_storm_net *neural, momentum_optimizer *optimizer) {
     tensor *features = (tensor *)neural->tensor(NULL, *dict);
     
     dict->rank = 1;
-    dict->shape[0][0][0] = batch_size * neural->conv2d->parameters->number_of_classifications;
+    dict->shape[0][0][0] = batch_size * neural->conv2d->parameters->num_classifications;
     tensor *labels = (tensor *)neural->tensor(NULL, *dict);
     
     tensor *t2 = (tensor *)neural->data->test->set;
@@ -98,7 +98,7 @@ void train_conv2d(brain_storm_net *neural, momentum_optimizer *optimizer) {
     float out_validation[t3->shape[0][0][0]];
     
     for (int k=1; k<=n_epochs; k++) {
-        shuffle(neural->data->training->set, neural->data->training->labels, neural->conv2d->parameters->number_of_classifications, NULL);
+        shuffle(neural->data->training->set, neural->data->training->labels, neural->conv2d->parameters->num_classifications, NULL);
         
         fprintf(stdout, "MNIST: Epoch {%d/%d}:\n", k, n_epochs);
         double train_time = 0.0;

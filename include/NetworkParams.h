@@ -13,7 +13,7 @@
 
 typedef struct dense_net_parameters {
     int epochs, mini_batch_size;
-    unsigned int number_of_classifications;
+    unsigned int num_classifications;
     unsigned int max_number_nodes_in_layer;
     float eta, lambda;
     
@@ -22,7 +22,7 @@ typedef struct dense_net_parameters {
 } dense_net_parameters;
 
 typedef struct conv2d_net_parameters {
-    unsigned int number_of_classifications;
+    unsigned int num_classifications;
     unsigned int max_number_nodes_in_dense_layer;
     float eta, lambda;
     

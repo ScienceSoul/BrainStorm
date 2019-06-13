@@ -21,8 +21,8 @@ typedef struct trainer {
     ada_grad_optimizer * _Nullable ada_grad;
     rms_prop_optimizer * _Nullable rms_prop;
     adam_optimizer * _Nullable adam;
-    void (* _Nullable next_batch)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder);
-    int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batchSize,  int * _Nullable remainder);
+    void (* _Nullable next_batch)(void * _Nonnull neural, tensor * _Nonnull input, tensor * _Nonnull labels, unsigned int batch_size, int * _Nullable remainder, bool do_remainder);
+    int (* _Nullable batch_range)(void * _Nonnull neural, unsigned int batch_size,  int * _Nullable remainder);
     void (* _Nullable progression)(void * _Nonnull neural, progress_dict progress_dict);
 } trainer;
 
@@ -149,8 +149,8 @@ typedef struct brain_storm_net {
     float (* _Nullable math_ops)(float * _Nonnull vector, unsigned int n, char * _Nonnull op);
     
     // Function pointers to prediction evaluator
-    void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal);
-    float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull dataSet, bool binarization);
+    void (* _Nullable eval_prediction)(void * _Nonnull self, char * _Nonnull data_set, float * _Nonnull out, bool metal);
+    float (* _Nullable eval_cost)(void * _Nonnull self, char * _Nonnull data_set, bool binarization);
         
     // Function pointer to kernels (weights) flipping routine
     void (* _Nullable flip_kernels)(void * _Nonnull self);

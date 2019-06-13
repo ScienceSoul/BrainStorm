@@ -676,7 +676,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
 // It computes the term transpose(w^{l+1}) x delta^{l+1}, where w^{l+1} and delta^{l+1} are the weights
 // and errors of the dense layer which follows the pooling layer downward.
 //
-static void backpropag__after_fully_connected(void * _Nonnull neural, unsigned int op) {
+static void backpropag_after_fully_connected(void * _Nonnull neural, unsigned int op) {
     
     extern tensor * propag_buffer;
     brain_storm_net *nn = (brain_storm_net *)neural;
@@ -737,7 +737,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
     
     // The term delta_{l}
     if (nn->conv2d->parameters->topology[op+1][0] == FULLY_CONNECTED) {
-        backpropag__after_fully_connected(neural, op);
+        backpropag_after_fully_connected(neural, op);
         int stride = 0;
         for (int k=0; k<q; k++) {
             for (int i=0; i<fh*fw; i++) {
@@ -886,7 +886,7 @@ void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, int * _N
     if (nn->conv2d->parameters->topology[op+1][0] == CONVOLUTION) {
         backpropag_pooling_after_convolution((void *)nn, op, advance2);
     } else if (nn->conv2d->parameters->topology[op+1][0] == FULLY_CONNECTED) {
-        backpropag__after_fully_connected((void *)nn, op);
+        backpropag_after_fully_connected((void *)nn, op);
     } else {
         unsigned int p = nn->conv2d->parameters->topology[op][1];
         memcpy(propag_buffer->val, nn->conv2d->deltas_buffer->val, (p*fh*fw)*sizeof(float));
@@ -938,7 +938,7 @@ void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, int 
     if (nn->conv2d->parameters->topology[op+1][0] == CONVOLUTION) {
         backpropag_pooling_after_convolution((void *)nn, op, advance2);
     } else if (nn->conv2d->parameters->topology[op+1][0] == FULLY_CONNECTED) {
-        backpropag__after_fully_connected((void *)nn, op);
+        backpropag_after_fully_connected((void *)nn, op);
     } else {
         unsigned int p = nn->conv2d->parameters->topology[op][1];
         memcpy(propag_buffer->val, nn->conv2d->deltas_buffer->val, (p*fh*fw)*sizeof(float));

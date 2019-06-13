@@ -64,16 +64,16 @@ void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _No
         dim2 = 1;
         if (nn->is_dense_network) {
             dim1 = nn->dense->parameters->topology[0];
-            if (nn->dense->parameters->number_of_classifications > 0) {
-                dim2 = nn->dense->parameters->number_of_classifications;
+            if (nn->dense->parameters->num_classifications > 0) {
+                dim2 = nn->dense->parameters->num_classifications;
             }
             
             num_inputs = t1->shape[0][0][0] / dim1;
             
         } else if (nn->is_conv2d_network) {
             dim1 = t1->shape[0][1][0] * t1->shape[0][2][0] * t1->shape[0][3][0];
-            if (nn->conv2d->parameters->number_of_classifications > 0) {
-                dim2 = nn->conv2d->parameters->number_of_classifications;
+            if (nn->conv2d->parameters->num_classifications > 0) {
+                dim2 = nn->conv2d->parameters->num_classifications;
             }
             
             num_inputs = t1->shape[0][0][0];
@@ -542,12 +542,12 @@ void train_loop(void * _Nonnull  neural) {
     tensor *features = (tensor *)nn->tensor(NULL, *dict);
     
     dict->rank = 1;
-    dict->shape[0][0][0] = nn->dense->parameters->mini_batch_size * nn->dense->parameters->number_of_classifications;
+    dict->shape[0][0][0] = nn->dense->parameters->mini_batch_size * nn->dense->parameters->num_classifications;
     tensor *labels = (tensor *)nn->tensor(NULL, *dict);
     
     for (int k=1; k<=nn->dense->parameters->epochs; k++) {
         int num_inputs = nn->dense->parameters->topology[0];
-        shuffle(nn->data->training->set, nn->data->training->labels, nn->dense->parameters->number_of_classifications, &num_inputs);
+        shuffle(nn->data->training->set, nn->data->training->labels, nn->dense->parameters->num_classifications, &num_inputs);
         
         for (int l=1; l<=nn->dense->train->batch_range((void *)neural,  nn->dense->parameters->mini_batch_size, NULL); l++) {
             nn->dense->train->next_batch((void *)neural, features, labels, nn->dense->parameters->mini_batch_size, NULL, false);

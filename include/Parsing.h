@@ -26,7 +26,7 @@ typedef struct dictionary {
 typedef struct definition {
     
     int def_id;
-    int number_of_fields;
+    int num_fields;
     dictionary * _Nullable field;
     struct definition * _Nullable next;
     struct definition *_Nullable previous;
