@@ -134,7 +134,7 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
         nn->conv2d->parameters->topology[nn->network_num_layers][0] = FULLY_CONNECTED;
         nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.num_neurons;
         
-        set_activation_function(nn->activationFunctionsRef, nn->conv2d->activationFunctions, nn->conv2d->activationDerivatives, layer_dict, nn->num_activation_functions);
+        set_activation_function(nn->activationFunctionsRef, nn->conv2d->activation_functions, nn->conv2d->activation_derivatives, layer_dict, nn->num_activation_functions);
         
         set_kernel_initializer(nn->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
         nn->conv2d->num_dense_layers++;
@@ -160,9 +160,9 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
     // If convolutional network, set this layer to fully connected inference operation
     // and to a fully connected backpropagation operation
     if (nn->is_conv2d_network) {
-        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = infer_fully_connected_op;
+        nn->conv2d->inference_ops[nn->conv2d->num_infer_ops] = infer_fully_connected_op;
         nn->conv2d->num_infer_ops++;
-        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_full_connected_op;
+        nn->conv2d->backpropag_ops[nn->conv2d->num_backpropag_ops] = backpropag_full_connected_op;
         nn->conv2d->num_backpropag_ops++;
     }
 }
@@ -233,7 +233,7 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
     nn->conv2d->num_conv2d_layers++;
     
     // The activation function for this layer
-    set_activation_function(nn->activationFunctionsRef, nn->conv2d->activationFunctions, nn->conv2d->activationDerivatives, layer_dict, nn->num_activation_functions);
+    set_activation_function(nn->activationFunctionsRef, nn->conv2d->activation_functions, nn->conv2d->activation_derivatives, layer_dict, nn->num_activation_functions);
     
     // Add the regularizer if given
     if (regulaizer != NULL) {
@@ -245,9 +245,9 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
     
     // Set this layer to a convolutional inference operation and
     // to convolutional backpropagation operation
-    nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = infer_convolution_op;
+    nn->conv2d->inference_ops[nn->conv2d->num_infer_ops] = infer_convolution_op;
     nn->conv2d->num_infer_ops++;
-    nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_convolution_op;
+    nn->conv2d->backpropag_ops[nn->conv2d->num_backpropag_ops] = backpropag_convolution_op;
     nn->conv2d->num_backpropag_ops++;
 }
 
@@ -312,16 +312,16 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
     // to pooling backpropagation operation
     if (layer_dict.pooling_op == MAX_POOLING) {
         nn->conv2d->parameters->topology[nn->network_num_layers][8] = MAX_POOLING;
-        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = max_pooling_op;
-        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_max_pooling_op;
+        nn->conv2d->inference_ops[nn->conv2d->num_infer_ops] = max_pooling_op;
+        nn->conv2d->backpropag_ops[nn->conv2d->num_backpropag_ops] = backpropag_max_pooling_op;
     } else if (layer_dict.pooling_op == L2_POOLING) {
         nn->conv2d->parameters->topology[nn->network_num_layers][8] = L2_POOLING;
-        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = l2_pooling_op;
-        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_l2_pooling_op;
+        nn->conv2d->inference_ops[nn->conv2d->num_infer_ops] = l2_pooling_op;
+        nn->conv2d->backpropag_ops[nn->conv2d->num_backpropag_ops] = backpropag_l2_pooling_op;
     } else if (layer_dict.pooling_op == AVERAGE_POOLING) {
         nn->conv2d->parameters->topology[nn->network_num_layers][8] = AVERAGE_POOLING;
-        nn->conv2d->inferenceOps[nn->conv2d->num_infer_ops] = average_pooling_op;
-        nn->conv2d->backpropagOps[nn->conv2d->num_backpropag_ops] = backpropag_average_pooling_op;
+        nn->conv2d->inference_ops[nn->conv2d->num_infer_ops] = average_pooling_op;
+        nn->conv2d->backpropag_ops[nn->conv2d->num_backpropag_ops] = backpropag_average_pooling_op;
     } else {
         fatal(DEFAULT_CONSOLE_WRITER, "unrecognized pooling operation.");
     }

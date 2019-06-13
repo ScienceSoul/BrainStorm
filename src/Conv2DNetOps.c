@@ -234,7 +234,7 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
 #endif
         
         for (int i=0; i<fh*fw; i++) {
-                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+i)] = nn->conv2d->activationFunctions[local_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride_z+i)], NULL, NULL);
+                nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+i)] = nn->conv2d->activation_functions[local_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride_z+i)], NULL, NULL);
         }
         nanToNum(nn->conv2d->conv_activations->val+offset_a_compute+stride_a_compute, (fh*fw));
         
@@ -513,7 +513,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
     }
     for (int i=0; i<nn->conv2d->dense_activations->shape[local_idx][0][0]; i++) {
         nn->conv2d->dense_activations->val[offset_a_connected_compute+i] =
-             nn->conv2d->activationFunctions[local_idx+nn->conv2d->num_conv2d_layers](nn->conv2d->dense_affine_transforms->val[offset_z_connected+i], vec, vec_length);
+             nn->conv2d->activation_functions[local_idx+nn->conv2d->num_conv2d_layers](nn->conv2d->dense_affine_transforms->val[offset_z_connected+i], vec, vec_length);
     }
     
     nanToNum(nn->conv2d->dense_activations->val+offset_a_connected_compute, nn->conv2d->dense_activations->shape[local_idx][0][0]);
@@ -525,7 +525,7 @@ void inference_in_conv2d_net(void * _Nonnull neural) {
     
     int advance = 0;
     for (int l=1; l<=nn->conv2d->num_infer_ops; l++) {
-        nn->conv2d->inferenceOps[l-1](neural, l, &advance);
+        nn->conv2d->inference_ops[l-1](neural, l, &advance);
         advance++;
     }
 }
@@ -643,7 +643,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
         
         float sp[nn->conv2d->dense_affine_transforms->shape[local_idx][0][0]];
         for (int i=0; i<nn->conv2d->dense_affine_transforms->shape[local_idx][0][0]; i++) {
-            sp[i] = nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->dense_affine_transforms->val[offset_z_connected+i]);
+            sp[i] = nn->conv2d->activation_derivatives[activ_idx](nn->conv2d->dense_affine_transforms->val[offset_z_connected+i]);
         }
         
         cblas_sgemv(CblasRowMajor, CblasTrans, (int)nn->conv2d->dense_weights->shape[local_idx+1][0][0], (int)nn->conv2d->dense_weights->shape[local_idx+1][1][0], 1.0, nn->conv2d->dense_weights->val+offset_w_connected, (int)nn->conv2d->dense_weights->shape[local_idx+1][1][0], propag_buffer->val, 1, 0.0, buffer, 1);
@@ -741,7 +741,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         int stride = 0;
         for (int k=0; k<q; k++) {
             for (int i=0; i<fh*fw; i++) {
-                 nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
+                 nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activation_derivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -752,7 +752,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         int stride = 0;
         for (int k=0; k<q; k++) {
             for (int i=0; i<fh*fw; i++) {
-                 nn->conv2d->deltas_buffer->val[stride+i] = nn->conv2d->deltas_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
+                 nn->conv2d->deltas_buffer->val[stride+i] = nn->conv2d->deltas_buffer->val[stride+i] * nn->conv2d->activation_derivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -765,7 +765,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
         int stride = 0;
         for (int k=0; k<p; k++) {
             for (int i=0; i<fh*fw; i++) {
-                nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activationDerivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
+                nn->conv2d->deltas_buffer->val[stride+i] = propag_buffer->val[stride+i] * nn->conv2d->activation_derivatives[activ_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride+i)]);
             }
             stride = stride + (fh * fw);
         }
@@ -983,7 +983,7 @@ void backpropag_in_conv2d_net(void * _Nonnull neural,
     int advance2 = nn->conv2d->num_conv2d_layers - 1;
     int advance3 = nn->conv2d->num_max_pooling_layers - 1;
     for (int l=nn->conv2d->num_backpropag_ops; l>=1; l--) {
-        nn->conv2d->backpropagOps[l-1](neural, l, &advance1, &advance2, &advance3);
+        nn->conv2d->backpropag_ops[l-1](neural, l, &advance1, &advance2, &advance3);
         advance1++;
     }
 }

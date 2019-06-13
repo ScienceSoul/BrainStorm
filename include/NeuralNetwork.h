@@ -87,10 +87,10 @@ typedef struct conv2d_network {
     conv2d_net_parameters * _Nullable parameters;
     trainer * _Nullable train;
     
-    float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
-    float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
-    void (* _Nonnull inferenceOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, int * _Nullable advance);
-    void (* _Nonnull backpropagOps[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op,  int * _Nullable advance1, int * _Nullable advance2, int * _Nullable advance3);
+    float (* _Nonnull activation_functions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n);
+    float (* _Nonnull activation_derivatives[MAX_NUMBER_NETWORK_LAYERS])(float z);
+    void (* _Nonnull inference_ops[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op, int * _Nullable advance);
+    void (* _Nonnull backpropag_ops[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull neural, unsigned int op,  int * _Nullable advance1, int * _Nullable advance2, int * _Nullable advance3);
     
     // Allocators
     void * _Nonnull (* _Nonnull conv_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);

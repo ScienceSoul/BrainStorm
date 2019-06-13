@@ -212,10 +212,10 @@ void create_conv2d_net(void * _Nonnull self) {
     nn->conv2d->train->progression = progression;
     
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
-        nn->conv2d->activationFunctions[i] = NULL;
-        nn->conv2d->activationDerivatives[i] = NULL;
-        nn->conv2d->inferenceOps[i] = NULL;
-        nn->conv2d->backpropagOps[i] = NULL;
+        nn->conv2d->activation_functions[i] = NULL;
+        nn->conv2d->activation_derivatives[i] = NULL;
+        nn->conv2d->inference_ops[i] = NULL;
+        nn->conv2d->backpropag_ops[i] = NULL;
     }
     
     nn->conv2d->parameters = (conv2d_net_parameters *)malloc(sizeof(conv2d_net_parameters));
