@@ -12,7 +12,6 @@
 typedef struct progress_dict {
     unsigned int batch_size;
     unsigned int percent;
-    
 } progress_dict;
 
 typedef void (* _Nullable ptr_inference_func)(void * _Nonnull self);

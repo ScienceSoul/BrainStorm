@@ -64,7 +64,6 @@ typedef struct network_constructor {
     void (* _Nullable classification)(void * _Nonnull neural, int * _Nonnull vector, int n);
     void (* _Nullable scalars)(void * _Nonnull neural, scalar_dict scalars);
     void * _Nonnull (* _Nullable optimizer)(void * _Nonnull neural, optimizer_dict optimizer_dict);
-    
 } network_constructor;
 
 network_constructor * _Nonnull allocate_constructor(void);

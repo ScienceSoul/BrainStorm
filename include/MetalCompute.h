@@ -11,7 +11,6 @@
 
 
 typedef struct metal_compute {
-    
     void (* _Nullable init)(void);
     void (* _Nullable prepare)(char * _Nonnull operation);
     void (* _Nullable allocate_buffers)(void * _Nonnull network);
@@ -19,7 +18,6 @@ typedef struct metal_compute {
     
     void (* _Nullable format_data)(float * _Nonnull * _Nonnull input, unsigned int m, unsigned int n);
     void (* _Nullable feedforward)(void * _Nonnull neural, float * _Nonnull result);
-    
 } metal_compute;
 
 metal_compute * _Nonnull metal_compute_alloc(void);

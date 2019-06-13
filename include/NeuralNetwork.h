@@ -100,11 +100,9 @@ typedef struct conv2d_network {
     void * _Nonnull (* _Nonnull dense_weights_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
     void * _Nonnull (* _Nonnull dense_common_alloc)(void * _Nonnull self, void * _Nonnull t_dict, bool reshape);
     void * _Nonnull (* _Nonnull max_pool_mask_indexes)(void * _Nonnull self, void * _Nonnull t_dict);
-    
 } conv2d_network;
 
 typedef struct brain_storm_net {
-    
     data * _Nullable data;
     network_constructor * _Nullable constructor;
     
@@ -162,7 +160,6 @@ typedef struct brain_storm_net {
     void (* _Nullable kernel_mat_update)(void * _Nonnull self);
     
     //void (* _Nullable conv_mat_update)(void * _Nonnull self);
-    
 } brain_storm_net;
 
 brain_storm_net * _Nonnull new_dense_net(void);
