@@ -146,7 +146,7 @@ void __attribute__((overloadable))shuffle(void * _Nonnull object) {
     }
 }
 
-void __attribute__((overloadable))parseArgument(const char * _Nonnull argument, const char * _Nonnull argumentName, int  * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len) {
+void __attribute__((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, int  * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len) {
     int idx = 0;
     *numberOfItems = 0;
     
@@ -221,7 +221,7 @@ void __attribute__((overloadable))parseArgument(const char * _Nonnull argument, 
     }
 }
 
-void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument, const char * _Nonnull argumentName, char result[_Nonnull][128], unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len) {
+void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, char result[_Nonnull][128], unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len) {
     
     int idx = 0;
     int bf_idx = 0;
@@ -317,7 +317,7 @@ void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument,
     }
 }
 
-void __attribute__ ((overloadable))parseArgument(const char * _Nonnull argument, const char * _Nonnull argumentName, float * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int *_Nonnull len) {
+void __attribute__ ((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, float * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int *_Nonnull len) {
     
     int idx = 0;
     int bf_idx = 0;
@@ -622,7 +622,7 @@ float softmax(float z, float * _Nullable vec, unsigned int * _Nullable n) {
 //
 //  Compute the Frobenius norm of a m x n matrix
 //
-float __attribute__((overloadable)) frobeniusNorm(float * _Nonnull * _Nonnull mat, unsigned int m, unsigned int n) {
+float __attribute__((overloadable)) frobenius_norm(float * _Nonnull * _Nonnull mat, unsigned int m, unsigned int n) {
     
     float norm = 0.0f;
     for (int i=0; i<m; i++) {
@@ -637,7 +637,7 @@ float __attribute__((overloadable)) frobeniusNorm(float * _Nonnull * _Nonnull ma
 //
 //  Compute the Frobenius norm of a m x n serialized matrix
 //
-float __attribute__((overloadable)) frobeniusNorm(float * _Nonnull mat, unsigned int n) {
+float __attribute__((overloadable)) frobenius_norm(float * _Nonnull mat, unsigned int n) {
     
     float norm = 0.0f;
     for (int i=0; i<n; i++) {
@@ -647,7 +647,7 @@ float __attribute__((overloadable)) frobeniusNorm(float * _Nonnull mat, unsigned
     return norm;
 }
 
-float crossEntropyCost(float * _Nonnull a, float * _Nonnull y, unsigned int n) {
+float cross_entropy_cost(float * _Nonnull a, float * _Nonnull y, unsigned int n) {
     
     float cost = 0.0f;
     float buffer[n];
@@ -655,7 +655,7 @@ float crossEntropyCost(float * _Nonnull a, float * _Nonnull y, unsigned int n) {
     for (int i=0; i<n; i++) {
         buffer[i] = -y[i]*logf(a[i]) - (1.0f-y[i])*logf(1.0-a[i]);
     }
-    nanToNum(buffer, n);
+    nan_to_num(buffer, n);
 #ifdef __APPLE__
     vDSP_sve(buffer, 1, &cost, n);
 #else
@@ -667,7 +667,7 @@ float crossEntropyCost(float * _Nonnull a, float * _Nonnull y, unsigned int n) {
     return cost;
 }
 
-void  __attribute__((overloadable)) nanToNum(float * _Nonnull array, unsigned int n) {
+void  __attribute__((overloadable)) nan_to_num(float * _Nonnull array, unsigned int n) {
     
     for (int i=0; i<n; i++) {
         if (isnan(array[i]) != 0) array[i] = 0.0f;
@@ -687,7 +687,7 @@ void  __attribute__((overloadable)) nanToNum(float * _Nonnull array, unsigned in
 //  - Parameter n: the number to find the nearest power 2 of.
 //  - Returns: The nearest power 2 of num (30 -> 32, 200 -> 256).
 //
-inline int  nearestPower2(int num) {
+inline int  nearest_power2(int num) {
     
     int n = (num > 0) ? num - 1 : 0;
     

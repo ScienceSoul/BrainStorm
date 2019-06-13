@@ -49,7 +49,7 @@ void inference_in_dense_net(void * _Nonnull neural) {
             nn->dense->activations->val[stride3+i] = nn->dense->activation_functions[l](nn->dense->affine_transforms->val[stride2+i], vec, vec_length);
         }
         
-        nanToNum(nn->dense->activations->val+stride3, nn->dense->activations->shape[l+1][0][0]);
+        nan_to_num(nn->dense->activations->val+stride3, nn->dense->activations->shape[l+1][0][0]);
         
         stride1 = stride1 + (m * n);
         stride2 = stride2 + nn->dense->biases->shape[l][0][0];

@@ -347,7 +347,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
     
     fprintf(stdout, "%s: load the network and its input parameters...\n", DEFAULT_CONSOLE_WRITER);
     
-    definitions = getDefinitions(self, paraFile, "define");
+    definitions = get_definitions(self, paraFile, "define");
     if (definitions == NULL) {
         fatal(DEFAULT_CONSOLE_WRITER, "problem finding any parameter definition.");
     }
@@ -384,7 +384,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 
             } else if (strcmp(field->key, "topology") == 0) {
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->dense->parameters->topology, &nn->network_num_layers, &len);
+                parse_argument(field->value, field->key, nn->dense->parameters->topology, &nn->network_num_layers, &len);
                 FOUND_TOPOLOGY = 1;
                 
             } else if (strcmp(field->key, "activations") == 0) {
@@ -401,7 +401,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 
                 char activationFunctionsStr[MAX_NUMBER_NETWORK_LAYERS][MAX_SHORT_STRING_LENGTH];
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, activationFunctionsStr, &nn->num_activation_functions, &len);
+                parse_argument(field->value, field->key, activationFunctionsStr, &nn->num_activation_functions, &len);
                 
                 if (nn->num_activation_functions > 1 && nn->num_activation_functions < nn->network_num_layers-1) {
                     fatal(DEFAULT_CONSOLE_WRITER, "the number of activation functions in parameters is too low. Can't resolve how to use the provided activations. ");
@@ -483,7 +483,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
             } else if (strcmp(field->key, "split") == 0) {
                 unsigned int n;
                 unsigned int len = 2;
-                parseArgument(field->value,  field->key, nn->dense->parameters->split, &n, &len);
+                parse_argument(field->value,  field->key, nn->dense->parameters->split, &n, &len);
                 if (n < 2) {
                     fatal(DEFAULT_CONSOLE_WRITER, " data splitting requires two values: one for training, one for testing/evaluation.");
                 }
@@ -491,7 +491,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 
             } else if (strcmp(field->key, "classification") == 0) {
                 unsigned int len = MAX_NUMBER_NETWORK_LAYERS;
-                parseArgument(field->value, field->key, nn->dense->parameters->classifications, &nn->dense->parameters->number_of_classifications, &len);
+                parse_argument(field->value, field->key, nn->dense->parameters->classifications, &nn->dense->parameters->number_of_classifications, &len);
                 FOUND_CLASSIFICATION = 1;
                 
             } else if (strcmp(field->key, "epochs") == 0) {
@@ -532,7 +532,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 nn->dense->train->momentum = (momentum_optimizer *)malloc(sizeof(momentum_optimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
-                parseArgument(field->value, field->key, result, &numberOfItems, &len);
+                parse_argument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and the momentum coefficient should be given to the momentum optimizer.");
                 nn->dense->train->momentum->learning_rate = result[0];
                 nn->dense->train->momentum->momentum_coefficient = result[1];
@@ -544,7 +544,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 nn->dense->train->ada_grad = (ada_grad_optimizer *)malloc(sizeof(ada_grad_optimizer));
                 float result[2];
                 unsigned int numberOfItems, len = 2;
-                parseArgument(field->value, field->key, result, &numberOfItems, &len);
+                parse_argument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 2) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate and a delta value should be given to the AdaGrad optimizer.");
                 nn->dense->train->ada_grad->learning_rate = result[0];
                 nn->dense->train->ada_grad->delta = result[1];
@@ -558,7 +558,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 nn->dense->train->rms_prop = (rms_prop_optimizer *)malloc(sizeof(rms_prop_optimizer));
                 float result[3];
                 unsigned int numberOfItems, len = 3;
-                parseArgument(field->value, field->key, result, &numberOfItems, &len);
+                parse_argument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 3) fatal(DEFAULT_CONSOLE_WRITER, "the learming rate, the decay rate and a delata value should be given to the RMSProp optimizer.");
                 nn->dense->train->rms_prop->learning_rate = result[0];
                 nn->dense->train->rms_prop->decay_rate = result[1];
@@ -573,7 +573,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 nn->dense->train->adam = (adam_optimizer *)malloc(sizeof(adam_optimizer));
                 float result[4];
                 unsigned int numberOfItems, len=4;
-                parseArgument(field->value, field->key, result, &numberOfItems, &len);
+                parse_argument(field->value, field->key, result, &numberOfItems, &len);
                 if (numberOfItems < 4) fatal(DEFAULT_CONSOLE_WRITER, "The step size, two decay rates and a delta value should be given to the Adam optimizer.");
                 nn->dense->train->adam->time = 0;
                 nn->dense->train->adam->step_size = result[0];

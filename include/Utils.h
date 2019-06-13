@@ -38,9 +38,9 @@ void __attribute__((overloadable)) shuffle(float * _Nonnull * _Nonnull array, un
 void __attribute__((overloadable)) shuffle(void * _Nonnull object);
 void __attribute__((overloadable))shuffle(void * _Nonnull neural, void * _Nonnull object, void * _Nullable associate, int num_classifications);
 
-void __attribute__((overloadable))parseArgument(const char * _Nonnull argument, const char * _Nonnull argumentName, int  * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len);
-void __attribute__((overloadable)) parseArgument(const char * _Nonnull argument, const char * _Nonnull argumentName, char result[_Nonnull][128], unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len);
-void __attribute__ ((overloadable))parseArgument(const char * _Nonnull argument, const char * _Nonnull argumentName, float * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int *_Nonnull len);
+void __attribute__((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, int  * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len);
+void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, char result[_Nonnull][128], unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len);
+void __attribute__ ((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, float * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int *_Nonnull len);
 
 
 float randn(float mu, float sigma);
@@ -91,14 +91,14 @@ float softplus_prime(float z);
 
 float softmax(float z, float * _Nullable vec, unsigned int * _Nullable n);
 
-float crossEntropyCost(float * _Nonnull a, float * _Nonnull y, unsigned int n);
+float cross_entropy_cost(float * _Nonnull a, float * _Nonnull y, unsigned int n);
 
-float __attribute__((overloadable)) frobeniusNorm(float * _Nonnull * _Nonnull mat, unsigned int m, unsigned int n);
-float __attribute__((overloadable)) frobeniusNorm(float * _Nonnull mat, unsigned int n);
+float __attribute__((overloadable)) frobenius_norm(float * _Nonnull * _Nonnull mat, unsigned int m, unsigned int n);
+float __attribute__((overloadable)) frobenius_norm(float * _Nonnull mat, unsigned int n);
 
-void  __attribute__((overloadable)) nanToNum(float * _Nonnull array, unsigned int n);
+void  __attribute__((overloadable)) nan_to_num(float * _Nonnull array, unsigned int n);
 
-int nearestPower2(int num);
+int nearest_power2(int num);
 
 void  __attribute__((overloadable)) shape(unsigned int dest[_Nonnull][MAX_TENSOR_RANK][1], unsigned int layers, unsigned int rank, int * _Nonnull vector);
 

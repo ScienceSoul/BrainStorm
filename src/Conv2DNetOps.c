@@ -236,7 +236,7 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
         for (int i=0; i<fh*fw; i++) {
                 nn->conv2d->conv_activations->val[offset_a_compute+(stride_a_compute+i)] = nn->conv2d->activation_functions[local_idx](nn->conv2d->conv_affine_transforms->val[offset_z+(stride_z+i)], NULL, NULL);
         }
-        nanToNum(nn->conv2d->conv_activations->val+offset_a_compute+stride_a_compute, (fh*fw));
+        nan_to_num(nn->conv2d->conv_activations->val+offset_a_compute+stride_a_compute, (fh*fw));
         
         stride_a_compute = stride_a_compute + (fh * fw);
         stride_z = stride_z + (fh * fw);
@@ -516,7 +516,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
              nn->conv2d->activation_functions[local_idx+nn->conv2d->num_conv2d_layers](nn->conv2d->dense_affine_transforms->val[offset_z_connected+i], vec, vec_length);
     }
     
-    nanToNum(nn->conv2d->dense_activations->val+offset_a_connected_compute, nn->conv2d->dense_activations->shape[local_idx][0][0]);
+    nan_to_num(nn->conv2d->dense_activations->val+offset_a_connected_compute, nn->conv2d->dense_activations->shape[local_idx][0][0]);
 }
 
 void inference_in_conv2d_net(void * _Nonnull neural) {

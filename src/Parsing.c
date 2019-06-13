@@ -13,14 +13,14 @@
 #include "NeuralNetwork.h"
 
 
-definition * _Nonnull allocateDefinitionNode(void) {
+definition * _Nonnull allocate_definition_node(void) {
     
     definition *r = (definition *)malloc(sizeof(definition));
     *r = (definition){.def_id=0, .number_of_fields=0, .field=NULL, .next=NULL, .previous=NULL};
     return r;
 }
 
-dictionary * _Nonnull allocateDictionaryNode(void) {
+dictionary * _Nonnull allocate_dictionary_node(void) {
     
     dictionary *d = (dictionary *)malloc(sizeof(dictionary));
     *d = (dictionary){.has_tag=false, .next=NULL, .previous=NULL};
@@ -33,13 +33,13 @@ dictionary * _Nonnull allocateDictionaryNode(void) {
 //
 // Get the network parameters definitions
 //
-definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonnull paramsDefFile, const char * _Nonnull keyword) {
+definition * _Nullable get_definitions(void * _Nonnull neural, const char * _Nonnull params_def_file, const char * _Nonnull keyword) {
         
     definition *definitions = NULL;
     
-    FILE *f1 = fopen(paramsDefFile,"r");
+    FILE *f1 = fopen(params_def_file,"r");
     if(!f1) {
-        fprintf(stdout,"%s: can't find the parameters definition file %s.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
+        fprintf(stdout,"%s: can't find the parameters definition file %s.\n", DEFAULT_CONSOLE_WRITER, params_def_file);
         return NULL;
     }
     
@@ -59,12 +59,12 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
     while(1) {
         ch = fgetc(f1);
         if (ch == -1) {
-            fprintf(stderr, "%s: syntax error in the file %s. File should end with <}>.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
+            fprintf(stderr, "%s: syntax error in the file %s. File should end with <}>.\n", DEFAULT_CONSOLE_WRITER, params_def_file);
             fatal(DEFAULT_CONSOLE_WRITER);
         }
         if (ch == ' ') continue;
         if (first_character && ch != '{') { // First character in file should be {
-            fprintf(stderr, "%s: syntax error in the file %s. File should start with <{>.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
+            fprintf(stderr, "%s: syntax error in the file %s. File should start with <{>.\n", DEFAULT_CONSOLE_WRITER, params_def_file);
             fatal(DEFAULT_CONSOLE_WRITER);
         } else if (first_character && ch == '{'){
             first_character = false;
@@ -94,14 +94,14 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
                 memset(tag, 0, sizeof(tag));
                 idx = 0;
                 if (first_d_node) {
-                    d_head = allocateDefinitionNode();
+                    d_head = allocate_definition_node();
                     d_head->def_id = defID;
                     definitions = d_head;
                     d_pos = d_head;
                     d_pt = d_head;
                     defID++;
                 } else {
-                    d_pt = allocateDefinitionNode();
+                    d_pt = allocate_definition_node();
                     d_pt->def_id = defID;
                     defID++;
                 }
@@ -160,16 +160,16 @@ definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonn
                         if (ch == ':') {
                             found_key++;
                             if (found_key > 1) {
-                                fprintf(stderr, "%s: syntax error in the file %s. Maybe duplicate character <:>.\n", DEFAULT_CONSOLE_WRITER, paramsDefFile);
+                                fprintf(stderr, "%s: syntax error in the file %s. Maybe duplicate character <:>.\n", DEFAULT_CONSOLE_WRITER, params_def_file);
                                 fatal(DEFAULT_CONSOLE_WRITER);
                             }
                             if (first_kv_node) {
-                                field_head = allocateDictionaryNode();
+                                field_head = allocate_dictionary_node();
                                 d_pt->field = field_head;
                                 field_pos = field_head;
                                 field_pt = field_head;
                             } else {
-                                field_pt = allocateDictionaryNode();
+                                field_pt = allocate_dictionary_node();
                             }
                             memcpy(field_pt->key, buff, idx);
                             memset(buff, 0, sizeof(buff));

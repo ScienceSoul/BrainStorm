@@ -33,10 +33,10 @@ typedef struct definition {
     
 } definition;
 
-definition * _Nonnull allocateDefinitionNode(void);
-dictionary * _Nonnull allocateDictionaryNode(void);
+definition * _Nonnull allocate_definition_node(void);
+dictionary * _Nonnull allocate_dictionary_node(void);
 
-definition * _Nullable getDefinitions(void * _Nonnull neural, const char * _Nonnull paramsDefFile, const char * _Nonnull keyword);
+definition * _Nullable get_definitions(void * _Nonnull neural, const char * _Nonnull params_def_file, const char * _Nonnull keyword);
 
 
 #endif /* Parsing_h */
