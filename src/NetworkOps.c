@@ -45,7 +45,7 @@ void mini_batch_loop(void * _Nonnull neural, unsigned int batch_size,
 #endif
 }
 
-void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batchSize, int * _Nullable remainder, bool do_remainder) {
+void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _Nonnull labels, unsigned int batch_size, int * _Nullable remainder, bool do_remainder) {
     
     static bool firstTime = true;
     static int delta1 = 0;
@@ -86,7 +86,7 @@ void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _No
     if (do_remainder) {
         
         int copy_1 = num_inputs - remainder_offsets[0];
-        int copy_2 = batchSize - copy_1;
+        int copy_2 = batch_size - copy_1;
         
         fprintf(stdout, "%s: remaining %d and will sample %d examples for next mini-batch.\n", DEFAULT_CONSOLE_WRITER, copy_1, copy_2);
         
@@ -105,16 +105,16 @@ void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _No
         return;
         
     } else {
-        memcpy(features->val, t1->val+delta1, (batchSize*dim1)*sizeof(float));
-        memcpy(labels->val, t2->val+delta2, (batchSize*dim2)*sizeof(float));
+        memcpy(features->val, t1->val+delta1, (batch_size*dim1)*sizeof(float));
+        memcpy(labels->val, t2->val+delta2, (batch_size*dim2)*sizeof(float));
     }
     
-    if (count == (int)ceil(num_inputs/batchSize)) {
+    if (count == (int)ceil(num_inputs/batch_size)) {
         
         if (remainder != NULL) {
             if (*remainder != 0) {
-                remainder_offsets[1] = delta1 + (batchSize * dim1);
-                remainder_offsets[2] = delta2 + (batchSize * dim2);
+                remainder_offsets[1] = delta1 + (batch_size * dim1);
+                remainder_offsets[2] = delta2 + (batch_size * dim2);
             }
         }
         
@@ -122,15 +122,15 @@ void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _No
         delta2 = 0;
         count = 1;
     } else {
-        delta1 = delta1 + (batchSize * dim1);
-        delta2 = delta2 + (batchSize * dim2);
+        delta1 = delta1 + (batch_size * dim1);
+        delta2 = delta2 + (batch_size * dim2);
         count++;
     }
-    if (!do_remainder && remainder != NULL) remainder_offsets[0] = remainder_offsets[0] + batchSize;
+    if (!do_remainder && remainder != NULL) remainder_offsets[0] = remainder_offsets[0] + batch_size;
 }
 
 
-int batch_range(void * _Nonnull neural, unsigned int batchSize, int * _Nullable remainder) {
+int batch_range(void * _Nonnull neural, unsigned int batch_size, int * _Nullable remainder) {
     
     static bool firstTime = true;
     
@@ -149,8 +149,8 @@ int batch_range(void * _Nonnull neural, unsigned int batchSize, int * _Nullable 
         firstTime = false;
     }
     
-    if (remainder != NULL) *remainder = num_inputs % batchSize;
-    return (int)ceil((int)num_inputs/batchSize);
+    if (remainder != NULL) *remainder = num_inputs % batch_size;
+    return (int)ceil((int)num_inputs/batch_size);
 }
 
 void progression(void * _Nonnull neural, progress_dict progress_dict) {
@@ -296,7 +296,7 @@ static void eval(void * _Nonnull self, tensor * _Nonnull inputs, tensor * _Nonnu
     eval_net(self, inputs, labels, out);
 }
 
-void eval_prediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Nonnull out, bool metal) {
+void eval_prediction(void * _Nonnull self, char * _Nonnull data_set, float * _Nonnull out, bool metal) {
     
     static bool test_check = false;
     static bool validation_check = false;
@@ -305,7 +305,7 @@ void eval_prediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Non
     
     tensor *t1 = NULL;
     tensor *t2 = NULL;
-    if (strcmp(dataSet, "validation") == 0) {
+    if (strcmp(data_set, "validation") == 0) {
         if (!validation_check) {
             if (nn->data->validation->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on validation data but the data do not exist.");
             validation_check = true;
@@ -313,7 +313,7 @@ void eval_prediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Non
         
         t1 = (tensor *)nn->data->validation->set;
         t2 = (tensor *)nn->data->validation->labels;
-    } else if (strcmp(dataSet, "test") == 0) {
+    } else if (strcmp(data_set, "test") == 0) {
         if (!test_check) {
             if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate prediction on test data but the data do not exist.");
             test_check = true;
@@ -350,7 +350,7 @@ void eval_prediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Non
 //
 //  Compute the total cost function using a cross-entropy formulation
 //
-float eval_cost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization) {
+float eval_cost(void * _Nonnull self, char * _Nonnull data_set, bool binarization) {
     
     static bool test_check = false;
     static bool validation_check = false;
@@ -367,11 +367,11 @@ float eval_cost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization
     
     tensor *t1 = NULL;
     tensor *t2 = NULL;
-    if (strcmp(dataSet, "training") == 0) {
+    if (strcmp(data_set, "training") == 0) {
         
         t1 = (tensor *)nn->data->training->set;
         t2 = (tensor *)nn->data->training->labels;
-    } else if (strcmp(dataSet, "validation") == 0) {
+    } else if (strcmp(data_set, "validation") == 0) {
         if (!validation_check) {
             if (nn->data->validation->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate cost on validation data but the data do not exist.");
             validation_check = true;
@@ -379,7 +379,7 @@ float eval_cost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization
         
         t1 = (tensor *)nn->data->validation->set;
         t2 = (tensor *)nn->data->validation->labels;
-    } else if (strcmp(dataSet, "test") == 0) {
+    } else if (strcmp(data_set, "test") == 0) {
         if (!test_check) {
             if (nn->data->test->set == NULL) fatal(DEFAULT_CONSOLE_WRITER, "trying to evaluate cost on test data but the data do not exist.");
             test_check = true;

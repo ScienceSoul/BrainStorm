@@ -38,9 +38,9 @@ void __attribute__((overloadable)) shuffle(float * _Nonnull * _Nonnull array, un
 void __attribute__((overloadable)) shuffle(void * _Nonnull object);
 void __attribute__((overloadable))shuffle(void * _Nonnull neural, void * _Nonnull object, void * _Nullable associate, int num_classifications);
 
-void __attribute__((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, int  * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len);
-void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, char result[_Nonnull][128], unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len);
-void __attribute__ ((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, float * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int *_Nonnull len);
+void __attribute__((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argument_name, int  * _Nonnull result, unsigned int * _Nonnull num_items, unsigned int * _Nonnull len);
+void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument, const char * _Nonnull argument_name, char result[_Nonnull][128], unsigned int * _Nonnull num_items, unsigned int * _Nonnull len);
+void __attribute__ ((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argument_name, float * _Nonnull result, unsigned int * _Nonnull num_items, unsigned int *_Nonnull len);
 
 
 float randn(float mu, float sigma);

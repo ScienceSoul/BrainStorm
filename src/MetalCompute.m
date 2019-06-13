@@ -18,11 +18,11 @@
 #include "TimeProfile.h"
 
 id <MTLDevice> _Nullable device;
-id <MTLCommandQueue> _Nullable commandQueue;
+id <MTLCommandQueue> _Nullable command_queue;
 id <MTLLibrary> _Nullable library;
 
 NSMutableArray *functions;
-NSMutableArray *pipelineStates;
+NSMutableArray *pipeline_states;
 
 id <MTLBuffer> kernel_data;
 id <MTLBuffer> kernel_weights;
@@ -33,34 +33,34 @@ id <MTLBuffer> kernel_parameters;
 
 bool allocation;
 
-typedef struct weightMatrixDimension {
+typedef struct weight_matrix_dimension {
     unsigned int m, n;
-} weightMatrixDimension;
+} weight_matrix_dimension;
 
-typedef struct biasVectorDimension {
+typedef struct bias_vector_dimension {
     unsigned int n;
-} biasVectorDimension;
+} bias_vector_dimension;
 
 typedef struct parameters_container {
-    unsigned int gridDimension;
-    unsigned int numberOfLayers;
-    unsigned int numberOfFeatures;
-    unsigned int numberOfOutputs;
+    unsigned int grid_dim;
+    unsigned int num_layers;
+    unsigned int num_features;
+    unsigned int num_outputs;
     
-    weightMatrixDimension weightsDim[100];
-    biasVectorDimension biasesDim[100];
+    weight_matrix_dimension weights_dim[100];
+    bias_vector_dimension biases_dim[100];
 } parameters_container;
 
-int LoadFileIntoString(const char * _Nonnull filename, char * _Nonnull * _Nullable text, unsigned int * _Nonnull len) {
+int LoadFileIntoString(const char * _Nonnull file_name, char * _Nonnull * _Nullable text, unsigned int * _Nonnull len) {
     struct stat statbuf;
     FILE        *fh;
     int         file_len;
     
-    fh = fopen(filename, "r");
+    fh = fopen(file_name, "r");
     if (fh == 0)
         return -1;
     
-    stat(filename, &statbuf);
+    stat(file_name, &statbuf);
     file_len = (int)statbuf.st_size;
     *len = file_len;
     *text = (char *) malloc(file_len + 1);
@@ -73,7 +73,7 @@ int LoadFileIntoString(const char * _Nonnull filename, char * _Nonnull * _Nullab
 
 void init_device (void) {
     device = MTLCreateSystemDefaultDevice();
-    commandQueue = device.newCommandQueue;
+    command_queue = device.newCommandQueue;
     
     char * metal_source;
     unsigned int src_len;
@@ -93,17 +93,17 @@ void init_device (void) {
     }
     
     functions = [NSMutableArray new];
-    pipelineStates = [NSMutableArray new];
+    pipeline_states = [NSMutableArray new];
     
     allocation = false;
 }
 
 void nullify(void) {
     device = nil;
-    commandQueue = nil;
+    command_queue = nil;
     library = nil;
     functions = nil;
-    pipelineStates = nil;
+    pipeline_states = nil;
     
     kernel_data = nil;
     kernel_weights = nil;
@@ -116,57 +116,57 @@ void nullify(void) {
 void allocate_buffers(void * _Nonnull network) {
     if (!allocation) {
         
-        BrainStormNet *nn = (BrainStormNet *)network;
+        brain_storm_net *nn = (brain_storm_net *)network;
         parameters_container *params = (parameters_container *)malloc(sizeof(parameters_container));
         
-        unsigned int entriesTableSize = nn->data->test->m * nn->num_channels;
+        unsigned int entries_table_size = nn->data->test->m * nn->num_channels;
         
-        unsigned int weightsTableSize = 0;
-        unsigned int biasesTableSize = 0;
+        unsigned int weights_table_size = 0;
+        unsigned int biases_table_size = 0;
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            weightsTableSize = weightsTableSize + (nn->dense->weights->shape[l][0][0]*nn->dense->weights->shape[l][1][0]);
-            biasesTableSize = biasesTableSize + nn->dense->biases->shape[l][0][0];
+            weights_table_size = weights_table_size + (nn->dense->weights->shape[l][0][0]*nn->dense->weights->shape[l][1][0]);
+            biases_table_size = biases_table_size + nn->dense->biases->shape[l][0][0];
         }
         
         int max = max_array(nn->dense->parameters->topology, nn->network_num_layers);
-        unsigned int activationsTableSize = max * nn->data->test->m;
+        unsigned int activations_table_size = max * nn->data->test->m;
         
-        kernel_data = [device newBufferWithLength:entriesTableSize*sizeof(float) options:MTLResourceStorageModeShared];
-        kernel_weights = [device newBufferWithLength:weightsTableSize*sizeof(float) options:MTLResourceStorageModeShared];
-        kernel_biases = [device newBufferWithLength:biasesTableSize*sizeof(float) options:MTLResourceStorageModeShared];
-        kernel_activations = [device newBufferWithLength:activationsTableSize*sizeof(float) options:MTLResourceStorageModePrivate];
+        kernel_data = [device newBufferWithLength:entries_table_size*sizeof(float) options:MTLResourceStorageModeShared];
+        kernel_weights = [device newBufferWithLength:weights_table_size*sizeof(float) options:MTLResourceStorageModeShared];
+        kernel_biases = [device newBufferWithLength:biases_table_size*sizeof(float) options:MTLResourceStorageModeShared];
+        kernel_activations = [device newBufferWithLength:activations_table_size*sizeof(float) options:MTLResourceStorageModePrivate];
         kernel_ground_truth = [device newBufferWithLength:nn->data->test->m*sizeof(float) options:MTLResourceStorageModeShared];
         
-        params->gridDimension = nn->data->test->m;
-        params->numberOfLayers = nn->network_num_layers;
-        params->numberOfFeatures = nn->dense->parameters->topology[0];
-        params->numberOfOutputs = nn->dense->parameters->topology[nn->network_num_layers-1];
+        params->grid_dim = nn->data->test->m;
+        params->num_layers = nn->network_num_layers;
+        params->num_features = nn->dense->parameters->topology[0];
+        params->num_outputs = nn->dense->parameters->topology[nn->network_num_layers-1];
         
         for (int l=0; l<nn->network_num_layers-1; l++) {
-            params->weightsDim[l].m = nn->dense->weights->shape[l][0][0];
-            params->weightsDim[l].n = nn->dense->weights->shape[l][1][0];
+            params->weights_dim[l].m = nn->dense->weights->shape[l][0][0];
+            params->weights_dim[l].n = nn->dense->weights->shape[l][1][0];
             
-            params->biasesDim[l].n = nn->dense->biases->shape[l][0][0];
+            params->biases_dim[l].n = nn->dense->biases->shape[l][0][0];
         }
 
         kernel_parameters = [device newBufferWithBytes:params length:sizeof(parameters_container) options:MTLResourceStorageModeShared];
         free(params);
         
         void *buffer = kernel_data.contents;
-        memset(buffer, 0.0f, entriesTableSize*sizeof(float));
+        memset(buffer, 0.0f, entries_table_size*sizeof(float));
         
         buffer = kernel_weights.contents;
-        memset(buffer, 0.0f, weightsTableSize*sizeof(float));
+        memset(buffer, 0.0f, weights_table_size*sizeof(float));
         
         buffer = kernel_biases.contents;
-        memset(buffer, 0.0f, biasesTableSize*sizeof(float));
+        memset(buffer, 0.0f, biases_table_size*sizeof(float));
     }
 }
 
 void prepare (char * _Nonnull operation) {
     
     id <MTLFunction> function;
-    id <MTLComputePipelineState> pipelineState;
+    id <MTLComputePipelineState> pipeline_state;
     
     if (!allocation) {
         if (strcmp(operation, "feedforward") == 0) {
@@ -174,7 +174,7 @@ void prepare (char * _Nonnull operation) {
             [functions addObject:function];
             
             NSError *error;
-            pipelineState = [device newComputePipelineStateWithFunction:functions[0] error:&error];
+            pipeline_state = [device newComputePipelineStateWithFunction:functions[0] error:&error];
             if (error != nil) {
                 fprintf(stderr, "<metal compute>: error when creating a pipeline state.");
                 fprintf(stderr, "<metal compute>: error code: %ld\n", (long)error.code);
@@ -182,7 +182,7 @@ void prepare (char * _Nonnull operation) {
             }
             
             [functions addObject:function];
-            [pipelineStates addObject:pipelineState];
+            [pipeline_states addObject:pipeline_state];
         }
         allocation = true;
     }
@@ -190,11 +190,11 @@ void prepare (char * _Nonnull operation) {
 
 void format_data(float * _Nonnull * _Nonnull input, unsigned int m, unsigned int n) {
     
-    static bool firstTime = false;
+    static bool first_time = false;
     
-    if (firstTime) return;
+    if (first_time) return;
     
-    if (!firstTime) {
+    if (!first_time) {
         float *mat = (float *)malloc((m*n)*sizeof(float));
         for (int i=0; i<m; i++) {
             for (int j=0; j<n; j++) {
@@ -206,29 +206,29 @@ void format_data(float * _Nonnull * _Nonnull input, unsigned int m, unsigned int
         memcpy(buffer, mat, (m*n)*sizeof(float));
         
         free(mat);
-        firstTime = true;
+        first_time = true;
     }
 }
 
 void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     
-    MTLSize threadgroupsPerGrid;
-    MTLSize threadsPerThreadgroup;
+    MTLSize thread_groups_per_grid;
+    MTLSize threads_per_thread_group;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
-    unsigned int weightsTableSize = 0;
-    unsigned int biasesTableSize = 0;
+    unsigned int weights_table_size = 0;
+    unsigned int biases_table_size = 0;
     for (int l=0; l<nn->network_num_layers-1; l++) {
-        weightsTableSize = weightsTableSize + (nn->dense->weights->shape[l][0][0]*nn->dense->weights->shape[l][1][0]);
-        biasesTableSize = biasesTableSize + nn->dense->biases->shape[l][0][0];
+        weights_table_size = weights_table_size + (nn->dense->weights->shape[l][0][0]*nn->dense->weights->shape[l][1][0]);
+        biases_table_size = biases_table_size + nn->dense->biases->shape[l][0][0];
     }
     
     void *buffer = kernel_weights.contents;
-    memcpy(buffer, nn->dense->weights, weightsTableSize*sizeof(float));
+    memcpy(buffer, nn->dense->weights, weights_table_size*sizeof(float));
     
     buffer = kernel_biases.contents;
-    memcpy(buffer, nn->dense->biases, biasesTableSize*sizeof(float));
+    memcpy(buffer, nn->dense->biases, biases_table_size*sizeof(float));
     
     buffer = kernel_ground_truth.contents;
     float *pt = buffer;
@@ -238,47 +238,47 @@ void compute_feedforward(void * _Nonnull neural, float * _Nonnull result) {
     
     @autoreleasepool{
         
-        id <MTLComputePipelineState> pipelineState = pipelineStates[0];
-        unsigned long threadExecutionWidth = pipelineState.threadExecutionWidth;
+        id <MTLComputePipelineState> pipeline_state = pipeline_states[0];
+        unsigned long thread_execution_width = pipeline_state.threadExecutionWidth;
         
-        threadgroupsPerGrid = MTLSizeMake((nn->data->test->m + threadExecutionWidth - 1) / threadExecutionWidth, 1, 1);
-        threadsPerThreadgroup = MTLSizeMake(threadExecutionWidth, 1, 1);
+        thread_groups_per_grid = MTLSizeMake((nn->data->test->m + thread_execution_width - 1) / thread_execution_width, 1, 1);
+        threads_per_thread_group = MTLSizeMake(thread_execution_width, 1, 1);
         
-        id <MTLCommandBuffer> commandBuffer = commandQueue.commandBuffer;
-        id <MTLComputeCommandEncoder> commandEncoder = commandBuffer.computeCommandEncoder;
-        [commandEncoder setComputePipelineState:pipelineStates[0]];
+        id <MTLCommandBuffer> command_buffer = command_queue.commandBuffer;
+        id <MTLComputeCommandEncoder> command_encoder = command_buffer.computeCommandEncoder;
+        [command_encoder setComputePipelineState:pipeline_states[0]];
         
-        [commandEncoder setBuffer:kernel_data offset:0 atIndex:0];
-        [commandEncoder setBuffer:kernel_weights offset:0 atIndex:1];
-        [commandEncoder setBuffer:kernel_biases offset:0 atIndex:2];
-        [commandEncoder setBuffer:kernel_activations offset:0 atIndex:3];
-        [commandEncoder setBuffer:kernel_ground_truth offset:0 atIndex:4];
-        [commandEncoder setBuffer:kernel_parameters offset:0 atIndex:5];
+        [command_encoder setBuffer:kernel_data offset:0 atIndex:0];
+        [command_encoder setBuffer:kernel_weights offset:0 atIndex:1];
+        [command_encoder setBuffer:kernel_biases offset:0 atIndex:2];
+        [command_encoder setBuffer:kernel_activations offset:0 atIndex:3];
+        [command_encoder setBuffer:kernel_ground_truth offset:0 atIndex:4];
+        [command_encoder setBuffer:kernel_parameters offset:0 atIndex:5];
         
-        [commandEncoder dispatchThreadgroups:threadgroupsPerGrid threadsPerThreadgroup:threadsPerThreadgroup];
+        [command_encoder dispatchThreadgroups:thread_groups_per_grid threadsPerThreadgroup:threads_per_thread_group];
         
-        [commandEncoder endEncoding];
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        [command_encoder endEncoding];
+        [command_buffer commit];
+        [command_buffer waitUntilCompleted];
     }
     
     void *output = kernel_ground_truth.contents;
     memcpy(result, output, nn->data->test->m*sizeof(float));
 }
 
-MetalCompute * _Nonnull metal_compute_alloc(void) {
+metal_compute * _Nonnull metal_compute_alloc(void) {
     
-    MetalCompute *metalComppute = (MetalCompute *)malloc(sizeof(MetalCompute));
+    metal_compute *new_compute = (metal_compute *)malloc(sizeof(metal_compute));
     
-    metalComppute->init = init_device;
-    metalComppute->prepare = prepare;
-    metalComppute->allocate_buffers = allocate_buffers;
-    metalComppute->nullify = nullify;
+    new_compute->init = init_device;
+    new_compute->prepare = prepare;
+    new_compute->allocate_buffers = allocate_buffers;
+    new_compute->nullify = nullify;
     
-    metalComppute->format_data = format_data;
-    metalComppute->feedforward = compute_feedforward;
+    new_compute->format_data = format_data;
+    new_compute->feedforward = compute_feedforward;
     
-    return metalComppute;
+    return new_compute;
 }
 
 #endif

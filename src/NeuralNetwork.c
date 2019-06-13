@@ -264,7 +264,7 @@ static void finale(void * _Nonnull self) {
 #ifdef GPU_WORKING
 static void gpu_alloc(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     nn->gpu = metal_compute_alloc();
 }

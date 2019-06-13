@@ -146,11 +146,11 @@ void __attribute__((overloadable))shuffle(void * _Nonnull object) {
     }
 }
 
-void __attribute__((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, int  * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len) {
+void __attribute__((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argument_name, int  * _Nonnull result, unsigned int * _Nonnull num_items, unsigned int * _Nonnull len) {
     int idx = 0;
-    *numberOfItems = 0;
+    *num_items = 0;
     
-    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argumentName, argument);
+    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argument_name, argument);
     
     size_t length = strlen(argument);
     if (argument[0] != '[' || argument[length-1] != ']') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in key value. Collections must use the [ ] syntax.");
@@ -165,7 +165,7 @@ void __attribute__((overloadable))parse_argument(const char * _Nonnull argument,
         }
         
         if (argument[idx] == ']') {
-            (*numberOfItems)++;
+            (*num_items)++;
             break;
         } else if (argument[idx] == '(') { // Begining of the definition of a range
             int layerNumbering[2];
@@ -184,11 +184,11 @@ void __attribute__((overloadable))parse_argument(const char * _Nonnull argument,
                             if (argument[idx+1] != ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in range definition. <}> should be followed by <,>");
                             if ((layerNumbering[0]-1) - checkRange != 1) fatal(DEFAULT_CONSOLE_WRITER, "range definition is not compatible with a correct topology of the network.");
                             for (int i=layerNumbering[0]-1; i<layerNumbering[1]; i++) {
-                                if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
-                                result[*numberOfItems] = numberOfUnits;
-                                (*numberOfItems)++;
+                                if (*num_items >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argument_name);
+                                result[*num_items] = numberOfUnits;
+                                (*num_items)++;
                             }
-                            (*numberOfItems)--; // We are going one step ahead from the previous loop, so come back one step back
+                            (*num_items)--; // We are going one step ahead from the previous loop, so come back one step back
                             checkRange = layerNumbering[1] - 1;
                             break;
                         } else {
@@ -209,27 +209,27 @@ void __attribute__((overloadable))parse_argument(const char * _Nonnull argument,
             }
         } else if (argument[idx] == ',') {
             if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <,]> or <,,> in key value.");
-            (*numberOfItems)++;
+            (*num_items)++;
             idx++;
         } else {
             int digit = argument[idx] - '0';
             if (digit < 0 || digit > 9) fatal(DEFAULT_CONSOLE_WRITER, "NaN in key value.");
-            if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
-            result[*numberOfItems] = result[*numberOfItems] * 10 + digit;
+            if (*num_items >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argument_name);
+            result[*num_items] = result[*num_items] * 10 + digit;
             idx++;
         }
     }
 }
 
-void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, char result[_Nonnull][128], unsigned int * _Nonnull numberOfItems, unsigned int * _Nonnull len) {
+void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument, const char * _Nonnull argument_name, char result[_Nonnull][128], unsigned int * _Nonnull num_items, unsigned int * _Nonnull len) {
     
     int idx = 0;
     int bf_idx = 0;
-    *numberOfItems = 0;
+    *num_items = 0;
     char buffer[MAX_SHORT_STRING_LENGTH];
     
     
-    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argumentName, argument);
+    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argument_name, argument);
     
     size_t length = strlen(argument);
     if (argument[0] != '[' || argument[length-1] != ']') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in key value. Collections must use the [ ] syntax.");
@@ -243,9 +243,9 @@ void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument
             idx++;
         }
         if (argument[idx] == '~') {
-            memset(result[*numberOfItems], 0, sizeof(result[*numberOfItems]));
-            memcpy(result[*numberOfItems], buffer, strlen(buffer));
-            (*numberOfItems)++;
+            memset(result[*num_items], 0, sizeof(result[*num_items]));
+            memcpy(result[*num_items], buffer, strlen(buffer));
+            (*num_items)++;
             break;
         } else if (argument[idx] == '(') { // Begining of the definition of a range
             int layerNumbering[2];
@@ -265,15 +265,15 @@ void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument
                             if (argument[idx+1] != ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in range definition. <}> should be followed by <,>");
                             if ((layerNumbering[0]-1) - checkRange != 1) fatal(DEFAULT_CONSOLE_WRITER, "range definition is not compatible with a correct topology of the network.");
                             for (int i=layerNumbering[0]-1; i<layerNumbering[1]; i++) {
-                                if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
-                                memset(result[*numberOfItems], 0, sizeof(result[*numberOfItems]));
-                                memcpy(result[*numberOfItems], buffer, strlen(buffer));
-                                (*numberOfItems)++;
+                                if (*num_items >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argument_name);
+                                memset(result[*num_items], 0, sizeof(result[*num_items]));
+                                memcpy(result[*num_items], buffer, strlen(buffer));
+                                (*num_items)++;
                             }
                             checkRange = layerNumbering[1] - 1;
                             break;
                         } else {
-                            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
+                            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)num_items);
                             buffer[bf_idx] = argument[idx];
                             bf_idx++;
                             idx++;
@@ -299,17 +299,17 @@ void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument
                 continue;
             }
             
-            if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
-            memset(result[*numberOfItems], 0, sizeof(result[*numberOfItems]));
-            memcpy(result[*numberOfItems], buffer, strlen(buffer));
-            (*numberOfItems)++;
+            if (*num_items >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argument_name);
+            memset(result[*num_items], 0, sizeof(result[*num_items]));
+            memcpy(result[*num_items], buffer, strlen(buffer));
+            (*num_items)++;
             if (argument[idx] == ']') break;
             idx++;
             memset(buffer, 0, sizeof(buffer));
             bf_idx = 0;
             checkRange++;
         } else {
-            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
+            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argument_name);
             buffer[bf_idx] = argument[idx];
             bf_idx++;
             idx++;
@@ -317,15 +317,15 @@ void __attribute__((overloadable)) parse_argument(const char * _Nonnull argument
     }
 }
 
-void __attribute__ ((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argumentName, float * _Nonnull result, unsigned int * _Nonnull numberOfItems, unsigned int *_Nonnull len) {
+void __attribute__ ((overloadable))parse_argument(const char * _Nonnull argument, const char * _Nonnull argument_name, float * _Nonnull result, unsigned int * _Nonnull num_items, unsigned int *_Nonnull len) {
     
     int idx = 0;
     int bf_idx = 0;
-    *numberOfItems = 0;
+    *num_items = 0;
     char buffer[MAX_SHORT_STRING_LENGTH];
     
     
-    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argumentName, argument);
+    fprintf(stdout, "%s: parsing the key value <%s>: %s.\n", DEFAULT_CONSOLE_WRITER, argument_name, argument);
     
     size_t lenght = strlen(argument);
     if (argument[0] != '[' || argument[lenght-1] != ']') fatal(DEFAULT_CONSOLE_WRITER, "syntax error in key value. Collections must use the [ ] syntax.");
@@ -341,15 +341,15 @@ void __attribute__ ((overloadable))parse_argument(const char * _Nonnull argument
             if (argument[idx] == ',') {
                 if (argument[idx+1] == ']' || argument[idx+1] == ',') fatal(DEFAULT_CONSOLE_WRITER, "syntax error possibly <,]> or <,,> in key value.");
             }
-            if (*numberOfItems >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
-            result[*numberOfItems] = strtof(buffer, NULL);
-            (*numberOfItems)++;
+            if (*num_items >= *len) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argument_name);
+            result[*num_items] = strtof(buffer, NULL);
+            (*num_items)++;
             if (argument[idx] == ']') break;
             idx++;
             memset(buffer, 0, sizeof(buffer));
             bf_idx = 0;
         } else {
-            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argumentName);
+            if (bf_idx >= MAX_SHORT_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when parsing the key:", (char *)argument_name);
             buffer[bf_idx] = argument[idx];
             bf_idx++;
             idx++;

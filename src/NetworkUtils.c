@@ -341,13 +341,13 @@ void __attribute__((overloadable))shuffle(void * _Nonnull features, void * _Null
 }
 
 
-int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull paraFile) {
+int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull para_file) {
     
     definition *definitions = NULL;
     
     fprintf(stdout, "%s: load the network and its input parameters...\n", DEFAULT_CONSOLE_WRITER);
     
-    definitions = get_definitions(self, paraFile, "define");
+    definitions = get_definitions(self, para_file, "define");
     if (definitions == NULL) {
         fatal(DEFAULT_CONSOLE_WRITER, "problem finding any parameter definition.");
     }

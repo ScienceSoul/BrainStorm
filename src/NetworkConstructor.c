@@ -11,58 +11,58 @@
 #include "NeuralNetwork.h"
 #include "Conv2DNetOps.h"
 
-static void set_activation_function(activation_functions activationFunctionsRef[MAX_NUMBER_NETWORK_LAYERS],
-                    float (* _Nonnull activationFunctions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n),
-                    float (* _Nonnull activationDerivatives[MAX_NUMBER_NETWORK_LAYERS])(float z),
+static void set_activation_function(activation_functions activation_functions_ref[MAX_NUMBER_NETWORK_LAYERS],
+                    float (* _Nonnull activation_functions[MAX_NUMBER_NETWORK_LAYERS])(float z, float * _Nullable vec, unsigned int * _Nullable n),
+                    float (* _Nonnull activation_derivatives[MAX_NUMBER_NETWORK_LAYERS])(float z),
                     layer_dict layer_dict, unsigned int idx) {
     
     if (layer_dict.activation == SIGMOID) {
-        activationFunctionsRef[idx] = SIGMOID;
-        activationFunctions[idx] = sigmoid;
-        activationDerivatives[idx] = sigmoid_prime;
+        activation_functions_ref[idx] = SIGMOID;
+        activation_functions[idx] = sigmoid;
+        activation_derivatives[idx] = sigmoid_prime;
     } else if (layer_dict.activation == RELU) {
-        activationFunctionsRef[idx] = RELU;
-        activationFunctions[idx] = relu;
-        activationDerivatives[idx] = relu_prime;
+        activation_functions_ref[idx] = RELU;
+        activation_functions[idx] = relu;
+        activation_derivatives[idx] = relu_prime;
     } else if (layer_dict.activation == LEAKY_RELU) {
-        activationFunctionsRef[idx] = LEAKY_RELU;
-        activationFunctions[idx] = leakyrelu;
-        activationDerivatives[idx] = leakyrelu_prime;
+        activation_functions_ref[idx] = LEAKY_RELU;
+        activation_functions[idx] = leakyrelu;
+        activation_derivatives[idx] = leakyrelu_prime;
     } else if (layer_dict.activation == ELU) {
-        activationFunctionsRef[idx] = ELU;
-        activationFunctions[idx] = elu;
-        activationDerivatives[idx] = elu_prime;
+        activation_functions_ref[idx] = ELU;
+        activation_functions[idx] = elu;
+        activation_derivatives[idx] = elu_prime;
     } else if (layer_dict.activation == TANH) {
-        activationFunctionsRef[idx] = TANH;
-        activationFunctions[idx] = tan_h;
-        activationDerivatives[idx] = tanh_prime;
+        activation_functions_ref[idx] = TANH;
+        activation_functions[idx] = tan_h;
+        activation_derivatives[idx] = tanh_prime;
     } else if (layer_dict.activation == SOFTPLUS) {
-        activationFunctionsRef[idx] = SOFTPLUS;
-        activationFunctions[idx] = softplus;
-        activationDerivatives[idx] = softplus_prime;
+        activation_functions_ref[idx] = SOFTPLUS;
+        activation_functions[idx] = softplus;
+        activation_derivatives[idx] = softplus_prime;
     } else if (layer_dict.activation == SOFTMAX) {
-        activationFunctionsRef[idx] = SOFTMAX;
-        activationFunctions[idx] = softmax;
-        activationDerivatives[idx] = NULL;
+        activation_functions_ref[idx] = SOFTMAX;
+        activation_functions[idx] = softmax;
+        activation_derivatives[idx] = NULL;
     } else if (layer_dict.activation == CUSTOM) {
         // Must be defined by the user
-        activationFunctionsRef[idx] = CUSTOM;
+        activation_functions_ref[idx] = CUSTOM;
     } else {
         fprintf(stdout, "%s: activation function not given, default to sigmoid.\n", DEFAULT_CONSOLE_WRITER);
-        activationFunctionsRef[idx] = SIGMOID;
-        activationFunctions[idx] = sigmoid;
-        activationDerivatives[idx] = sigmoid_prime;
+        activation_functions_ref[idx] = SIGMOID;
+        activation_functions[idx] = sigmoid;
+        activation_derivatives[idx] = sigmoid_prime;
     }
 }
 
-static void set_kernel_initializer(void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val),
+static void set_kernel_initializer(void (* _Nonnull kernel_initializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val),
                                    layer_dict layer_dict, unsigned int idx) {
     
     if (layer_dict.kernel_initializer == NULL) {
         fprintf(stdout, "%s: no initializer given to layer, default to standard nornmal distribution.\n", DEFAULT_CONSOLE_WRITER);
-        kernelInitializers[idx] = xavier_initializer;
+        kernel_initializers[idx] = xavier_initializer;
     } else {
-        kernelInitializers[idx] = layer_dict.kernel_initializer;
+        kernel_initializers[idx] = layer_dict.kernel_initializer;
     }
 }
 
