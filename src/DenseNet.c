@@ -14,7 +14,7 @@
 //
 void create_dense_net(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     nn->dense = (dense_network *)malloc(sizeof(dense_network));
     *(nn->dense) = (dense_network){.num_dense_layers=0,
@@ -73,7 +73,7 @@ void create_dense_net(void * _Nonnull self) {
 //
 void dense_net_genesis(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     nn->dense->parameters->max_number_nodes_in_layer = maxv(nn->dense->parameters->topology, nn->network_num_layers);
     
@@ -208,7 +208,7 @@ void dense_net_genesis(void * _Nonnull self) {
 //
 void dense_net_finale(void * _Nonnull  self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     if (nn->dense->weights != NULL) {
         free(nn->dense->weights->val);

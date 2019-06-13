@@ -187,9 +187,9 @@ void value_initializer(void * _Nonnull object, float * _Nullable factor, char * 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void * _Nullable tensor_create(void * _Nullable self, tensor_dict tensor_dict) {
     
-    BrainStormNet *nn = NULL;
+    brain_storm_net *nn = NULL;
     if (self != NULL) {
-        nn = (BrainStormNet *)self;
+        nn = (brain_storm_net *)self;
     }
     
     if (tensor_dict.rank > MAX_TENSOR_RANK) {
@@ -232,13 +232,13 @@ void * _Nullable tensor_create(void * _Nullable self, tensor_dict tensor_dict) {
                 step = step * tensor_dict.shape[l][i][0];
             }
             
-            if (nn->kernelInitializers[l] == xavier_initializer) {
-                nn->kernelInitializers[l]((void *)tensor_object, NULL, NULL, NULL, l, offset, NULL);
-            } else if (nn->kernelInitializers[l] == variance_scaling_initializer) {
+            if (nn->kernel_initializers[l] == xavier_initializer) {
+                nn->kernel_initializers[l]((void *)tensor_object, NULL, NULL, NULL, l, offset, NULL);
+            } else if (nn->kernel_initializers[l] == variance_scaling_initializer) {
                 bool uniform = false;
-                nn->kernelInitializers[l]((void *)tensor_object, NULL, "FAN_IN", &uniform, l, offset, NULL);
-            } else if (nn->kernelInitializers[l] == random_normal_initializer) {
-                nn->kernelInitializers[l]((void *)tensor_object, NULL, NULL, NULL, l, offset, NULL);
+                nn->kernel_initializers[l]((void *)tensor_object, NULL, "FAN_IN", &uniform, l, offset, NULL);
+            } else if (nn->kernel_initializers[l] == random_normal_initializer) {
+                nn->kernel_initializers[l]((void *)tensor_object, NULL, NULL, NULL, l, offset, NULL);
             }
             
             offset = offset + step;
@@ -352,7 +352,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
         fatal(DEFAULT_CONSOLE_WRITER, "problem finding any parameter definition.");
     }
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     short FOUND_DATA           = 0;
     short FOUND_TOPOLOGY       = 0;
@@ -416,27 +416,27 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                     }
                     for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(activationFunctionsStr[0], "sigmoid") == 0) {
-                            nn->activationFunctionsRef[i] = SIGMOID;
+                            nn->activation_functions_ref[i] = SIGMOID;
                             nn->dense->activation_functions[i] = sigmoid;
                             nn->dense->activation_derivatives[i] = sigmoid_prime;
                         } else if (strcmp(activationFunctionsStr[0], "relu") == 0) {
-                            nn->activationFunctionsRef[i] = RELU;
+                            nn->activation_functions_ref[i] = RELU;
                             nn->dense->activation_functions[i] = relu;
                             nn->dense->activation_derivatives[i] = relu_prime;
                         } else if (strcmp(activationFunctionsStr[0], "leakyrelu") == 0) {
-                            nn->activationFunctionsRef[i] = LEAKY_RELU;
+                            nn->activation_functions_ref[i] = LEAKY_RELU;
                             nn->dense->activation_functions[i] = leakyrelu;
                             nn->dense->activation_derivatives[i] = leakyrelu_prime;
                         } else if (strcmp(activationFunctionsStr[0], "elu") == 0) {
-                            nn->activationFunctionsRef[i] = ELU;
+                            nn->activation_functions_ref[i] = ELU;
                             nn->dense->activation_functions[i] = elu;
                             nn->dense->activation_derivatives[i] = elu_prime;
                         } else if (strcmp(activationFunctionsStr[0], "tanh") == 0) {
-                            nn->activationFunctionsRef[i] = TANH;
+                            nn->activation_functions_ref[i] = TANH;
                             nn->dense->activation_functions[i] = tan_h;
                             nn->dense->activation_derivatives[i] = tanh_prime;
                         } else if (strcmp(activationFunctionsStr[0], "softplus") == 0) {
-                            nn->activationFunctionsRef[i] = SOFTPLUS;
+                            nn->activation_functions_ref[i] = SOFTPLUS;
                             nn->dense->activation_functions[i] = softplus;
                             nn->dense->activation_derivatives[i] = softplus_prime;
                         } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activationFunctionsStr[0]);
@@ -444,27 +444,27 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                 } else {
                     for (int i=0; i<nn->network_num_layers-1; i++) {
                         if (strcmp(activationFunctionsStr[i], "sigmoid") == 0) {
-                            nn->activationFunctionsRef[i] = SIGMOID;
+                            nn->activation_functions_ref[i] = SIGMOID;
                             nn->dense->activation_functions[i] = sigmoid;
                             nn->dense->activation_derivatives[i] = sigmoid_prime;
                         } else if (strcmp(activationFunctionsStr[i], "relu") == 0) {
-                            nn->activationFunctionsRef[i] = RELU;
+                            nn->activation_functions_ref[i] = RELU;
                             nn->dense->activation_functions[i] = relu;
                             nn->dense->activation_derivatives[i] = relu_prime;
                         } else if (strcmp(activationFunctionsStr[i], "leakyrelu") == 0) {
-                            nn->activationFunctionsRef[i] = LEAKY_RELU;
+                            nn->activation_functions_ref[i] = LEAKY_RELU;
                             nn->dense->activation_functions[i] = leakyrelu;
                             nn->dense->activation_derivatives[i] = leakyrelu_prime;
                         } else if (strcmp(activationFunctionsStr[i], "elu") == 0) {
-                            nn->activationFunctionsRef[i] = ELU;
+                            nn->activation_functions_ref[i] = ELU;
                             nn->dense->activation_functions[i] = elu;
                             nn->dense->activation_derivatives[i] = elu_prime;
                         } else if (strcmp(activationFunctionsStr[i], "tanh") == 0) {
-                            nn->activationFunctionsRef[i] = TANH;
+                            nn->activation_functions_ref[i] = TANH;
                             nn->dense->activation_functions[i] = tan_h;
                             nn->dense->activation_derivatives[i] = tanh_prime;
                         } else if (strcmp(activationFunctionsStr[i], "softplus") == 0) {
-                            nn->activationFunctionsRef[i] = SOFTPLUS;
+                            nn->activation_functions_ref[i] = SOFTPLUS;
                             nn->dense->activation_functions[i] = softplus;
                             nn->dense->activation_derivatives[i] = softplus_prime;
                         } else if (strcmp(activationFunctionsStr[i], "softmax") == 0) {
@@ -472,7 +472,7 @@ int load_parameters_from_imput_file(void * _Nonnull self, const char * _Nonnull 
                             if (i < nn->network_num_layers-2) {
                                 fatal(DEFAULT_CONSOLE_WRITER, "the softmax function can't be used for the hiden units, only for the output units.");
                             }
-                            nn->activationFunctionsRef[i] = SOFTMAX;
+                            nn->activation_functions_ref[i] = SOFTMAX;
                             nn->dense->activation_functions[i] = softmax;
                             nn->dense->activation_derivatives[i] = NULL;
                         } else fatal(DEFAULT_CONSOLE_WRITER, "unsupported or unrecognized activation function:", activationFunctionsStr[i]);

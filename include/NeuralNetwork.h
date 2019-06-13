@@ -103,7 +103,7 @@ typedef struct conv2d_network {
     
 } conv2d_network;
 
-typedef struct BrainStormNet {
+typedef struct brain_storm_net {
     
     data * _Nullable data;
     network_constructor * _Nullable constructor;
@@ -128,7 +128,7 @@ typedef struct BrainStormNet {
     
     char data_path[MAX_LONG_STRING_LENGTH], data_name[MAX_LONG_STRING_LENGTH];
     
-    activation_functions activationFunctionsRef[MAX_NUMBER_NETWORK_LAYERS];
+    activation_functions activation_functions_ref[MAX_NUMBER_NETWORK_LAYERS];
     
     void (* _Nullable genesis)(void * _Nonnull self);
     void (* _Nullable finale)(void * _Nonnull self);
@@ -136,7 +136,7 @@ typedef struct BrainStormNet {
     void (* _Nullable gpu_alloc)(void * _Nonnull self);
     
     
-     void (* _Nonnull kernelInitializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
+     void (* _Nonnull kernel_initializers[MAX_NUMBER_NETWORK_LAYERS])(void * _Nonnull object, float * _Nullable factor, char * _Nullable mode, bool * _Nullable uniform, int layer, int offset, float * _Nullable val);
     
     float (* _Nullable l0_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
     float (* _Nullable l1_regularizer)(void * _Nonnull neural, float * _Nonnull weights, float eta, float lambda, int i, int j, int n, int offset, int stride1, int stride2);
@@ -163,10 +163,10 @@ typedef struct BrainStormNet {
     
     //void (* _Nullable conv_mat_update)(void * _Nonnull self);
     
-} BrainStormNet;
+} brain_storm_net;
 
-BrainStormNet * _Nonnull new_dense_net(void);
-BrainStormNet * _Nonnull new_conv2d_net(void);
+brain_storm_net * _Nonnull new_dense_net(void);
+brain_storm_net * _Nonnull new_conv2d_net(void);
 
 #endif /* NeuralNetwork_h */
 

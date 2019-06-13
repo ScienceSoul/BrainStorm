@@ -9,7 +9,7 @@
 #include "BrainStorm.h"
 #include "LoadFashion-MNISTDataSet.h"
 
-void train_dense(BrainStormNet *neural, momentum_optimizer *optimizer) {
+void train_dense(brain_storm_net *neural, momentum_optimizer *optimizer) {
     
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
@@ -73,7 +73,7 @@ void train_dense(BrainStormNet *neural, momentum_optimizer *optimizer) {
     free(dict);
 }
 
-void train_conv2d(BrainStormNet *neural, momentum_optimizer *optimizer) {
+void train_conv2d(brain_storm_net *neural, momentum_optimizer *optimizer) {
     
     unsigned int n_epochs = 40;
     unsigned int batch_size = 50;
@@ -142,7 +142,7 @@ void train_conv2d(BrainStormNet *neural, momentum_optimizer *optimizer) {
 void api_fully_connected_net(void) {
     
     // Instantiate a fully-connected neural network
-    BrainStormNet *neural = new_dense_net();
+    brain_storm_net *neural = new_dense_net();
     
     float regularization_factor = 0.001f;
     
@@ -196,7 +196,7 @@ void api_fully_connected_net(void) {
 void api_convolutional_net(void) {
     
     // Instantiate a convolutional neural network
-    BrainStormNet *neural = new_conv2d_net();
+    brain_storm_net *neural = new_conv2d_net();
     
     float regularization_factor = 0.001f;
     

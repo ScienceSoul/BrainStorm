@@ -24,7 +24,7 @@ static void gpu_alloc(void * _Nonnull self);
 
 static void initNeuralData(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     nn->data->training = (training *)malloc(sizeof(training));
     nn->data->training->set = NULL;
@@ -43,7 +43,7 @@ static void initNeuralData(void * _Nonnull self) {
 
 static void new_network_common(void * _Nonnull neural) {
  
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     nn->num_activation_functions = 0;
     
@@ -53,7 +53,7 @@ static void new_network_common(void * _Nonnull neural) {
     nn->constructor = allocate_constructor();
     
     for (int i=0; i<MAX_NUMBER_NETWORK_LAYERS; i++) {
-         nn->kernelInitializers[i] = NULL;
+         nn->kernel_initializers[i] = NULL;
     }
     
     nn->genesis = genesis;
@@ -76,10 +76,10 @@ static void new_network_common(void * _Nonnull neural) {
 //
 // Root allocation routine of a dense (fully connected) neural network
 //
-BrainStormNet * _Nonnull new_dense_net(void) {
+brain_storm_net * _Nonnull new_dense_net(void) {
     
-    BrainStormNet *nn = (BrainStormNet *)malloc(sizeof(BrainStormNet));
-    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false,
+    brain_storm_net *nn = (brain_storm_net *)malloc(sizeof(brain_storm_net));
+    *nn = (brain_storm_net){.network_num_layers=0, .is_dense_network=true, .is_conv2d_network=false,
         .init_biases=true};
     
     create_dense_net((void *)nn);
@@ -95,10 +95,10 @@ BrainStormNet * _Nonnull new_dense_net(void) {
 //
 // Root allocation routine of a convolutional neural network
 //
-BrainStormNet * _Nonnull new_conv2d_net(void) {
+brain_storm_net * _Nonnull new_conv2d_net(void) {
     
-    BrainStormNet *nn = (BrainStormNet *)malloc(sizeof(BrainStormNet));
-    *nn = (BrainStormNet){.network_num_layers=0, .is_dense_network=false, .is_conv2d_network=true,
+    brain_storm_net *nn = (brain_storm_net *)malloc(sizeof(brain_storm_net));
+    *nn = (brain_storm_net){.network_num_layers=0, .is_dense_network=false, .is_conv2d_network=true,
         .init_biases=true};
     
     create_conv2d_net((void *)nn);
@@ -111,7 +111,7 @@ BrainStormNet * _Nonnull new_conv2d_net(void) {
 //
 static void genesis(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     // If the network is constructed with the constructor API, check that all required parameters were defined
     if (nn->constructor->network_construction) {
@@ -205,7 +205,7 @@ static void genesis(void * _Nonnull self) {
 //
 static void finale(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     if (nn->data->training->set != NULL) {
         tensor *t = (tensor *)nn->data->training->set;

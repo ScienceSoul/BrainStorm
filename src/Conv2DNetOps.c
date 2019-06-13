@@ -36,7 +36,7 @@ static unsigned int activ_idx;
 static void update_conv_input(void * _Nonnull neural, unsigned int offset, unsigned int p, unsigned int fh, unsigned int fw, unsigned int ld1, unsigned int ld2, unsigned int kh, unsigned int kw, unsigned int sh, unsigned int sw) {
     
     extern tensor *conv_input_matrix;
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int indx = 0;
     for (int i=0; i<fh; i++) {
@@ -63,7 +63,7 @@ static void transpose_convolution_op(void * _Nonnull neural, unsigned int op,  i
     
     extern tensor * propag_buffer;
     extern tensor *conv_input_matrix;
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int p = nn->conv2d->parameters->topology[op][1];
     unsigned int q = nn->conv2d->parameters->topology[op+1][1];
@@ -141,7 +141,7 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
     
     extern tensor *conv_input_matrix;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int p = nn->conv2d->parameters->topology[op-1][1];
     unsigned int q = nn->conv2d->parameters->topology[op][1];
@@ -247,7 +247,7 @@ void infer_convolution_op(void * _Nonnull neural, unsigned int op, int * _Nullab
 
 void max_pooling_op(void * _Nonnull neural, unsigned int op, int * _Nullable advance) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int q = nn->conv2d->parameters->topology[op][1];
     unsigned int fh = nn->conv2d->parameters->topology[op][2];
@@ -321,7 +321,7 @@ void max_pooling_op(void * _Nonnull neural, unsigned int op, int * _Nullable adv
 
 void l2_pooling_op(void * _Nonnull neural, unsigned int op, int * _Nullable advance) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int q = nn->conv2d->parameters->topology[op][1];
     unsigned int fh = nn->conv2d->parameters->topology[op][2];
@@ -377,7 +377,7 @@ void l2_pooling_op(void * _Nonnull neural, unsigned int op, int * _Nullable adva
 
 void average_pooling_op(void * _Nonnull neural, unsigned int op, int * _Nullable advance) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int q = nn->conv2d->parameters->topology[op][1];
     unsigned int fh = nn->conv2d->parameters->topology[op][2];
@@ -438,7 +438,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
     static bool advance_connected_compute;
     static int local_idx;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     tensor *ptr_activations = NULL;
     unsigned int *ptr_offset = NULL;
     
@@ -507,7 +507,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
     // the fully connected layers always come after all convolution layers
     // (no interleaving between convolution layers) which should be the case for a correctly
     // constructed convolutional network. Otherwise wrong behavior and results!!
-    if (nn->activationFunctionsRef[local_idx+nn->conv2d->num_conv2d_layers] == SOFTMAX) {
+    if (nn->activation_functions_ref[local_idx+nn->conv2d->num_conv2d_layers] == SOFTMAX) {
         vec = nn->conv2d->dense_affine_transforms->val+offset_z_connected;
         vec_length = &(nn->conv2d->dense_affine_transforms->shape[local_idx][0][0]);
     }
@@ -521,7 +521,7 @@ void infer_fully_connected_op(void * _Nonnull neural, unsigned int op, int * _Nu
 
 void inference_in_conv2d_net(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int advance = 0;
     for (int l=1; l<=nn->conv2d->num_infer_ops; l++) {
@@ -542,7 +542,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
     tensor *ptr_activations = NULL;
     unsigned int *ptr_offset = NULL;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (*advance1 > 0) {
         if (nn->conv2d->parameters->topology[op-1][0] == FULLY_CONNECTED) {
@@ -679,7 +679,7 @@ void backpropag_full_connected_op(void * _Nonnull neural, unsigned int op, int *
 static void backpropag__after_fully_connected(void * _Nonnull neural, unsigned int op) {
     
     extern tensor * propag_buffer;
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int length = nn->conv2d->parameters->topology[op][1] * nn->conv2d->parameters->topology[op][2] *
                  nn->conv2d->parameters->topology[op][3];
@@ -712,7 +712,7 @@ void backpropag_convolution_op(void * _Nonnull neural, unsigned int op, int * _N
     
     extern tensor *conv_input_matrix;
     extern tensor * propag_buffer;
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int p = nn->conv2d->parameters->topology[op-1][1];
     unsigned int q = nn->conv2d->parameters->topology[op][1];
@@ -863,7 +863,7 @@ void backpropag_max_pooling_op(void * _Nonnull neural, unsigned int op, int * _N
     extern tensor * propag_buffer;
     static bool check = false;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (!check) {
         if (*advance1 == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology error in convolutional network. Using a pooling layer as an output layer is not permitted.");
@@ -915,7 +915,7 @@ void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, int 
     extern tensor * propag_buffer;
     static bool check = false;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (!check) {
         if (*advance1 == 0) fatal(DEFAULT_CONSOLE_WRITER, "topology error in convolutional network. Using a pooling layer as an output layer is not permitted.");
@@ -965,7 +965,7 @@ void backpropag_average_pooling_op(void * _Nonnull neural, unsigned int op, int 
 void backpropag_in_conv2d_net(void * _Nonnull neural,
                               void (* _Nullable ptr_inference_func)(void * _Nonnull self)) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Activations at the input layer
     //TODO: channels > 1?
@@ -993,7 +993,7 @@ void batch_accumulation_in_conv2d_net(void * _Nonnull neural) {
     // Accumulate dC/dw and dC/db at convolution and
     // fully connected layers
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Convolution layers
     int offset_w = 0;

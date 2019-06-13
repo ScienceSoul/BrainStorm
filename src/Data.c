@@ -12,7 +12,7 @@
 
 static void * _Nonnull set_data(void * _Nonnull self, float * _Nonnull * _Nonnull dataSet, unsigned int start, unsigned int end, int * _Nullable dense_topo, int conv_topo[_Nullable][9], unsigned int num_channels) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     tensor_dict *dict = init_tensor_dict();
     
@@ -79,7 +79,7 @@ static void * _Nonnull set_data(void * _Nonnull self, float * _Nonnull * _Nonnul
 
 static void * _Nonnull set_labels(void * _Nonnull self, float * _Nonnull * _Nonnull dataSet, unsigned int start, unsigned int end, int * _Nullable classifications, unsigned int numberOfClassifications, int * _Nullable dense_topo, int conv_topo[_Nullable][9], unsigned int num_channels, unsigned int numberOfLayers, bool binarization) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     if (numberOfClassifications > 0) {
         
@@ -158,7 +158,7 @@ void load_data(void * _Nonnull self, const char * _Nonnull dataSetName, const ch
     unsigned int len1=0, len2=0, num_channels;
     float **raw = NULL;
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     fprintf(stdout, "%s: load the <%s> training data set...\n", DEFAULT_CONSOLE_WRITER, dataSetName);
     raw = nn->data->training->reader(trainFile, &len1, &len2, &num_channels);

@@ -217,7 +217,7 @@ float activation_func(float val, float * _Nullable dummy1, unsigned int * _Nulla
 
 void init_feed_activations(void * _Nonnull neural, float *ptr[]) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Initialize the feeding layer with the input:
     for (int l=0; l<1; l++) {
@@ -242,7 +242,7 @@ void init_feed_activations(void * _Nonnull neural, float *ptr[]) {
 
 void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int number_of_maps, unsigned int kh, unsigned int sh, pooling_ops pooling_ops) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     for (int l=0; l<nn->network_num_layers; l++) {
         if (l == 0) {
@@ -286,7 +286,7 @@ void set_up(void * _Nonnull neural, int * _Nonnull maps_size, unsigned int numbe
 
 void init_convol_kernels(void * _Nonnull neural, unsigned int kh) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int offset = 0;
     for (int l=0; l<nn->conv2d->num_conv2d_layers; l++) {
@@ -315,7 +315,7 @@ void init_convol_kernels(void * _Nonnull neural, unsigned int kh) {
 
 void init_dense_weights(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Init dense weights with ones
     int offset = 0;
@@ -335,7 +335,7 @@ void init_dense_weights(void * _Nonnull neural) {
 
 bool check_activations(void * _Nonnull neural, func_ptr formater) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int offset = 0;
     int p_idx  = 0;
@@ -397,7 +397,7 @@ void ref_convol(float * _Nonnull ref_conv, unsigned int kh) {
 
 bool test_create_tensors(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int kh = 5;
     unsigned int layers = 10;
@@ -622,7 +622,7 @@ bool test_shuffle_tensor(void) {
 
 bool test_kernels_flipping(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int kh = 5;
     
@@ -723,7 +723,7 @@ bool test_kernels_flipping(void * _Nonnull neural) {
 
 bool test_max_pooling(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     //---------------------------------------
     // Test with unit strides
@@ -740,7 +740,7 @@ bool test_max_pooling(void * _Nonnull neural) {
     int idx = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
         if (l > 0) {
-            nn->conv2d->inferenceOps[idx] = max_pooling_op;
+            nn->conv2d->inference_ops[idx] = max_pooling_op;
             idx++;
         }
     }
@@ -795,7 +795,7 @@ bool test_max_pooling(void * _Nonnull neural) {
 
 bool test_max_pooling_indexes_store(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     //---------------------------------------
     // Test with unit strides
@@ -811,7 +811,7 @@ bool test_max_pooling_indexes_store(void * _Nonnull neural) {
     int idx = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
         if (l > 0) {
-            nn->conv2d->inferenceOps[idx] = max_pooling_op;
+            nn->conv2d->inference_ops[idx] = max_pooling_op;
             idx++;
         }
     }
@@ -932,7 +932,7 @@ bool test_max_pooling_indexes_store(void * _Nonnull neural) {
 
 bool test_average_pooling(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     //---------------------------------------
     // Test with unit strides
@@ -949,7 +949,7 @@ bool test_average_pooling(void * _Nonnull neural) {
     int idx = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
         if (l > 0) {
-            nn->conv2d->inferenceOps[idx] = average_pooling_op;
+            nn->conv2d->inference_ops[idx] = average_pooling_op;
             idx++;
         }
     }
@@ -1000,7 +1000,7 @@ bool test_average_pooling(void * _Nonnull neural) {
 
 bool test_l2_pooling(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     //---------------------------------------
     // Test with unit strides
@@ -1017,7 +1017,7 @@ bool test_l2_pooling(void * _Nonnull neural) {
     int idx = 0;
     for (int l=0; l<nn->network_num_layers; l++) {
         if (l > 0) {
-            nn->conv2d->inferenceOps[idx] = l2_pooling_op;
+            nn->conv2d->inference_ops[idx] = l2_pooling_op;
             idx++;
         }
     }
@@ -1070,7 +1070,7 @@ bool test_convolution(void * _Nonnull neural) {
     
     extern tensor *conv_input_matrix;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int kh = 5;
     unsigned int sh = 1;
@@ -1082,7 +1082,7 @@ bool test_convolution(void * _Nonnull neural) {
     
     nn->constructor->layer_conv2d(neural, (layer_dict){.filters=2, .kernel_size=kh, .stride=sh, .padding=VALID, .activation=CUSTOM}, NULL);
     
-    nn->conv2d->activationFunctions[0] = activation_func;
+    nn->conv2d->activation_functions[0] = activation_func;
     
     // The activation tensors
     // a1 = shape[1,8,8]
@@ -1137,7 +1137,7 @@ bool test_convolution(void * _Nonnull neural) {
     
     // The affine transformations
     dict->rank = 3;
-    nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
+    nn->conv2d->conv_affine_transforms = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
     
     // The kernel matrices
     int maps_size[2] = {8, 4};
@@ -1219,8 +1219,8 @@ bool test_convolution(void * _Nonnull neural) {
     free(nn->conv2d->conv_biases->val);
     free(nn->conv2d->conv_biases);
     
-    free(nn->conv2d->conv_affineTransformations->val);
-    free(nn->conv2d->conv_affineTransformations);
+    free(nn->conv2d->conv_affine_transforms->val);
+    free(nn->conv2d->conv_affine_transforms);
     
     free(dict);
     
@@ -1232,7 +1232,7 @@ bool test_transpose_convolution_1(void * _Nonnull neural) {
     extern tensor *propag_buffer;
     extern tensor *conv_input_matrix;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int kh = 3;
     unsigned int sh = 1;
@@ -1372,7 +1372,7 @@ bool test_transpose_convolution_2(void * _Nonnull neural) {
     extern tensor *propag_buffer;
     extern tensor *conv_input_matrix;
     
-    BrainStormNet * nn = (BrainStormNet *)neural;
+    brain_storm_net * nn = (brain_storm_net *)neural;
     
     unsigned int kh = 2;
     unsigned int sh = 1;
@@ -1579,7 +1579,7 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     
     extern tensor *conv_input_matrix;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int kh_c = 5;
     unsigned int kh_p = 2;
@@ -1595,7 +1595,7 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     
     nn->constructor->layer_pool(neural, (layer_dict){.filters=1, .kernel_size=kh_p, .stride=sh, .padding=VALID, .pooling_op=MAX_POOLING});
     
-    nn->conv2d->activationFunctions[0] = activation_func;
+    nn->conv2d->activation_functions[0] = activation_func;
     
     // Activation tensors:
     // a1 = shape[1,8,8]
@@ -1626,7 +1626,7 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     
     // The affine transformations
     dict->rank = 3;
-    nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
+    nn->conv2d->conv_affine_transforms = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
     
     // The kernel matrices
     int maps_size[2] = {8, 4};
@@ -1689,8 +1689,8 @@ bool test_convolution_pooling(void * _Nonnull neural) {
     free(nn->conv2d->conv_biases->val);
     free(nn->conv2d->conv_biases);
     
-    free(nn->conv2d->conv_affineTransformations->val);
-    free(nn->conv2d->conv_affineTransformations);
+    free(nn->conv2d->conv_affine_transforms->val);
+    free(nn->conv2d->conv_affine_transforms);
     
     free(nn->conv2d->max_pool_indexes->int32_val);
     free(nn->conv2d->max_pool_indexes);
@@ -1702,7 +1702,7 @@ bool test_convolution_pooling(void * _Nonnull neural) {
 
 bool test_pooling_fully_connected(void * _Nonnull  neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int kh = 2;
     unsigned int sh = 2;
@@ -1718,9 +1718,9 @@ bool test_pooling_fully_connected(void * _Nonnull  neural) {
     nn->constructor->layer_dense(neural, (layer_dict){.num_neurons=4, .activation=CUSTOM}, NULL);
     nn->constructor->layer_dense(neural, (layer_dict){.num_neurons=4, .activation=CUSTOM}, NULL);
     
-    nn->conv2d->activationFunctions[0] = activation_func;
-    nn->conv2d->activationFunctions[1] = activation_func;
-    nn->conv2d->activationFunctions[2] = activation_func;
+    nn->conv2d->activation_functions[0] = activation_func;
+    nn->conv2d->activation_functions[1] = activation_func;
+    nn->conv2d->activation_functions[2] = activation_func;
     
     // Feeding and poolling layers activations
     // a1 = shape[2,8,8]
@@ -1738,7 +1738,7 @@ bool test_pooling_fully_connected(void * _Nonnull  neural) {
     dict->rank = 1;
     nn->conv2d->dense_activations = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, true);
     nn->conv2d->dense_biases = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, false);
-    nn->conv2d->dense_affineTransformations = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, false);
+    nn->conv2d->dense_affine_transforms = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, false);
     
     // Fully connected layers weights
     dict->rank = 2;
@@ -1789,8 +1789,8 @@ bool test_pooling_fully_connected(void * _Nonnull  neural) {
     free(nn->conv2d->dense_activations);
     free(nn->conv2d->dense_biases->val);
     free(nn->conv2d->dense_biases);
-    free(nn->conv2d->dense_affineTransformations->val);
-    free(nn->conv2d->dense_affineTransformations);
+    free(nn->conv2d->dense_affine_transforms->val);
+    free(nn->conv2d->dense_affine_transforms);
     
     free(nn->conv2d->dense_weights->val);
     free(nn->conv2d->dense_weights);
@@ -1807,7 +1807,7 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     
     extern tensor *conv_input_matrix;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int kh_c = 5;
     unsigned int kh_p = 2;
@@ -1828,7 +1828,7 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     nn->constructor->layer_dense(neural, (layer_dict){.num_neurons=4, .activation=CUSTOM}, NULL);
     
     for (int l=0; l<nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers; l++) {
-        nn->conv2d->activationFunctions[l] = activation_func;
+        nn->conv2d->activation_functions[l] = activation_func;
     }
     
     // Feeding, convolution and pooling layers activations
@@ -1858,7 +1858,7 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     
     // The convolution affine transformations
     dict->rank = 3;
-    nn->conv2d->conv_affineTransformations = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
+    nn->conv2d->conv_affine_transforms = (tensor *)nn->conv2d->conv_common_alloc(neural, (void *)dict, true);
     
     // The kernel matrices
     int maps_size[2] = {8, 4};
@@ -1892,7 +1892,7 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     dict->rank = 2;
     nn->conv2d->dense_activations = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, true);
     nn->conv2d->dense_biases = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, false);
-    nn->conv2d->dense_affineTransformations = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, false);
+    nn->conv2d->dense_affine_transforms = (tensor *)nn->conv2d->dense_common_alloc(neural, (void *)dict, false);
     
     // Fully connected layers weights
     dict->rank = 2;
@@ -1954,8 +1954,8 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     free(nn->conv2d->conv_biases->val);
     free(nn->conv2d->conv_biases);
     
-    free(nn->conv2d->conv_affineTransformations->val);
-    free(nn->conv2d->conv_affineTransformations);
+    free(nn->conv2d->conv_affine_transforms->val);
+    free(nn->conv2d->conv_affine_transforms);
     
     free(nn->conv2d->dense_activations->val);
     free(nn->conv2d->dense_activations);
@@ -1963,8 +1963,8 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
     free(nn->conv2d->dense_biases->val);
     free(nn->conv2d->dense_biases);
     
-    free(nn->conv2d->dense_affineTransformations->val);
-    free(nn->conv2d->dense_affineTransformations);
+    free(nn->conv2d->dense_affine_transforms->val);
+    free(nn->conv2d->dense_affine_transforms);
     
     free(nn->conv2d->dense_weights->val);
     free(nn->conv2d->dense_weights);
@@ -1979,7 +1979,7 @@ bool test_dummy_convol_net(void * _Nonnull neural) {
 
 int main(int argc, const char * argv[]) {
     
-    BrainStormNet *neural = new_dense_net();
+    brain_storm_net *neural = new_dense_net();
     
     // Test tensors creation and initialization
     if (!test_create_tensors(neural)) {

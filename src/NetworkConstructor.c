@@ -68,7 +68,7 @@ static void set_kernel_initializer(void (* _Nonnull kernelInitializers[MAX_NUMBE
 
 void set_feed(void * _Nonnull neural, layer_dict layer_dict) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     nn->constructor->network_construction = true;
     if (nn->network_num_layers != 0) {
@@ -115,7 +115,7 @@ void set_feed(void * _Nonnull neural, layer_dict layer_dict) {
 
 void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regularizer) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
@@ -124,19 +124,19 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
         nn->dense->parameters->topology[nn->network_num_layers] = layer_dict.num_neurons;
         
         // The activation function for this layer
-        set_activation_function(nn->activationFunctionsRef, nn->dense->activation_functions, nn->dense->activation_derivatives, layer_dict, nn->num_activation_functions);
+        set_activation_function(nn->activation_functions_ref, nn->dense->activation_functions, nn->dense->activation_derivatives, layer_dict, nn->num_activation_functions);
         
         // The kernel initializer for this layer
-        set_kernel_initializer(nn->kernelInitializers, layer_dict, nn->dense->num_dense_layers);
+        set_kernel_initializer(nn->kernel_initializers, layer_dict, nn->dense->num_dense_layers);
         nn->dense->num_dense_layers++;
       
     } else if (nn->is_conv2d_network) {
         nn->conv2d->parameters->topology[nn->network_num_layers][0] = FULLY_CONNECTED;
         nn->conv2d->parameters->topology[nn->network_num_layers][1] = layer_dict.num_neurons;
         
-        set_activation_function(nn->activationFunctionsRef, nn->conv2d->activation_functions, nn->conv2d->activation_derivatives, layer_dict, nn->num_activation_functions);
+        set_activation_function(nn->activation_functions_ref, nn->conv2d->activation_functions, nn->conv2d->activation_derivatives, layer_dict, nn->num_activation_functions);
         
-        set_kernel_initializer(nn->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
+        set_kernel_initializer(nn->kernel_initializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
         nn->conv2d->num_dense_layers++;
         
         // Store the maximum number of nodes in the fully connected layers
@@ -169,7 +169,7 @@ void set_layer_dense(void * _Nonnull neural, layer_dict layer_dict, regularizer_
 
 void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer_dict * _Nullable regulaizer) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
         fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
@@ -229,11 +229,11 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
     }
     
     // The kernel initializer for this layer
-    set_kernel_initializer(nn->kernelInitializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
+    set_kernel_initializer(nn->kernel_initializers, layer_dict, (nn->conv2d->num_conv2d_layers+nn->conv2d->num_dense_layers));
     nn->conv2d->num_conv2d_layers++;
     
     // The activation function for this layer
-    set_activation_function(nn->activationFunctionsRef, nn->conv2d->activation_functions, nn->conv2d->activation_derivatives, layer_dict, nn->num_activation_functions);
+    set_activation_function(nn->activation_functions_ref, nn->conv2d->activation_functions, nn->conv2d->activation_derivatives, layer_dict, nn->num_activation_functions);
     
     // Add the regularizer if given
     if (regulaizer != NULL) {
@@ -253,7 +253,7 @@ void set_layer_conv2d(void * _Nonnull neural, layer_dict layer_dict, regularizer
 
 void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (nn->network_num_layers >= MAX_NUMBER_NETWORK_LAYERS)
     fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow in network topology construction.");
@@ -333,7 +333,7 @@ void set_layer_pool(void * _Nonnull neural, layer_dict layer_dict) {
 
 void set_split(void * _Nonnull neural, int n1, int n2) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (nn->is_dense_network) {
         nn->dense->parameters->split[0] = n1;
@@ -346,7 +346,7 @@ void set_split(void * _Nonnull neural, int n1, int n2) {
 
 void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     unsigned int len = (unsigned int)strlen(str);
     if (len >= MAX_LONG_STRING_LENGTH) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying string in constructor");
     memcpy(nn->data_path, str, len*sizeof(char));
@@ -354,7 +354,7 @@ void set_training_data(void * _Nonnull neural, char * _Nonnull str) {
 
 void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     if (n >= MAX_NUMBER_NETWORK_LAYERS) fatal(DEFAULT_CONSOLE_WRITER, "buffer overflow when copying vector in constructor");
     if (nn->is_dense_network) {
         memcpy(nn->dense->parameters->classifications, vector, n*sizeof(int));
@@ -368,14 +368,14 @@ void set_classification(void * _Nonnull neural, int * _Nonnull vector, int n) {
 
 void set_scalars(void * _Nonnull neural, scalar_dict scalars) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     nn->dense->parameters->epochs = scalars.epochs;
     nn->dense->parameters->mini_batch_size = scalars.mini_batch_size;
 }
 
 void * _Nonnull set_optimizer(void * neural, optimizer_dict optimizer_dict) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     void * optimizer = NULL;
     
     if (optimizer_dict.optimizer == NULL) {

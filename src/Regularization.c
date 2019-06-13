@@ -18,7 +18,7 @@ float l1_regularizer(void * _Nonnull neural, float * _Nonnull weights, float eta
     
     static bool firtTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     static int num_inputs = 0;
     if (firtTime) {
@@ -50,7 +50,7 @@ float l2_regularizer(void * _Nonnull neural, float * _Nonnull weights, float eta
     
     static bool firtTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     static int num_inputs = 0;
     if (firtTime) {

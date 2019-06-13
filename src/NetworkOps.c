@@ -27,7 +27,7 @@ void mini_batch_loop(void * _Nonnull neural, unsigned int batch_size,
                    ptr_inference_func inference, ptr_backpropag_func backpropagation,
                    ptr_batch_accumul_func batch_accumulation) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
 #ifdef VERBOSE
     double rt = realtime();
@@ -52,7 +52,7 @@ void next_batch(void * _Nonnull neural, tensor * _Nonnull features, tensor * _No
     static int delta2 = 0;
     static int count = 1;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     tensor *t1 = (tensor *)nn->data->training->set;
     tensor *t2 = (tensor *)nn->data->training->labels;
@@ -134,7 +134,7 @@ int batch_range(void * _Nonnull neural, unsigned int batchSize, int * _Nullable 
     
     static bool firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     tensor *t1 = (tensor *)nn->data->training->set;
     
     static int num_inputs = 0;
@@ -157,7 +157,7 @@ void progression(void * _Nonnull neural, progress_dict progress_dict) {
     
     static bool firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     static int num_inputs = 0;
     if (firstTime) {
@@ -233,7 +233,7 @@ float math_ops(float * _Nonnull vector, unsigned int n, char * _Nonnull op) {
 
 void eval_dense_net(void * _Nonnull neural,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out) {
  
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Offset to activations at output layer
     unsigned int offset = 0;
@@ -254,7 +254,7 @@ void eval_dense_net(void * _Nonnull neural,  tensor * _Nonnull inputs, tensor * 
 
 void eval_conv2d_net(void * _Nonnull neural,  tensor * _Nonnull inputs, tensor * _Nonnull labels, float * _Nonnull out) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Offset to activations at the output layer
     unsigned int offset = 0;
@@ -282,7 +282,7 @@ static void eval(void * _Nonnull self, tensor * _Nonnull inputs, tensor * _Nonnu
     static bool firstTime = true;
     static eval_net_type eval_net = NULL;
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     if (firstTime) {
         if (nn->is_dense_network) {
@@ -301,7 +301,7 @@ void eval_prediction(void * _Nonnull self, char * _Nonnull dataSet, float * _Non
     static bool test_check = false;
     static bool validation_check = false;
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     tensor *t1 = NULL;
     tensor *t2 = NULL;
@@ -355,7 +355,7 @@ float eval_cost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization
     static bool test_check = false;
     static bool validation_check = false;
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     ptr_inference_func inference = NULL;
     if (nn->is_dense_network) {
@@ -444,7 +444,7 @@ float eval_cost(void * _Nonnull self, char * _Nonnull dataSet, bool binarization
 //
 void flip_kernels(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int offset_w = 0;
     int offset_f = 0;
@@ -480,7 +480,7 @@ void flip_kernels(void * _Nonnull neural) {
 void flip_deltas(void * _Nonnull neural, unsigned int q, unsigned fh, unsigned int fw) {
     
     extern tensor *propag_buffer;
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int offset = 0;
     for (int k=0; k<q; k++) {
@@ -499,7 +499,7 @@ void flip_deltas(void * _Nonnull neural, unsigned int q, unsigned fh, unsigned i
 //
 void kernel_mat_update(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int offset_km = 0;
     int offset_w = 0;
@@ -534,7 +534,7 @@ void kernel_mat_update(void * _Nonnull neural) {
 
 void train_loop(void * _Nonnull  neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     tensor_dict *dict = init_tensor_dict();
     dict->rank = 1;

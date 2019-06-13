@@ -35,7 +35,7 @@ static void init_in_dense_net(void * _Nonnull neural) {
 
     static int firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     static unsigned int w_length = 0;
     static unsigned int b_length = 0;
@@ -71,7 +71,7 @@ static void init_in_conv2d_net(void * _Nonnull neural) {
     
     static bool firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     static unsigned int w_conv_length = 0;
     static unsigned int b_conv_length = 0;
@@ -124,7 +124,7 @@ static void init_in_conv2d_net(void * _Nonnull neural) {
 
 static void grad_descent_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Update weights
     unsigned int offset = 0;
@@ -155,7 +155,7 @@ static void grad_descent_update_in_dense_net(void * _Nullable neural, unsigned i
 
 static void grad_descent_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Update the weights and biases at the convolution layers
     int offset_w = 0;
@@ -226,7 +226,7 @@ static void grad_descent_update_in_conv2d_net(void * _Nonnull neural, unsigned i
 
 static void momentum_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Update weights
     unsigned int offset = 0;
@@ -264,7 +264,7 @@ static void momentum_update_in_dense_net(void * _Nullable neural, unsigned int b
 
 static void momentum_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Update the weights and biases at the convolution layers
     int offset_w = 0;
@@ -353,7 +353,7 @@ static void momentum_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
 
 static void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Update weights
     unsigned int offset = 0;
@@ -399,7 +399,7 @@ static void ada_grad_update_in_dense_net(void * _Nullable neural, unsigned int b
 }
 static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
      // Update the weights and biases at the convolution layers
     int offset_w = 0;
@@ -508,7 +508,7 @@ static void ada_grad_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
 
 static void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Update weights
     unsigned int offset = 0;
@@ -557,7 +557,7 @@ static void rms_prop_update_in_dense_net(void * _Nonnull neural, unsigned int ba
 
 static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Update the weights and biases at the convolution layers
     int offset_w = 0;
@@ -665,7 +665,7 @@ static void rms_prop_update_in_conv2d_net(void * _Nonnull neural, unsigned int b
 
 static void adam_update_in_dense_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     nn->dense->train->adam->time++;
     
@@ -738,7 +738,7 @@ static void adam_update_in_dense_net(void * _Nonnull neural, unsigned int batch_
 
 static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch_size) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     nn->conv2d->train->adam->time++;
     
@@ -894,7 +894,7 @@ static void adam_update_in_conv2d_net(void * _Nonnull neural, unsigned int batch
 
 static void set_func_ptr(void * _Nonnull neural, optimizer optimizer) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     if (nn->is_dense_network) {
         ptr_init_func = init_in_dense_net;
@@ -939,7 +939,7 @@ void gradient_descent_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_
     
     static bool  firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     optimizer optimizer = GRADIENT_DESCENT;
     if (firstTime) {
@@ -971,7 +971,7 @@ void momentum_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features
     
     static bool firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     optimizer optimizer = MOMENTUM;
     if (firstTime) {
@@ -1003,7 +1003,7 @@ void ada_grad_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features
  
     static bool firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     optimizer optimizer = ADAGRAD;
     if (firstTime) {
@@ -1035,7 +1035,7 @@ void rms_prop_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features
     
     static bool firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     optimizer optimizer = RMSPROP;
     if (firstTime) {
@@ -1067,7 +1067,7 @@ void adam_optimize(void * _Nonnull neural, tensor * _Nonnull  batch_features, te
     
     static bool firstTime = true;
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     optimizer optimizer = ADAM;
     if (firstTime) {

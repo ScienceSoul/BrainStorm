@@ -17,7 +17,7 @@
 
 void inference_in_dense_net(void * _Nonnull neural) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     unsigned int stride1 = 0;
     unsigned int stride2 = 0;
@@ -39,7 +39,7 @@ void inference_in_dense_net(void * _Nonnull neural) {
 #endif
         float *vec = NULL;
         unsigned int *vec_length = NULL;
-        if (nn->activationFunctionsRef[l] == SOFTMAX) {
+        if (nn->activation_functions_ref[l] == SOFTMAX) {
             vec = nn->dense->affine_transforms->val+stride2;
             vec_length = &(nn->dense->affine_transforms->shape[l][0][0]);
         }
@@ -59,7 +59,7 @@ void inference_in_dense_net(void * _Nonnull neural) {
 void backpropag_in_dense_net(void * _Nonnull neural,
                              void (* _Nullable ptr_inference_func)(void * _Nonnull self)) {
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     // Activations at the input layer
     int stride = nn->example_idx * nn->dense->parameters->topology[0];
@@ -160,7 +160,7 @@ void batch_accumulation_in_dense_net(void * _Nonnull neural) {
     
     // Accumulate dC/dw and dC/db
     
-    BrainStormNet *nn = (BrainStormNet *)neural;
+    brain_storm_net *nn = (brain_storm_net *)neural;
     
     int offset_w = 0;
     int offset_b = 0;

@@ -11,7 +11,7 @@
 
 static void * _Nonnull conv_weights_alloc(void * _Nonnull self, void * _Nonnull t_dict, bool reshape) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     tensor_dict *dict = (tensor_dict *)t_dict;
     
     if (reshape) {
@@ -34,7 +34,7 @@ static void * _Nonnull conv_weights_alloc(void * _Nonnull self, void * _Nonnull 
 
 static void * _Nonnull conv_activations_alloc(void * _Nonnull self, void * _Nonnull t_dict, bool reshape) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     tensor_dict *dict = (tensor_dict *)t_dict;
     
     if (reshape) {
@@ -58,7 +58,7 @@ static void * _Nonnull conv_activations_alloc(void * _Nonnull self, void * _Nonn
 
 static void * _Nonnull conv_common_alloc(void * _Nonnull self, void * _Nonnull t_dict, bool reshape) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     tensor_dict *dict = (tensor_dict *)t_dict;
     
     if (dict->rank > 3) {
@@ -86,7 +86,7 @@ static void * _Nonnull conv_common_alloc(void * _Nonnull self, void * _Nonnull t
 
 static void * _Nonnull dense_weights_alloc(void * _Nonnull self, void * _Nonnull t_dict, bool reshape) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     tensor_dict *dict = (tensor_dict *)t_dict;
     
     if (reshape) {
@@ -114,7 +114,7 @@ static void * _Nonnull dense_weights_alloc(void * _Nonnull self, void * _Nonnull
 
 static void * _Nonnull dense_common_alloc(void * _Nonnull self, void * _Nonnull t_dict, bool reshape) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     tensor_dict *dict = (tensor_dict *)t_dict;
     
     if (reshape) {
@@ -134,7 +134,7 @@ static void * _Nonnull dense_common_alloc(void * _Nonnull self, void * _Nonnull 
 
 static void * _Nonnull max_pool_mask_indexes(void * _Nonnull self, void * _Nonnull t_dict) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     tensor_dict *dict = (tensor_dict *)t_dict;
     
     int idx = 0;
@@ -172,7 +172,7 @@ static void * _Nonnull max_pool_mask_indexes(void * _Nonnull self, void * _Nonnu
 //
 void create_conv2d_net(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     nn->conv2d = (conv2d_network *)malloc(sizeof(conv2d_network));
     *(nn->conv2d) = (conv2d_network){.num_conv2d_layers=0, .num_dense_layers=0, .num_pooling_layers=0,
@@ -246,7 +246,7 @@ void create_conv2d_net(void * _Nonnull self) {
 //
 void conv2d_net_genesis(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     if (nn->conv2d->parameters->split[0] == 0 || nn->conv2d->parameters->split[1] == 0) fatal(DEFAULT_CONSOLE_WRITER, "data split not defined. Use a constructor or define it in a parameter file.");
     
@@ -568,7 +568,7 @@ void conv2d_net_genesis(void * _Nonnull self) {
 //
 void conv2d_net_finale(void * _Nonnull self) {
     
-    BrainStormNet *nn = (BrainStormNet *)self;
+    brain_storm_net *nn = (brain_storm_net *)self;
     
     // ------------------------------------------------------------------------
     // ------- Free up the convolutuon layers
